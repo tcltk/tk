@@ -42,12 +42,12 @@ TkWindow* tkWaylandLastPointerWinPtr = NULL;
  * position instead of the GLFW cursor position.  Cleared by the next real
  * cursor motion.
  */
- 
+
 int tkWaylandPointerEmulated = 0;
 
 void TkWaylandUpdatePointerState(int rootX, int rootY, int winX, int winY,
                                  unsigned int buttonState, TkWindow *winPtr) {
-									 
+
     tkWaylandLastRootX = rootX;
     tkWaylandLastRootY = rootY;
     tkWaylandLastWinX = winX;
@@ -283,7 +283,7 @@ GenerateButtonEvent(
  *
  * QueueButtonEvent --
  *
- *	Put an X button event on the Tk event queue. 
+ *	Put an X button event on the Tk event queue.
  *
  * Results:
  *	None.

@@ -221,7 +221,7 @@ pointer's x coordinate, measured in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position is
 measured in the virtual root.
 If the mouse pointer is not on the same screen as \fIwindow\fR then
--1 is returned. On Wayland this is always defined relative to the toplevel. 
+-1 is returned. On Wayland this is always defined relative to the toplevel.
 .\" METHOD: pointerxy
 .TP
 \fBwinfo pointerxy \fIwindow\fR
@@ -274,7 +274,7 @@ option.
 Returns a decimal string giving the x-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
-has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates. 
+has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates.
 .\" METHOD: rooty
 .TP
 \fBwinfo rooty \fIwindow\fR
@@ -282,7 +282,7 @@ has no border). On Wayland this is always defined relative to the toplevel coord
 Returns a decimal string giving the y-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
-has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates. 
+has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates.
 .\" METHOD: screen
 .TP
 \fBwinfo screen \fIwindow\fR

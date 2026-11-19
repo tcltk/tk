@@ -54,7 +54,7 @@ static unsigned long nextPixmapId = 1;
 static Tcl_HashTable pixmapTable;
 static int pixmapTableInitialized = 0;
 
-/* 
+/*
  * Display / screen initialization.
  *
  * TkpOpenDisplay is the Tk platform entry point that allocates a full
@@ -610,7 +610,7 @@ TkWaylandGetScreenSize(
  *
  *----------------------------------------------------------------------
  */
- 
+
 TkDisplay *
 TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 {
@@ -1877,7 +1877,7 @@ XGetGeometry(
         if (!pixmapPtr) {
             return BadDrawable;
         }
-        
+
         if (root_return) *root_return = (Window)0;
         if (x_return) *x_return = 0;
         if (y_return) *y_return = 0;
@@ -1885,18 +1885,18 @@ XGetGeometry(
         if (height_return) *height_return = pixmapPtr->height;
         if (border_width_return) *border_width_return = 0;
         if (depth_return) *depth_return = pixmapPtr->depth;
-        
+
         return Success;
     }
-    
+
     /* For windows, get geometry from the GLFW window. */
     glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     if (!glfwWindow) {
         return BadDrawable;
     }
-    
+
     glfwGetWindowSize(glfwWindow, &width, &height);
-    
+
     if (root_return) *root_return = (Window)0;
     if (x_return) *x_return = 0;
     if (y_return) *y_return = 0;
@@ -1904,7 +1904,7 @@ XGetGeometry(
     if (height_return) *height_return = (unsigned int)height;
     if (border_width_return) *border_width_return = 0;
     if (depth_return) *depth_return = 24; /* Always 24-bit for Wayland */
-    
+
     return Success;
 }
 
@@ -1952,7 +1952,7 @@ TkWaylandSetBitmapData(
     /* Calculate bytes per line (packed bits, padded to byte boundary). */
     int bytesPerLine = (width + 7) / 8;
     size_t dataSize = (size_t)bytesPerLine * height;
-    
+
     /* Allocate and copy the bitmap data. */
     pixmapPtr->bitmapData = (unsigned char *)ckalloc(dataSize);
     if (!pixmapPtr->bitmapData) {

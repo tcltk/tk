@@ -141,7 +141,7 @@ ShiftByOffset(
     int width,
     int height)
 {
-    DEBUG_LOG("ShiftByOffset: %s", Tk_PathName(butPtr->tkwin)); 
+    DEBUG_LOG("ShiftByOffset: %s", Tk_PathName(butPtr->tkwin));
     if (relief != TK_RELIEF_RAISED && butPtr->type == TYPE_BUTTON &&
         !Tk_StrictMotif(butPtr->tkwin)) {
         int shiftX = (relief == TK_RELIEF_SUNKEN) ? 2 : 1;
@@ -197,11 +197,11 @@ DrawButtonBitmap(
         XCopyPlane(butPtr->display, butPtr->bitmap, d, currentGC, 0, 0,
 		   width, height, x, y, 1);
 	return;
-    } else { 
+    } else {
         DEBUG_LOG("No graphics context for drawing bitmap");
 	goto fallback_rect;
     }
-  
+
 fallback_rect:
     NVGcontext *vg = TkWaylandGetNVGContext(d);
     nvgBeginPath(vg);
@@ -458,7 +458,7 @@ TkpDisplayButton(void *clientData)
         butPtr->type == TYPE_RADIO_BUTTON) &&
         butPtr->indicatorOn &&
         butPtr->indicatorDiameter > 2 * bd) {
-      
+
         TkBorder *selBd = (TkBorder *)butPtr->selectBorder;
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
           ? CHECK_BUTTON : RADIO_BUTTON;
@@ -471,11 +471,11 @@ TkpDisplayButton(void *clientData)
 		  "diam = %d, padY = %d, ind_y = %d",
 		  height, fullHeight, winHeight, butPtr->indicatorDiameter,
 		  padY, ind_y);
-	
+
 	XColor checkBG, checkFG, checkDisBG;
-	TkParseColor(Tk_Display(butPtr->tkwin), None, "white", &checkBG); 
-	TkParseColor(Tk_Display(butPtr->tkwin), None, "black", &checkFG); 
-	TkParseColor(Tk_Display(butPtr->tkwin), None, "gray90", &checkDisBG); 
+	TkParseColor(Tk_Display(butPtr->tkwin), None, "white", &checkBG);
+	TkParseColor(Tk_Display(butPtr->tkwin), None, "black", &checkFG);
+	TkParseColor(Tk_Display(butPtr->tkwin), None, "gray90", &checkDisBG);
         TkpDrawCheckIndicator(tkwin, butPtr->display,
 	    drawable,
 	    ind_x, ind_y, butPtr->normalBorder,
@@ -625,7 +625,7 @@ TkpComputeButtonGeometry(
      * Currently width and height are set to the image size. Now we
      * adjust the dimensions by adding text dimensions according to
      * the value of the compound option.
-     * 
+     *
      */
         switch ((enum compound) butPtr->compound) {
         case COMPOUND_TOP:
@@ -881,7 +881,7 @@ TkpDrawCheckIndicator(
     if (TkWaylandBeginDraw(d, NULL, &dc) != TCL_OK) {
         return;
     }
-    
+
     int size = indicatorSize;
 
     /* Background square/circle. */

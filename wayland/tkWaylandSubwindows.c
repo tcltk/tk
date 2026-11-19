@@ -68,7 +68,7 @@
  * shader as a uniform value in location 0.
  */
 
-static const char* clipVertexShader = 
+static const char* clipVertexShader =
     "#version 300 es\n"
     "layout (location = 0) in vec2 aPos;\n"
     "uniform vec2 fbSize;\n"
@@ -77,7 +77,7 @@ static const char* clipVertexShader =
     "                      1.0 - (aPos.y / fbSize.y) * 2.0, -0.5, 1.0);\n"
     "}\n";
 
-static const char* clipFragmentShader = 
+static const char* clipFragmentShader =
     "#version 300 es\n"
     "precision highp float;\n"
     "out vec4 fragColor;\n"
@@ -168,7 +168,7 @@ void createClipShaders(TkWindow *winPtr) {
 	glGetProgramiv(winPtr->privatePtr->clipShader,
 		       GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength > 0) {
-	    char logBuffer[logLength]; 
+	    char logBuffer[logLength];
 	    glGetProgramInfoLog(winPtr->privatePtr->clipShader,
 				logLength, NULL, logBuffer);
 	    printf("GLSL LINKER FAILURE:\n%s\n", logBuffer);
@@ -182,7 +182,7 @@ void createClipShaders(TkWindow *winPtr) {
     glDetachShader(winPtr->privatePtr->clipShader, vs);
     glDeleteShader(fs);
     glDetachShader(winPtr->privatePtr->clipShader, fs);
-    
+
     /* Save the location of the framebuffer size uniform. */
     winPtr->privatePtr->fbSizeUniform = glGetUniformLocation(
         winPtr->privatePtr->clipShader, "fbSize");
@@ -311,7 +311,7 @@ getBounds(
     while (!Tk_IsTopLevel(winPtr2)) {
         x += winPtr2->changes.x;
 	y += winPtr2->changes.y;
-    	winPtr2 = winPtr2->parentPtr;
+	winPtr2 = winPtr2->parentPtr;
     }
     return (clipRect) {
         .x = scale * x,
@@ -560,9 +560,9 @@ TkWaylandExposeOverlapping(
  */
 
 /*
- * Static helper function. 
+ * Static helper function.
  * Subdivides a rectangle into two clockwise oriented triangles
- * and adds the 6 vertices of those triangles to a buffer of  
+ * and adds the 6 vertices of those triangles to a buffer of
  * vertices at the specified index. Returns the index of the
  * vertex following the last one, which was just added.
  *   0       1
@@ -806,7 +806,7 @@ void updateClipRects(
      * Add the vertices of all of the clipRects in the clipRect buffer
      * to the vertex array.
      */
-    clipRect *clipRects = winPtr->privatePtr->clipRectBuffer; 
+    clipRect *clipRects = winPtr->privatePtr->clipRectBuffer;
     for (int i = 0; i < winPtr->privatePtr->clipRectCount; i++) {
 	n = appendVerticesForRect(clipRects[i], vertices, n);
     }
@@ -914,7 +914,7 @@ void tkWaylandDrawClipMask(
     /* Restore defaults. */
     glBindVertexArray(0);
     glUseProgram(0);
-    glDepthMask(GL_FALSE); 
+    glDepthMask(GL_FALSE);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 

@@ -462,7 +462,7 @@ proc ::tk::MessageBox {args} {
 	set focus $w
     }
     ::tk::SetFocusGrab $w $focus
-    
+
     if {$windowingsystem eq "aqua"} {
 	wm attributes $w -stylemask titled
     }

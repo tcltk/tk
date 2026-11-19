@@ -149,7 +149,7 @@ const char *const WmAttributeNames[] = {
  *
  */
 
-inline bool TkWaylandDrawableIsPixmap(Drawable drawable) 
+inline bool TkWaylandDrawableIsPixmap(Drawable drawable)
 {
     /* A valid pixmap has the low bit set and is not None. */
     if (drawable == None || drawable == 0) {
@@ -229,7 +229,7 @@ static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Obj *const objv[]);
 static int		WmAttributesCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
-	 		    Tcl_Obj *const objv[]);
+			    Tcl_Obj *const objv[]);
 static int		WmClientCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -510,7 +510,7 @@ TkWaylandHandleProtocol(WmInfo *wmPtr, int protocol)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 InitializeGlfwWindow(TkWindow *winPtr)
 {
@@ -581,9 +581,9 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     if (!winPtr || !winPtr->privatePtr) {
         return;
     }
-    
+
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    
+
     /* Clear the clip rect buffer. */
     winPtr->privatePtr->clipRectBufferSize = 0;
     winPtr->privatePtr->clipRectCount = 0;
@@ -592,9 +592,9 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
         ckfree(winPtr->privatePtr->clipRectBuffer);
         winPtr->privatePtr->clipRectBuffer = NULL;
     }
-    
+
     if (glfwWindow) {
-        /* 
+        /*
          * Detach the user pointer to prevent double-free
          * when the GLFW window is destroyed.
          */
@@ -631,7 +631,7 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
  *
  * Side effects:
  *	Queues one VisibilityNotify XEvent per window in the
- *	subtree rooted at winPtr. Advances the display's request serial 
+ *	subtree rooted at winPtr. Advances the display's request serial
  *  once per event.
  *
  *----------------------------------------------------------------------
@@ -1264,13 +1264,13 @@ MarkNeedsDisplay(
  *      labelframe inside a panedwindow) was never repainted at its
  *      final geometry: its first-frame pixels, painted at pre-layout
  *      geometry, stayed on screen.
- * 
- * Results: 
+ *
+ * Results:
  *      Subtree elements receive display flag.
- * 
+ *
  * Side effects:
  *      None.
- * 
+ *
  *----------------------------------------------------------------------
  */
 
@@ -1882,7 +1882,7 @@ TkWmDeadWindow(
      */
     if (winPtr->privatePtr) {
         GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-        
+
         /* Free clip rect buffer if present. */
         winPtr->privatePtr->clipRectBufferSize = 0;
         winPtr->privatePtr->clipRectCount = 0;
@@ -1891,7 +1891,7 @@ TkWmDeadWindow(
             ckfree(winPtr->privatePtr->clipRectBuffer);
             winPtr->privatePtr->clipRectBuffer = NULL;
         }
-        
+
         /*
          * Only try to destroy the GLFW window if it exists and is valid.
          * Check if the window pointer is non-NULL and seems valid.
@@ -1903,20 +1903,20 @@ TkWmDeadWindow(
              * approach by checking if glfwWindow is valid.
              */
             DEBUG_LOG("Destroying GLFW window for %s", Tk_PathName(winPtr));
-            
+
             /* Clear callbacks before destroying. */
             TkWaylandClearCallbacks(glfwWindow);
-            
+
             /* Destroy the GLFW window. */
             TkWaylandDestroyWindow(glfwWindow);
-            
+
             /* Clear the pointer to prevent use-after-free. */
             winPtr->privatePtr->glfwWindow = NULL;
         }
-        
+
         /* Free the pendingText DString. */
         Tcl_DStringFree(&winPtr->privatePtr->pendingText);
-        
+
         /* Free scroll scratch if any. */
         if (winPtr->privatePtr->scrollScratchFBO) {
             glDeleteFramebuffers(1, &winPtr->privatePtr->scrollScratchFBO);
@@ -2068,7 +2068,7 @@ TkWmDeadWindow(
     /* Clear the window's pointer to this WmInfo and free it. */
     winPtr->wmInfoPtr = NULL;
     ckfree((char *)wmPtr);
-    
+
         DEBUG_LOG("TkWmDeadWindow: Done cleaning up %s", Tk_PathName(winPtr));
 
     /* Wayland: synthesize Enter for window now under pointer after toplevel destroy.
@@ -2277,7 +2277,7 @@ Tk_MakeWindow(
 	AllocPrivateData(winPtr);
     }
     if (Tk_IsTopLevel(winPtr)) {
-		
+
         /*
          * Guard against internal Tk toplevels that have no mainPtr -
          * e.g. the clipboard owner window created by TkClipInit.
@@ -2299,17 +2299,17 @@ Tk_MakeWindow(
             DEBUG_LOG("Tk_MakeWindow: clipboard owner %s - no GLFW surface", Tk_PathName(winPtr));
             return result;
         }
-        
+
         /*
          * Check if this is a menu window by its class.
          * Menu windows should use subsurfaces, not full GLFW windows.
          * Skip GLFW window creation entirely for menu windows.
          */
         if (IsPopupMenuWindow(winPtr)) {
-            
-            DEBUG_LOG("Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation", 
+
+            DEBUG_LOG("Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation",
                     Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));
-            
+
             /* Ensure private data exists. */
             if (winPtr->privatePtr == NULL) {
                 winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
@@ -2317,7 +2317,7 @@ Tk_MakeWindow(
                 winPtr->privatePtr->glfwWindow = NULL;
                 winPtr->privatePtr->fb = NULL;
             }
-            
+
             /* No GLFW window for menu - will use subsurface via menu system. */
             return result;
         }
@@ -2959,9 +2959,9 @@ TkWmProtocolEventProc(
     if (eventPtr && eventPtr->type == ClientMessage) {
         /* Try to map Atom/string to our internal id. */
         const char *msg = NULL;
-        /* 
-         * XClientMessageEvent message_type may hold protocol 
-         * name. For safety, if data.l[0] matches our constants, 
+        /*
+         * XClientMessageEvent message_type may hold protocol
+         * name. For safety, if data.l[0] matches our constants,
          * use it.
          */
         long l0 = eventPtr->xclient.data.l[0];
@@ -3642,7 +3642,7 @@ WmClientCmd(
  *	Implements the "wm colormapwindows" subcommand (no-op on Wayland).
  *
  * Results:
- *	 No-op on Wayland. 
+ *	 No-op on Wayland.
  *
  * Side effects:
  *	None.
@@ -3713,7 +3713,7 @@ WmColormapwindowsCmd(
  *	Implements the "wm command" subcommand.
  *
  * Results:
- *	No-op on Wayland. 
+ *	No-op on Wayland.
  *
  * Side effects:
  *	Stores the command to restart the application.
@@ -3829,7 +3829,7 @@ WmDeiconifyCmd(
  *	Implements the "wm focusmodel" subcommand.
  *
  * Results:
- *	 No-op on Wayland. 
+ *	 No-op on Wayland.
  *
  * Side effects:
  *	None.
@@ -3931,7 +3931,7 @@ WmForgetCmd(
  *	Implements the "wm frame" subcommand (returns dummy window ID).
  *
  * Results:
- *  No-op on Wayland. 
+ *  No-op on Wayland.
  *
  * Side effects:
  *	None.
@@ -4189,7 +4189,7 @@ WmGridCmd(
  *	Implements the "wm group" subcommand.
  *
  * Results:
- *	 No-op on Wayland. 
+ *	 No-op on Wayland.
  *
  * Side effects:
  *	Stores the group leader window name.
@@ -4269,7 +4269,7 @@ WmIconbadgeCmd(
     /* Wayland has no badge protocol; intentionally a no-op. */
     return TCL_OK;
 }
- 
+
 
 /*
  *----------------------------------------------------------------------
@@ -4504,14 +4504,14 @@ WmIconnameCmd(
  *
  * WmIconphotoCmd --
  *
- *	Implements the "wm iconphoto" subcommand. 
+ *	Implements the "wm iconphoto" subcommand.
  *
  * Results:
  *	Standard Tcl result.
  *
  * Side effects:
- *	No-op on Wayland. Toplevel icons on Wayland are instead set via the 
- *      wl app_id, which the compositor resolves against a matching .desktop 
+ *	No-op on Wayland. Toplevel icons on Wayland are instead set via the
+ *      wl app_id, which the compositor resolves against a matching .desktop
  *      file's Icon=key - see TkWaylandSetAppId() / TkpSetAppName() in
  *      tkWaylandInit.c.
  *
@@ -5172,7 +5172,7 @@ WmResizableCmd(
  *	Implements the "wm sizefrom" subcommand.
  *
  * Results:
- *	None - no-op on Wayland. 
+ *	None - no-op on Wayland.
  *
  * Side effects:
  *	Updates size source hint.
@@ -5232,7 +5232,7 @@ WmSizefromCmd(
  *	Implements the "wm stackorder" subcommand.
  *
  * Results:
- *	None - no-op on Wayland. 
+ *	None - no-op on Wayland.
  *
  * Side effects:
  *	None (returns placeholder result for isabove/isbelow).
@@ -5432,9 +5432,9 @@ WmStateCmd(
             if (glfwWindow != NULL) {
                 glfwMaximizeWindow(glfwWindow);
             }
-            /* 
+            /*
              * Note: many WMs ignore attempts to force zoom via hints,
-             * so we rely on the GLFW/Wayland calls above. 
+             * so we rely on the GLFW/Wayland calls above.
              */
             break;
     }
@@ -5495,7 +5495,7 @@ WmTitleCmd(
  *	Implements the "wm transient" subcommand.
  *
  * Results:
- *	None - no-op on Wayland. 
+ *	None - no-op on Wayland.
  *
  * Side effects:
  *	Sets or clears transient-for relationship.
@@ -6036,8 +6036,8 @@ TopLevelReqProc(
  * ApplyPendingGeometry --
  *
  *	Sets the size of the toplevel by calling glfwSetWindowSize.  This is
- * 	called directly by that TkWmMapWindow when a toplevel is first mapped,
- * 	and used as idle task by UpdateGeometryInfo.  The size is set to
+ *	called directly by that TkWmMapWindow when a toplevel is first mapped,
+ *	and used as idle task by UpdateGeometryInfo.  The size is set to
  *  wmPtr->width x wmPtr->height if those values are both positive, or
  *  to winPtr->reqWidth x winPtr->reqHeight if not.
  *
@@ -6276,7 +6276,7 @@ CancelGeometryUpdate(
  * UpdateGeometryInfo --
  *
  *	Run as an idle task to set the size of a toplevel's glfwWindow
- *      to match the size expected by Tk.  Calls ApplyPendingGeometry. 
+ *      to match the size expected by Tk.  Calls ApplyPendingGeometry.
  *
  * Results:
  *	None.
@@ -7250,7 +7250,7 @@ XDestroySubwindows(
  *
  *----------------------------------------------------------------------
  */
- 
+
 int
 XMapWindow(
     Display *display,
@@ -7265,7 +7265,7 @@ XMapWindow(
     if (winPtr == NULL) {
         return Success;
     }
-    
+
     DEBUG_LOG("XMapWindow: %s queuing expose %dx%d at %d,%d (req %dx%d)",
     Tk_PathName(winPtr),
     Tk_Width(winPtr), Tk_Height(winPtr),
@@ -7493,7 +7493,7 @@ XResizeWindow(
 	    Tk_PathName(winPtr->parentPtr));
         TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
 	  Tk_Width(winPtr->parentPtr), Tk_Height(winPtr->parentPtr));
-    }	
+    }
     DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
@@ -7896,10 +7896,10 @@ XChangeWindowAttributes(
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
 
-    /* 
+    /*
      * CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
-     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap - 
-     * all are maintained by Tk's own attribute tables; no GLFW action. 
+     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap -
+     * all are maintained by Tk's own attribute tables; no GLFW action.
      */
 
     return Success;

@@ -11,7 +11,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkWaylandInt.h" 
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 
 /*

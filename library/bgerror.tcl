@@ -256,7 +256,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 	    wm attributes $dlg -topmost 1
 	}
     }
-    
+
     if {$windowingsystem eq "aqua"} {
 		wm attributes $dlg -stylemask titled
     }

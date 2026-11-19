@@ -188,6 +188,7 @@ to the userbase.
  - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
  - [Every Tk_Init registers another thread exit handler](https://core.tcl-lang.org/tk/tktview/703a7f)
  - [Remove unused troughGC and copyGC from MacScrollbar](https://core.tcl-lang.org/tk/tktview/f64df5)
+ - [On X11, invoke buttons when mouse button 1 is released](https://core.tcl-lang.org/tk/tktview/356526)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

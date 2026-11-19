@@ -2,8 +2,8 @@
  * tkWaylandSysTray.c --
  *
  *    Wayland system tray/notification icon support using the
- *    StatusNotifierItem protocol via sd-bus. 
- * 
+ *    StatusNotifierItem protocol via sd-bus.
+ *
  * Copyright © 2020-2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -921,9 +921,9 @@ RegisterStatusNotifierItem(DockIcon *icon) {
                          WatcherOwnerChanged, icon);
     if (r < 0) {
         DEBUG_LOG("Failed to add watcher-restart match: %s\n", strerror(-r));
-        /* 
+        /*
          * Not fatal -- we still work, just won't self-heal if the
-         * watcher restarts. 
+         * watcher restarts.
          */
     }
 
@@ -940,7 +940,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
     /* Start the event processing timer. */
     icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
 
-    /* 
+    /*
      * Schedule property refreshes at staggered intervals to ensure the
      * GNOME extension picks up all properties after proxy init.
      */

@@ -1,12 +1,12 @@
 /*
- * tkWaylandClipboard.c -- 
+ * tkWaylandClipboard.c --
  *
  *      Native Wayland clipboard for the Tk/GLFW backend.
  *
  *      Tk owns the Wayland selection itself via wl_data_device /
  *      wl_data_source / wl_data_offer, using the same wl_display and
  *      wl_surface GLFW already owns. Supports both external integration
- *      with Wayland system clipboard and Tk's internal clipboard. 
+ *      with Wayland system clipboard and Tk's internal clipboard.
 
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -38,7 +38,7 @@
 */
 
 /*
- *  Wayland state.                                                      
+ *  Wayland state.
  */
 
 typedef struct WaylandClipboard {
@@ -123,7 +123,7 @@ QueueClipboardLost(void)
 }
 
 /*
- *  wl_data_source listener -- we are the clipboard owner.             
+ *  wl_data_source listener -- we are the clipboard owner.
  */
 
 /*
@@ -240,8 +240,8 @@ static const struct wl_data_source_listener sourceListener = {
     .action = NULL,
 };
 
-/* 
- *  wl_data_offer listener -- someone else owns the clipboard.          
+/*
+ *  wl_data_offer listener -- someone else owns the clipboard.
  */
 
 /*
@@ -286,7 +286,7 @@ static const struct wl_data_offer_listener offerListener = {
 };
 
 /*
- * wl_data_device listener.                                           
+ * wl_data_device listener.
  */
 
 /*
@@ -424,7 +424,7 @@ static const struct wl_data_device_listener deviceListener = {
     .selection = DeviceSelection,
 };
 
-/* 
+/*
  *  Keyboard: serial tracking only.  We do not need wl_pointer.
  */
 
@@ -505,9 +505,9 @@ KeyboardEnter(void *data,
  */
 
 static void
-KeyboardLeave(TCL_UNUSED(void *), 
+KeyboardLeave(TCL_UNUSED(void *),
 	      TCL_UNUSED(struct wl_keyboard *),
-	      TCL_UNUSED(uint32_t), 
+	      TCL_UNUSED(uint32_t),
 	      TCL_UNUSED(struct wl_surface *))
 {
     DEBUG_LOG("KeyboardLeave: retaining serial=%u", clip.lastSerial);
@@ -551,21 +551,21 @@ KeyboardModifiers(void *data,
  *
  * KeyboardRepeatInfo  --
  *
- *      Info on keyboard repeating. 
+ *      Info on keyboard repeating.
  *
  * Results:
- *      None. No-op with GLFW. 
+ *      None. No-op with GLFW.
  *
  * Side effects:
  *      None.
- * 
+ *
  *----------------------------------------------------------------------
  */
 
 static void
-KeyboardRepeatInfo(TCL_UNUSED(void *), 
+KeyboardRepeatInfo(TCL_UNUSED(void *),
 		   TCL_UNUSED(struct wl_keyboard *),
-		   TCL_UNUSED(int32_t), 
+		   TCL_UNUSED(int32_t),
 		   TCL_UNUSED(int32_t))
 {
     /* No-op. */
@@ -580,8 +580,8 @@ static const struct wl_keyboard_listener keyboardListener = {
     .repeat_info = KeyboardRepeatInfo,
 };
 
-/* 
- *  Seat + registry. 
+/*
+ *  Seat + registry.
  */
 
 /*
@@ -632,19 +632,19 @@ SeatCapabilities(void *data, struct wl_seat *seat, uint32_t caps)
  *
  * SeatName --
  *
- *      wl_seat identifier. 
+ *      wl_seat identifier.
  *
  * Results:
- *      None. No-op with GLFW. 
+ *      None. No-op with GLFW.
  *
  * Side effects:
  *      None.
- * 
+ *
  *----------------------------------------------------------------------
  */
 
 static void
-SeatName(TCL_UNUSED(void *), 
+SeatName(TCL_UNUSED(void *),
 	 TCL_UNUSED(struct wl_seat *),
 	 TCL_UNUSED(const char *))
 {
@@ -716,7 +716,7 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
  *
  * RegistryGlobalRemove --
  *
- *      wl_registry "global" handler.  
+ *      wl_registry "global" handler.
  *
  * Results:
  *      None. No-op with GLFW.
@@ -726,9 +726,9 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
-RegistryGlobalRemove(TCL_UNUSED(void *), 
+RegistryGlobalRemove(TCL_UNUSED(void *),
 		     TCL_UNUSED(struct wl_registry *),
 		     TCL_UNUSED(uint32_t))
 {
@@ -740,7 +740,7 @@ static const struct wl_registry_listener registryListener = {
     .global_remove = RegistryGlobalRemove,
 };
 
-/* 
+/*
  *  Init / pump.
  */
 
@@ -1041,7 +1041,7 @@ ClipExitHandler(TCL_UNUSED(ClientData))
     TkWaylandClipboardCleanup();
 }
 
-/* 
+/*
  *  Publish / clear.
  */
 
@@ -1590,9 +1590,9 @@ TkSelGetSelection(
  */
 
 int
-XSetSelectionOwner(TCL_UNUSED(Display *), 
+XSetSelectionOwner(TCL_UNUSED(Display *),
 		   TCL_UNUSED(Atom),
-		   TCL_UNUSED(Window), 
+		   TCL_UNUSED(Window),
 		   TCL_UNUSED(Time))
 {
     return Success;

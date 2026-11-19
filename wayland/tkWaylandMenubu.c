@@ -520,13 +520,13 @@ TkpMenuButtonFocus(
     int gotFocus)         /* Non-zero if focus was gained, 0 if lost */
 {
     if (!mbPtr || !mbPtr->tkwin) return;
-    
+
     if (gotFocus) {
         mbPtr->flags |= GOT_FOCUS;
     } else {
         mbPtr->flags &= ~GOT_FOCUS;
     }
-    
+
     mbPtr->flags |= REDRAW_PENDING;
     Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenuButton, (ClientData)mbPtr);
 }
@@ -553,7 +553,7 @@ TkpMenuButtonState(
     enum state newState)   /* New state for the menubutton */
 {
     if (!mbPtr || !mbPtr->tkwin) return;
-    
+
     if (mbPtr->state != newState) {
         mbPtr->state = newState;
         mbPtr->flags |= REDRAW_PENDING;

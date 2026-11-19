@@ -573,7 +573,7 @@ test image-13.2 {DeleteImage procedure} -constraints testImageType -setup {
     imageCleanup
 } -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" does not exist} | {} |}
 
-# This hangs on Wayalnd 
+# This hangs on Wayalnd
 test image-14.1 {image command vs hidden commands} -body {
     catch {image delete hidden}
     set l [imageNames]

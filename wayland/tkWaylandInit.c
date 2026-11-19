@@ -205,7 +205,7 @@ glfwTkInfo* glfwTkInfoList = NULL;
  *
  *----------------------------------------------------------------------
  */
- 
+
 static glfwTkInfo* createGlfwTkInfo(
     GLFWwindow* glfwWindow,
     TkWindow* winPtr)
@@ -274,7 +274,7 @@ static glfwTkInfo* createGlfwTkInfo(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void destroyGlfwTkInfo(
     GLFWwindow* glfwWindow)
 {
@@ -290,7 +290,7 @@ static void destroyGlfwTkInfo(
 	    }
 	    glfwMakeContextCurrent(glfwWindow);
 	    glfwSetWindowUserPointer(glfwWindow, NULL);
-	    /* 
+	    /*
 	     * Remove all references to this NVGcontext from the font
 	     * registry.  Without this, windows will be rendered without text!
 	     */
@@ -326,7 +326,7 @@ static void destroyGlfwTkInfo(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static glfwTkInfo*
 getGlfwTkInfo(
     GLFWwindow *glfwWindow)
@@ -528,7 +528,7 @@ Tk_ClipDrawableToRect(
      * such as a Text widget always has privatePtr->fb == NULL, so
      * checking winPtr->privatePtr->fb directly made every clip Begin/End
      * call for a child widget fall into the "not ready" branch below.
-     * Walk up to the toplevel here so he readiness check 
+     * Walk up to the toplevel here so he readiness check
      * matches where ->fb actually lives.
      */
     TkWindow *toplevelPtr = winPtr;
@@ -972,7 +972,7 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         ibus_bus = NULL;
     }
 
-    /* 
+    /*
      * Destroy all NanoVG contexts BEFORE freeing font data.
      * nvgCreateFontMem does not copy the buffer, it keeps the pointer,
      * so freeing sans_data/bold_data/mono_data while vg is alive is
@@ -1111,7 +1111,7 @@ TkWaylandCreateWindow(
 
 
 	   /* Make sure the root window's context is current and configured.
-	    * Keep the window hidden; TkWmMapWindow is responsible for the 
+	    * Keep the window hidden; TkWmMapWindow is responsible for the
 	    * first show so the user never sees an unpainted frame. */
 
 	glfwMakeContextCurrent(glfwWindow);
@@ -1396,14 +1396,14 @@ TkWaylandBeginDraw(
 	TkWaylandApplyGC(dcPtr->vg, gc);
 	return TCL_OK;
     }
-    
+
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {
         x += winPtr->changes.x;
 	y += winPtr->changes.y;
-    	winPtr = winPtr->parentPtr;
+	winPtr = winPtr->parentPtr;
     }
     DEBUG_LOG("BeginDraw: %s in toplevel %s with offset (%d, %d)",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
@@ -1523,7 +1523,7 @@ TkWaylandBeginDraw(
  *
  *----------------------------------------------------------------------
  */
- 
+
 MODULE_SCOPE void
 TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
@@ -1590,7 +1590,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 
         DEBUG_LOG("FBO is incomplete! (status=0x%x)", status);
     }
-    
+
     /*
      * Draw the clip mask into the depth buffer.  This must use childPtr
      * (the widget actually being drawn), not winPtr (the enclosing
@@ -1834,7 +1834,7 @@ TkWaylandGetNVGContextForMeasure(void)
     /*
      * Read the NVGcontext straight off glfwTkInfo instead of round-tripping
      * through winPtr -> Drawable -> TkWaylandGetNVGContext(), which just
-     * re-derives this same field. 
+     * re-derives this same field.
      */
     NVGcontext *vg = glfwInfoPtr->vg;
     if (!vg) {
@@ -1853,8 +1853,8 @@ TkWaylandGetNVGContextForMeasure(void)
      * set (effectively 1.0) and its advances permanently disagree with
      * what later gets drawn on a HiDPI display. Bracket measurement in a
      * matching-scale frame so whichever path -- measuring or drawing --
-     * touches a given (font, size) first bakes it identically. 
-     * 
+     * touches a given (font, size) first bakes it identically.
+     *
      * Skip this if a real frame is already active on this window (e.g.
      * measurement invoked reentrantly from inside a draw callback):
      * nvgBeginFrame must never nest (see TKWL_IS_DRAWING elsewhere), and

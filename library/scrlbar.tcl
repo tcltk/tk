@@ -14,7 +14,7 @@
 # The code below creates the default class bindings for scrollbars.
 #-------------------------------------------------------------------------
 
-# Standard Motif bindings for x11, aqua and wayland. 
+# Standard Motif bindings for x11, aqua and wayland.
 if {[tk windowingsystem] eq "x11" ||
     [tk windowingsystem] eq "wayland" ||
     [tk windowingsystem] eq "aqua"} {
@@ -381,7 +381,7 @@ proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
 	variable ::tk::Priv
 	if {![info exists Priv(xEvents)]} { set Priv(xEvents) 0 }
 	if {![info exists Priv(yEvents)]} { set Priv(yEvents) 0 }
-	
+
 	# Count both the <MouseWheel> and <Shift-MouseWheel>
 	# events, and ignore the non-dominant ones
 

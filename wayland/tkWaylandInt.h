@@ -227,7 +227,7 @@ typedef struct WaylandFont {
 
     /* Shaper. */
     WaylandShaper   shaper;
-    
+
     /* Fonts are stored per context. */
     NvgFontContext *nvgContexts;
     int             nvgContextCount;
@@ -975,7 +975,7 @@ void updateClipRects(TkWindow* winPtr, GLFWwindow* glfwWindow);
 /*
  *----------------------------------------------------------------------
  *
- * Stub functions which are not declared elsewhere. 
+ * Stub functions which are not declared elsewhere.
  *
  *----------------------------------------------------------------------
  */
@@ -992,7 +992,7 @@ MODULE_SCOPE void TkpSetCursor(Cursor cursor);
  * far from the floating point shape, especially when there is a very
  * sharp mitered join in a stroked path.  NanoVG does replace the miter
  * by a bevel if it is too sharp, but nonethless the bound is larger
- * than one would expect. 
+ * than one would expect.
  *
  *----------------------------------------------------------------------
  */

@@ -26,7 +26,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
     if {[::tk::accessible::_isunix]
 	&& [::tk::accessible::check_screenreader] eq 1} {
-	
+
 	# Add border to all X11/Wayland widgets with accessible focus. A highlight rectangle
 	# is drawn over focused widgets by the screen reader app on
 	# macOS and Windows (VoiceOver, NVDA), but not on X11 or Wayland.
@@ -399,8 +399,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			::tk::accessible::speak "$data"
 		    }
 		}
-	    }	
-	    
+	    }
+
 	    if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
 		set description [::tk::accessible::get_acc_name $w]
@@ -977,7 +977,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		       }
 
     # Menu accessibility bindings for X11 and Wayland only. Menus are native
-    # on macOS/Windows, so we don’t expose them here. 
+    # on macOS/Windows, so we don’t expose them here.
 
     if {[::tk::accessible::_isunix]} {
 	variable prevActiveIndex
@@ -1029,7 +1029,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_action $menuWidget [list $menuWidget invoke $idx]
 		::tk::accessible::emit_selection_change $menuWidget
 		::tk::accessible::emit_focus_change     $menuWidget
-	    }	
+	    }
 	}
 
 
@@ -1379,11 +1379,11 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     if {[tk windowingsystem] eq "win32"} {
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
     }
-    
+
     if {[tk windowingsystem] eq "wayland"} {
 	bind all <FocusIn> {+::tk::accessible::_throttledFocusChange %W}
     }
-    
+
     bind Toplevel <FocusIn> {+::tk::accessible::_updateselection %W}
 
     # Finally, export the main commands.

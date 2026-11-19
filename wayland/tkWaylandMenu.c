@@ -284,7 +284,7 @@ static void MenuMouseLeave(TkMenu *menuPtr);
  * from raw wl_pointer/wl_keyboard listeners in C -- never synthesizing a
  * <Motion> event that would run through the Menu bindtag -- that script
  * layer is never reached, so <<MenuSelect>> must be generated here
- * instead. 
+ * instead.
  */
 static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
 MODULE_SCOPE void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
@@ -2215,7 +2215,7 @@ DrawMenuEntryIndicator(
 
     /* Calculate indicator position - centered vertically in the entry. */
     top = y + height / 2;
-    
+
     /* Determine indicator size - proportional to entry height. */
     size = MenuIndicatorSize(isCheck, height);
     radius = size / 2;
@@ -2250,10 +2250,10 @@ DrawMenuEntryIndicator(
     /* Draw the indicator with white background and no outline. */
     if (isCheck) {
         /* Checkbox - square with white background. */
-        
+
         /* White background. */
         nvgBeginPath(vg);
-        nvgRect(vg, 
+        nvgRect(vg,
             left - size/2,
             top - size/2,
             size, size);
@@ -2264,15 +2264,15 @@ DrawMenuEntryIndicator(
         if (mePtr->entryFlags & ENTRY_SELECTED) {
             float inset = size * 0.15f;
             float checkSize = size - 2 * inset;
-            
+
             nvgBeginPath(vg);
-            nvgMoveTo(vg, 
+            nvgMoveTo(vg,
                 left - checkSize/3,
                 top);
-            nvgLineTo(vg, 
+            nvgLineTo(vg,
                 left - checkSize/8,
                 top + checkSize/2.8f);
-            nvgLineTo(vg, 
+            nvgLineTo(vg,
                 left + checkSize/2.8f,
                 top - checkSize/3);
             nvgStrokeWidth(vg, 2.0f);
@@ -2281,7 +2281,7 @@ DrawMenuEntryIndicator(
         }
     } else if (isRadio) {
         /* Radio button - circle with white background. */
-        
+
         /* White background. */
         nvgBeginPath(vg);
         nvgCircle(vg, left, top, radius);
@@ -2907,11 +2907,11 @@ TkpPostMenu(
 
     /*
      * Resolve GLFW window for this popup.
-     * 
+     *
      * First try: use the window that the menu is posted from.
      * Since the menu's tkwin may be under "." while the posting
      * window is a child toplevel, we need to find the correct window.
-     * 
+     *
      * Use the coordinates to find which window the user is interacting with.
      * This is the same approach used by right-click context menus.
      */
@@ -2925,7 +2925,7 @@ TkpPostMenu(
             }
         }
     }
-    
+
     /* If that didn't work, try resolving from the menu's parent chain. */
     if (!gw) {
         TkWindow *parent = (TkWindow *)Tk_Parent(menuPtr->tkwin);
@@ -3052,7 +3052,7 @@ TkpMenuButtonPostMenu(
      */
     pendingRootIsMenubar = 0;
     result = TkpPostMenu(interp, menuPtr, x, y, -1);
-    
+
     /*
      * Note: TkpPostMenu will handle the actual menu positioning.
      * We pass index=-1 to let it compute the correct y offset.
@@ -3130,9 +3130,9 @@ MenuStackPop(
  *
  * Results:
  *     1 if passive, 0 otherwise.
- * 
- * Side effects: 
- * 	   None. 
+ *
+ * Side effects:
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -3158,12 +3158,12 @@ MenuIsPassive(
  *     Depth of the menu stack as seen by input routing: a lone passive
  *     popup counts as 0, so pointer and keyboard handling treat "no menu
  *     is active" and let events reach the widgets underneath.
- * 
+ *
  * Results:
  *     Returns the depth of the menu stack.
- * 
- * Side effects: 
- * 	   None. 
+ *
+ * Side effects:
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -3877,7 +3877,7 @@ TkWaylandPostMenuAtAnchor(
     } else {
         entry->rootIsMenubar = menuStack[0].rootIsMenubar;
     }
-    
+
     Tk_CreateEventHandler(menuPtr->tkwin, StructureNotifyMask,
                        MenuStackWindowEventProc, (ClientData)menuPtr);
 
@@ -4129,11 +4129,11 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     Tk_FontMetrics fm;
     Tk_GetFontMetrics(tkfont, &fm);
 
-    /* 
+    /*
      * Standard Tk color setup (menu-wide -background fallback only;
      * per-entry and -activebackground/-activeforeground/-foreground
      * resolution now happens inside TkpDrawMenuEntry, mirroring the
-     * dropdown/popup entry drawing path). 
+     * dropdown/popup entry drawing path).
      */
     NVGcolor bgColor = nvgRGB(230, 230, 230);
 
@@ -4154,11 +4154,11 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
-    /* 
+    /*
      * Draw each entry via the shared entry-drawing path so menubar
      * cascades get the same per-entry -background/-activebackground/
      * -foreground/-activeforeground/-font resolution (with fallback to
-     * menu-wide options) as popup/dropdown entries. 
+     * menu-wide options) as popup/dropdown entries.
      */
     for (int i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
@@ -4895,10 +4895,10 @@ MenuMouseMotion(
                     /* Re-get parent window after pop. */
                     parentGw = TkWaylandGetCascadeParentWindow(level);
 
-                    /* 
+                    /*
                      * Compute cascade position: to the right of the parent
                      * unless that would overflow the toplevel, in which
-                     * case flip to the left, aligned with the entry. 
+                     * case flip to the left, aligned with the entry.
                      */
                     TkRecomputeMenu(cascadePtr);
                     cascadeW = cascadePtr->totalWidth;
@@ -5619,7 +5619,7 @@ TkWaylandMenuOpenCascade(
 
     /* Redraw the parent menu to show the cascade highlight. */
     TkEventuallyRedrawMenu(menuPtr, NULL);
-    
+
     /* Redraw the cascade menu. */
     TkWaylandMenuRedrawActive();
 }

@@ -1,5 +1,5 @@
 /*
- * tkWaylandImage.c -- 
+ * tkWaylandImage.c --
  *
  *      Image handling for Wayland backend using NanoVG.
  *      Provides conversion between Tk images and NanoVG images,
@@ -227,7 +227,7 @@ PutPixel(
  *
  * XCreateImage --
  *
- *      Allocates storage for a new XImage mirroring the Windows API 
+ *      Allocates storage for a new XImage mirroring the Windows API
  *      implementation context.
  *
  * Results:
@@ -334,8 +334,8 @@ _XInitImageFuncPtrs(
  *
  * TkpPutRGBAImage --
  *
- *      Accepts a raw image container from Tk, extracts the requested 
- *      sub-region, converts pixel formats from Tk's XImage layout to 
+ *      Accepts a raw image container from Tk, extracts the requested
+ *      sub-region, converts pixel formats from Tk's XImage layout to
  *      native NanoVG RGBA, and draws it using NanoVG.
  *
  * Results:
@@ -347,7 +347,7 @@ _XInitImageFuncPtrs(
  *----------------------------------------------------------------------
  */
 
-int 
+int
 TkpPutRGBAImage(
                 TCL_UNUSED(Display *), /* display */
                 Drawable drawable,
@@ -440,9 +440,9 @@ TkpPutRGBAImage(
     }
 
     /* Construct the texture pattern brush positioned relative to destination offsets. */
-    imgPaint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
+    imgPaint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y,
                                 (float)width, (float)height, 0.0f, imageId, 1.0f);
-    
+
     /* Draw the texture path onto the active canvas window. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
@@ -503,7 +503,7 @@ XGetImage(
         TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(drawable);
         if (pixmapPtr && pixmapPtr->isBitmap && pixmapPtr->bitmapData) {
             /* Create a 1-bit XImage from the bitmap data. */
-            imagePtr = XCreateImage(display, NULL, 1, XYPixmap, 0, NULL, 
+            imagePtr = XCreateImage(display, NULL, 1, XYPixmap, 0, NULL,
                                    width, height, 8, 0);
             if (!imagePtr) {
                 return NULL;
@@ -714,20 +714,20 @@ XCreateBitmapFromData(
     unsigned int  height)
 {
     Pixmap pixmap;
-    
+
     if (!data || width == 0 || height == 0) {
         return None;
     }
-    
+
     /* Create a 1-bit deep pixmap. */
     pixmap = Tk_GetPixmap(display, d, (int)width, (int)height, 1);
     if (pixmap == None) {
         return None;
     }
-    
+
     /* Store the bitmap data in the pixmap. */
     TkWaylandSetBitmapData(pixmap, data, width, height);
-    
+
     return pixmap;
 }
 
@@ -910,7 +910,7 @@ XCopyPlane(
     if (!TkWaylandDrawableIsPixmap(src)) {
         return BadDrawable;
     }
-    
+
     srcPixmap = TkWaylandPixmapFromPixmap(src);
     if (!srcPixmap || !srcPixmap->isBitmap || !srcPixmap->bitmapData) {
         return BadDrawable;

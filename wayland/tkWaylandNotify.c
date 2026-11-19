@@ -66,7 +66,7 @@ extern int tkWaylandLastRootY;
 #include <errno.h>
 #include "GLFW/glfw3native.h"
 #include <poll.h>
-	
+
 /*
  * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
  * These wrappers accept Tk_Window so this file never needs to see IbusContext*.
@@ -274,7 +274,7 @@ TkWaylandClearStoredText(TkWindow *winPtr)
 }
 
 /*
- * Notifier / event loop functions. 
+ * Notifier / event loop functions.
  */
 
 static void TkWaylandNotifyExitHandler(void *clientData);
@@ -329,7 +329,7 @@ static inline int TkWaylandHasPendingRedraw(void) {
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 Tk_WaylandSetupTkNotifier(void)
 {
@@ -344,16 +344,16 @@ Tk_WaylandSetupTkNotifier(void)
                               TkWaylandCheckProc, NULL);
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
-    
+
 }
 
-/* 
- * No-op: the file handler exists only to wake Tcl_WaitForEvent. 
+/*
+ * No-op: the file handler exists only to wake Tcl_WaitForEvent.
  * This is still a required parameter. The CheckProc
- * drains the sockets on every pass through the loop. 
+ * drains the sockets on every pass through the loop.
  */
 static void
-TkWaylandFdProc(TCL_UNUSED(void *), 
+TkWaylandFdProc(TCL_UNUSED(void *),
 	TCL_UNUSED(int))
 {
 }
@@ -399,7 +399,7 @@ TkWaylandWatchFd(int *slot, int fd)
 
 
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), 
+TkWaylandSetupProc(TCL_UNUSED(void *),
 	TCL_UNUSED(int))
 {
     TSD_INIT();
@@ -497,7 +497,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 
     /* Process events for GLFW windows. */
     glfwPollEvents();
-    
+
     /* Process events for popup windows */
     struct wl_display *display = glfwGetWaylandDisplay();
     if (display) {
@@ -512,7 +512,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
  *
  *      Clean up at exit. Removes the event source, deletes the
  *      heartbeat timer and file handler, and marks the notifier as
- *      uninitialized. 
+ *      uninitialized.
  *
  * Results:
  *      None.
@@ -523,7 +523,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 {
@@ -544,10 +544,10 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
     TkWaylandWatchFd(&watchedIBusFd, -1);
 
     tsdPtr->initialized = false;
-    
-    /* 
+
+    /*
      * Note: We don't call TkWaylandShutdown here because that is the LAST exit handler,
-     * running after this function. 
+     * running after this function.
      */
 }
 
@@ -600,15 +600,15 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     DEBUG_LOG("TkWaylandQueueExposeEvent for %s", Tk_PathName(winPtr));
-    
+
     if (!winPtr) return;
     if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (width <= 0 || height <= 0) return;
     if (!Tk_IsMapped(winPtr) && !(winPtr->flags & TK_TOP_LEVEL)) {
-        /* 
+        /*
          * For non-toplevels, don't queue expose if not mapped.
-         * Top-levels may need expose even if not yet mapped for 
-         * initial draw. 
+         * Top-levels may need expose even if not yet mapped for
+         * initial draw.
          */
     }
 
@@ -624,7 +624,7 @@ TkWaylandQueueExposeEvent(
     event.xexpose.width = width;
     event.xexpose.height = height;
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
-    
+
     /* Queue it. */
     DEBUG_LOG("Queuing Expose(%lu) for %s in %dx%d",
         event.xexpose.serial,
@@ -633,7 +633,7 @@ TkWaylandQueueExposeEvent(
 }
 
 
-/* 
+/*
  * GLFW callbacks. These functions integrate the native GFLW events
  * with Tk's event loop.
  */
@@ -748,7 +748,7 @@ CloseRequestIdleProc(void *clientData)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
@@ -773,14 +773,14 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *      when a window changes size, whether by interactive resizing with the
  *      mouse or programatic resizing with wm geometry. This generates a
  *      ConfigureNotify event for the window.  The subsequent
- *      TkWaylandWindowRefreshCallback generates ExposeNotify events for the window 
- * 		and all of its children.
+ *      TkWaylandWindowRefreshCallback generates ExposeNotify events for the window
+ *      and all of its children.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Rebuilds the backing store framebuffer. 
+ *      Rebuilds the backing store framebuffer.
  *
  *----------------------------------------------------------------------
  */
@@ -791,20 +791,20 @@ TkWaylandFramebufferSizeCallback(
     int width,
     int height)
 {
-    
+
     /* Validate parameters. */
     if (width <= 0 || height <= 0) {
         DEBUG_LOG("FramebufferSizeCallback: invalid size %dx%d",
 		  width, height);
         return;
     }
-    
+
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
         DEBUG_LOG("FramebufferSizeCallback: No Tk window!");
         return;
     }
-    
+
     if (!winPtr->privatePtr) {
         DEBUG_LOG("TkWaylandFramebufferSizeCallback:"
 		  "privatePtr is NULL for %s -> %dx%d",
@@ -882,7 +882,7 @@ TkWaylandFramebufferSizeCallback(
      */
 
     TkWaylandMenubarResize(winPtr);
-    
+
     /*
      * Update Tk's geometry from the GLFW window size and generate the
      * configure notification.  The actual repaint will happen through the
@@ -890,7 +890,7 @@ TkWaylandFramebufferSizeCallback(
      */
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
-    
+
     DEBUG_LOG("TkWaylandFramebufferSizeCallback: configuring %s",
 	      Tk_PathName(winPtr));
     GenerateConfigureNotify(winPtr, 1);
@@ -942,7 +942,7 @@ GenerateConfigureNotify(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandWindowFocusCallback(
     GLFWwindow *window,
@@ -955,7 +955,7 @@ TkWaylandWindowFocusCallback(
 	      Tk_PathName(winPtr));
 
     XEvent event;
-    
+
     if (!winPtr) {
         return;
     }
@@ -995,7 +995,7 @@ TkWaylandWindowFocusCallback(
 	TkWaylandQueueExposeEvent(winPtr,
 	    0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
     }
-    infoPtr->flags &= ~TKWL_NEVER_FOCUSED;    
+    infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
 }
 
 /*
@@ -1023,7 +1023,7 @@ TkWaylandWindowIconifyCallback(
     DEBUG_LOG("TkWaylandWindowIconifyCallback: %s", Tk_PathName(winPtr));
 
     XEvent event;
-    
+
     if (!winPtr) {
         return;
     }
@@ -1078,18 +1078,18 @@ TkWaylandWindowMaximizeCallback(
 {
 
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    
+
     if (!winPtr) {
         return;
     }
-    
+
     /* Update WmInfo zoomed state if WM info exists. */
     if (winPtr->wmInfoPtr) {
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         wmPtr->attributes.zoomed = maximized;
         wmPtr->reqState.zoomed = maximized;
     }
-    
+
     /* Note: No X event needed for maximize state changes. */
 }
 
@@ -1103,7 +1103,7 @@ TkWaylandWindowMaximizeCallback(
  *      (tkPointer.c), which generates the proper Enter/Leave event chains
  *      and, on leave.
  *
- * 		This is distinct from the widget-level crossing logic in
+ *      This is distinct from the widget-level crossing logic in
  *      Tk_UpdatePointer (called by TkWaylandCursorPosCallback), which tracks
  *      transitions between child widgets while the pointer is already inside
  *      the GLFW window.  This callback handles the coarser, compositor-level
@@ -1136,7 +1136,7 @@ TkWaylandCursorEnterCallback(
     }
 
     glfwGetCursorPos(window, &xpos, &ypos);
-    
+
     /*
      * Menubar intercept: the always-visible menubar strip is not part of
      * the popup stack and has no window of its own to receive motion
@@ -1216,7 +1216,7 @@ TkWaylandCursorEnterCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandCursorPosCallback(
 			   GLFWwindow *window,
@@ -1355,7 +1355,7 @@ TkWaylandMouseButtonCallback(
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
-    
+
     /*
      * Map GLFW button to an X11 button mask. X buttons 4-7 are the wheel
      * axes and arrive via TkWaylandScrollCallback instead, so back/forward
@@ -1522,9 +1522,9 @@ TkWaylandScrollCallback(
         Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
 
         yRemainder -= use;
-        /* 
-         * Only one notch per callback to avoid flooding; 
-         * remainder will be processed on next axis event. 
+        /*
+         * Only one notch per callback to avoid flooding;
+         * remainder will be processed on next axis event.
          */
         break;
     }
@@ -1551,7 +1551,7 @@ TkWaylandScrollCallback(
         event.xbutton.y = (int)ypos - tgtRootY;
         event.xbutton.x_root = (int)xpos;
         event.xbutton.y_root = (int)ypos;
-        /* 
+        /*
          *  Mark horizontal: Tk convention is to add Shift or use separate handling.
          * We set state with ShiftMask already if user holds Shift, but for
          * pure horizontal we queue with Button 6/7 compat and MouseWheel with
@@ -1560,7 +1560,7 @@ TkWaylandScrollCallback(
         event.xbutton.state = glfwButtonState | glfwModifierState;
         event.xbutton.button = delta;
         event.xbutton.same_screen = True;
-        /* 
+        /*
          * For horizontal, Tk's generic handling checks xoffset separately;
          * we queue as MouseWheel and also as Button 6/7.
          */
@@ -2038,7 +2038,7 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
  *
  * TkpGetEventTime --
  *
- * Returns current time. 
+ * Returns current time.
  *
  * Results:
  *	Number of milliseconds.

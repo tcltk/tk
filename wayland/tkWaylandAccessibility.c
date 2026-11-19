@@ -33,7 +33,7 @@ typedef struct _TkAtkAccessible {
     bool is_focused;
     bool is_active;
     bool focus_announced;
-    bool visible_announced; 
+    bool visible_announced;
     int virtual_count;
 } TkAtkAccessible;
 
@@ -49,7 +49,7 @@ static const struct AtkRoleMap {
 } roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
-    {"Checkbutton", ATK_ROLE_CHECK_BOX},	
+    {"Checkbutton", ATK_ROLE_CHECK_BOX},
     {"Combobox", ATK_ROLE_COMBO_BOX},
     {"Entry", ATK_ROLE_ENTRY},
     {"Label", ATK_ROLE_LABEL},
@@ -230,11 +230,11 @@ static int atk_watched_fds[ATK_MAX_WATCH_FDS];
 static int atk_n_watched = 0;
 
 /* No-op, but still a required parameter
- * for the event loop integration. 
- * Waking Tcl is the whole point; 
- * Atk_Event_Check/Run do the work. 
+ * for the event loop integration.
+ * Waking Tcl is the whole point;
+ * Atk_Event_Check/Run do the work.
  */
-static void AtkFdProc(TCL_UNUSED(void *), 
+static void AtkFdProc(TCL_UNUSED(void *),
 	TCL_UNUSED(int))
 {
 }
@@ -2368,8 +2368,8 @@ TkWaylandAccessibility_Finalize(void)
 
 #else
 static int
-TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp, 
-	TCL_UNUSED(Tcl_Size), 
+TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp,
+	TCL_UNUSED(Tcl_Size),
 	TCL_UNUSED(Tcl_Obj *const *))
 {
     static int warned = 0;

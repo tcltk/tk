@@ -67,7 +67,7 @@ should see the notes below):
 Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
-remains at \fB1.0\fR. This setting may not be honored on Wayland. 
+remains at \fB1.0\fR. This setting may not be honored on Wayland.
 .\" OPTION: -appearance
 .TP
 \fB\-appearance\fR
@@ -529,7 +529,7 @@ Badge display on macOS is configured in the system preferences. App
 panel display behavior on X11 will depend on the window manager and/or
 desktop environment.
 .PP
-On Wayland, this command has no effect. 
+On Wayland, this command has no effect.
 .RE
 .\" METHOD: iconbitmap
 .TP
@@ -561,7 +561,7 @@ first test if the file contains an icon, then if it has an assigned
 icon, and finally, if that fails, test for
 a bitmap.
 .PP
-On Wayland, this command is not supported. 
+On Wayland, this command is not supported.
 .RE
 .\" METHOD: iconify
 .TP
@@ -731,7 +731,7 @@ when the window is first mapped or when mapped after the state is changed from
 withdrawn to normal. Some, but not all, platforms will take notice at
 additional times.
 .PP
-On Wayland, overrideredirect is implemented as a subsurface of a toplevel window, and is not an independent toplevel. 
+On Wayland, overrideredirect is implemented as a subsurface of a toplevel window, and is not an independent toplevel.
 .RE
 .\" METHOD: positionfrom
 .TP

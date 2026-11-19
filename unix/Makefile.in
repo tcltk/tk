@@ -498,7 +498,7 @@ X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o 
+	tkUnixPrint.o
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -528,7 +528,7 @@ WAYLAND_OBJS            = \
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
-    tkUnixPrint.o  tkUnixSysNotify.o                   
+    tkUnixPrint.o  tkUnixSysNotify.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -694,7 +694,7 @@ WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
 WAYLAND_UNIX_SRCS = \
-    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c 
+    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
@@ -1666,8 +1666,8 @@ tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandMouseEvent.c
 tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
 
-tkWaylandPopup.o: $(WAYLAND_DIR)/tkWaylandPopup.c 
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandPopup.c 
+tkWaylandPopup.o: $(WAYLAND_DIR)/tkWaylandPopup.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandPopup.c
 
 
 tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
@@ -1692,7 +1692,7 @@ tkWaylandXlib.o: $(WAYLAND_DIR)/tkWaylandXlib.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXlib.c
 
 tkWaylandWm.o: $(WAYLAND_DIR)/tkWaylandWm.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandWm.c 
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandWm.c
 
 # SheenBidi unity build
 SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c

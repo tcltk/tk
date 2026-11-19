@@ -172,7 +172,7 @@ XDrawString(
 
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
-        return BadDrawable;            
+        return BadDrawable;
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
@@ -228,7 +228,7 @@ XDrawImageString(
     float bounds[4];
     char *buf;
 
-    if (!string || length <= 0) return Success; 
+    if (!string || length <= 0) return Success;
 
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
@@ -1249,7 +1249,7 @@ XFillRectangles(
     int i;
 
     if (nrectangles < 1) return Success;
-    
+
     /* Get color. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
         color = TkWaylandPixelToNVG(v.foreground);
@@ -1262,10 +1262,10 @@ XFillRectangles(
     }
     for (i = 0; i < nrectangles; i++) {
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, 
-                (float)rectangles[i].x, 
+        nvgRect(dc.vg,
+                (float)rectangles[i].x,
                 (float)rectangles[i].y,
-                (float)rectangles[i].width, 
+                (float)rectangles[i].width,
                 (float)rectangles[i].height);
 	nvgFillColor(dc.vg, color);
 	if (!StippleFill(dc.vg, gc)) {
@@ -1275,7 +1275,7 @@ XFillRectangles(
     TkWaylandEndDraw(&dc);
     return Success;
 }
-                
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1306,11 +1306,11 @@ XFillRectangle(
     rect.y      = y;
     rect.width  = width;
     rect.height = height;
-    
+
     /* Ensure width and height are at least 1. */
     if (width == 0) rect.width = 1;
     if (height == 0) rect.height = 1;
-    
+
     return XFillRectangles(display, d, gc, &rect, 1);
 }
 
@@ -2185,9 +2185,9 @@ TkScrollWindow(
         return 0;
     }
 
-    /* 
+    /*
      * Same walk TkWaylandBeginDraw does, to find the toplevel and this
-     * widget's offset within it. 
+     * widget's offset within it.
      */
     while (!Tk_IsTopLevel(winPtr)) {
         offX += winPtr->changes.x;
@@ -2206,10 +2206,10 @@ TkScrollWindow(
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     glfwGetFramebufferSize(glfwWindow, &winFbWidth, &winFbHeight);
 
-    /* 
+    /*
      * Convert widget-local logical coords to backing-store pixels,
      * computing each edge independently so rounding can't open a
-     * seam between the blit rect and its own width/height. 
+     * seam between the blit rect and its own width/height.
      */
     fbX0 = (int)lroundf((offX + x) * scale);
     fbY0 = (int)lroundf((offY + y) * scale);

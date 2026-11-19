@@ -22,8 +22,8 @@
 #   epoch; it does not itself schedule a repaint.  Tests force a redraw
 #   with a synthetic <Expose> (ncExpose) after content changes.
 #
-# * Every test is gated on notAqua and notWayland: the macOS draw path 
-#   and Wayland draw path do not use the node-cache logic yet, so these tests 
+# * Every test is gated on notAqua and notWayland: the macOS draw path
+#   and Wayland draw path do not use the node-cache logic yet, so these tests
 #   have nothing to exercise there.
 #
 

@@ -463,8 +463,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z> 
-	event add <<Redo>>		<Control-Z> <Control-Lock-z> 
+	event add <<Undo>>		<Control-z> <Control-Lock-Z>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z>
 	event add <<SelectAll>>		<Control-a>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
@@ -505,8 +505,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z> 
-	event add <<Redo>>		<Control-Z> <Control-Lock-z> 
+	event add <<Undo>>		<Control-z> <Control-Lock-Z>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z>
 	event add <<SelectAll>>		<Control-a>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>

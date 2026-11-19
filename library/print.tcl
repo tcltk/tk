@@ -1,7 +1,7 @@
 # print.tcl --
 
 # This file defines the 'tk print' command for printing of the canvas
-# widget and text on X11, Wayland, Windows, and macOS. It implements an 
+# widget and text on X11, Wayland, Windows, and macOS. It implements an
 # abstraction layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz

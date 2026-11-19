@@ -434,7 +434,7 @@ static bool TkIsXcursorMagic(const unsigned char *buf, size_t len) {
  *	Native parser for .xcur files. Picks the largest image in the
  *	file (most sizes store 24, 32, 48 variants) or the first if
  *	several are equal in size. Converts ARGB (Xcursor's native pixel
- *	layout) to RGBA for GLFW. If libXcursor is loaded, 
+ *	layout) to RGBA for GLFW. If libXcursor is loaded,
  *  its higher-level loader is used first because
  *	it also handles animation frames; on failure the native parser is
  *	used as a fallback.
@@ -617,7 +617,7 @@ LoadXcursorFile(
  * TryLoadThemedXcursor --
  *
  *	Search for a cursor by name in the user's current cursor theme
- *	and load it as RGBA pixel data. If libXcursor is loaded, 
+ *	and load it as RGBA pixel data. If libXcursor is loaded,
  *  its theme inheritance and XCURSOR_THEME /
  *	XCURSOR_PATH resolution are used directly; otherwise this
  *	function walks a hand-built list of standard icon directories
@@ -1683,7 +1683,7 @@ TkGetCursorByName(
                                                 bgColor);
 
     } else {
-        /* Final attempt: try XCursor theme lookup by name (e.g. "left_ptr" 
+        /* Final attempt: try XCursor theme lookup by name (e.g. "left_ptr"
          * from Adwaita/Breeze maps to themed cursor). This also handles
          * custom cursor names installed by user themes. */
         unsigned char *xPixels = NULL;

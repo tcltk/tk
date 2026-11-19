@@ -1009,7 +1009,7 @@ Status
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    TCL_UNUSED(const char *), /* spec */ 
+    TCL_UNUSED(const char *), /* spec */
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
@@ -1407,7 +1407,7 @@ int
 XSetIconName(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window),
-    TCL_UNUSED(const char *)) /* name */ 
+    TCL_UNUSED(const char *)) /* name */
 {
     /* No-op - icon names not exposed in Wayland. */
     return 0;

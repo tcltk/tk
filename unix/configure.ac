@@ -300,7 +300,7 @@ if test $tk_aqua = no; then
         # When Wayland is enabled -> disable Xft explicitly
         enable_xft=no
         UNIX_FONT_OBJS=tkUnixFont.o
-        
+
         # Immediately clear X11-related variables to prevent leakage
         XLIBSW=""
         XINCLUDES=""
@@ -650,7 +650,7 @@ AS_IF([test $tk_aqua = yes], [
         TK_WINDOWINGSYSTEM=WAYLAND
 		WAYLAND_LDFLAGS="-Wl,-Bsymbolic-functions"
 		AC_SUBST(WAYLAND_LDFLAGS)
-		
+
     else
         TK_WINDOWINGSYSTEM=X11
         WAYLAND_LDFLAGS=""

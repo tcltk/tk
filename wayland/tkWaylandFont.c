@@ -7,8 +7,8 @@
  *
  *   Color emoji: fonts with PNG bitmap strikes (Noto Color Emoji CBDT,
  *   sbix) are shaped by HarfBuzz like any other face but drawn as
- *   NanoVG image-pattern quads (see "Color emoji support" below). Requires 
- * 	 HarfBuzz with hb-ot-color (>= 2.1) and stb_image.h (included with NanoVG).
+ *   NanoVG image-pattern quads (see "Color emoji support" below). Requires
+ *   HarfBuzz with hb-ot-color (>= 2.1) and stb_image.h (included with NanoVG).
  *
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
@@ -145,30 +145,30 @@ MODULE_SCOPE int  TkWaylandClusterBoundaryAtOrBefore(Tk_Font tkfont,
  *   Check to see if a font has serifs.
  *
  * Results:
- *   True if the font face has serifs, false otherwise. 
+ *   True if the font face has serifs, false otherwise.
  *
  * Side effects:
  *   None.
  *----------------------------------------------------------------------
  */
-     
+
 static bool
 IsSerifFace(FcPattern *pat)
 {
     if (!pat) return false;
-    
+
     FcChar8 *family = NULL;
     if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
         return false;
     }
-    
+
     const char *fam = (const char *)family;
-    
+
     /* Check for explicit serif indicators. */
     if (strcasestr(fam, "serif") && !strcasestr(fam, "sans")) {
         return true;
     }
-    
+
     /* Known serif font families. */
     const char *serifFamilies[] = {
         "times", "times new roman", "georgia", "garamond", "palatino",
@@ -177,13 +177,13 @@ IsSerifFace(FcPattern *pat)
         "minion", "adobe caslon", "goudy", "hoefler text",
         NULL
     };
-    
+
     for (int i = 0; serifFamilies[i]; i++) {
         if (strcasestr(fam, serifFamilies[i])) {
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -194,7 +194,7 @@ IsSerifFace(FcPattern *pat)
  *   Check to see if a font has no serifs.
  *
  * Results:
- *   True if the font face is sans serif, false otherwise. 
+ *   True if the font face is sans serif, false otherwise.
  *
  * Side effects:
  *   None.
@@ -205,14 +205,14 @@ static bool
 IsSansSerifFace(FcPattern *pat)
 {
     if (!pat) return false;
-    
+
     FcChar8 *family = NULL;
     if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
         return false;
     }
-    
+
     const char *fam = (const char *)family;
-    
+
     /* Check for explicit sans-serif indicators. */
     if (strcasestr(fam, "sans") || strcasestr(fam, "sans-serif") ||
         strcasestr(fam, "helvetica") || strcasestr(fam, "arial") ||
@@ -225,7 +225,7 @@ IsSansSerifFace(FcPattern *pat)
         strcasestr(fam, "roboto") || strcasestr(fam, "ubuntu")) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -236,7 +236,7 @@ IsSansSerifFace(FcPattern *pat)
  *   Check to see if a font is monospaced.
  *
  * Results:
- *   True if the font face is monospaced, false otherwise. 
+ *   True if the font face is monospaced, false otherwise.
  *
  * Side effects:
  *   None.
@@ -247,14 +247,14 @@ static bool
 IsMonospaceFace(FcPattern *pat)
 {
     if (!pat) return false;
-    
+
     FcChar8 *family = NULL;
     if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
         return false;
     }
-    
+
     const char *fam = (const char *)family;
-    
+
     /* Check for monospace indicators. */
     if (strcasestr(fam, "mono") || strcasestr(fam, "courier") ||
         strcasestr(fam, "liberation mono") || strcasestr(fam, "dejavu mono") ||
@@ -264,7 +264,7 @@ IsMonospaceFace(FcPattern *pat)
         strcasestr(fam, "source code pro") || strcasestr(fam, "fira code")) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -342,7 +342,7 @@ IsCombiningMark(FcChar32 uc)
  * ComposeUTF8String --
  *
  *   Precompose combining marks in a UTF-8 string by routing it through
- *   Tcl_UtfToNormalizedDString(). 
+ *   Tcl_UtfToNormalizedDString().
  *
  *   The result is what gets handed to NanoVG: NanoVG has no GPOS mark
  *   attachment, so base+mark sequences must be drawn and measured as
@@ -469,15 +469,15 @@ IsSimpleOnly(const char *str, int len)
                 i++;
                 continue;
             }
-            i++; 
-            continue; 
+            i++;
+            continue;
         }
 
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
         if (clen <= 0) return 0;
 
-        /* 
+        /*
          * Combining diacritical marks MUST go through HarfBuzz shaping,
          * unless every mark in the string can be precomposed onto its
          * base character. Try precomposition to see whether
@@ -568,8 +568,8 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* 
-         * Copyright symbol (U+00A9) and registered sign (U+00AE) 
+        /*
+         * Copyright symbol (U+00A9) and registered sign (U+00AE)
          * need HarfBuzz for proper rendering in some fonts.
          * This ensures they render correctly as proper symbols.
          */
@@ -577,7 +577,7 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* 
+        /*
          * Force complex shaper for scripts that require it.
          * This includes RTL scripts, CJK, Indic, and emoji.
          */
@@ -612,7 +612,7 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* 
+        /*
          * All Latin characters (including extended Latin) can use the
          * fast path, EXCEPT for copyright and registered symbols which
          * are handled above.
@@ -622,7 +622,7 @@ IsSimpleOnly(const char *str, int len)
             continue;
         }
 
-        /* 
+        /*
          * Some symbols can use the fast path, but note that
          * copyright and registered are already excluded above.
          */
@@ -928,11 +928,11 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
         return bestFace;
     }
 
-    /* 
+    /*
      * Third pass: try specific monochrome emoji font paths as a last
      * resort. Color emoji files (NotoColorEmoji.ttf etc.) are deliberately
      * not listed here - stb_truetype can't rasterize their glyph tables,
-     * so matching one would just produce blank glyphs again. 
+     * so matching one would just produce blank glyphs again.
      */
     static const char *emojiFontPaths[] = {
         "/usr/share/fonts/truetype/noto/NotoEmoji-Regular.ttf",
@@ -1048,7 +1048,7 @@ GetBidiRuns(
  *   Updates the character-to-face cache.
  *----------------------------------------------------------------------
  */
- 
+
  static int
 GetRunFaceIndex(
 		WaylandFont *fontPtr,
@@ -1159,7 +1159,7 @@ FaceCoversRange(
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static int
 FindFaceCoveringRange(
     WaylandFont *fontPtr,
@@ -1184,7 +1184,7 @@ FindFaceCoveringRange(
     if (hasEmoji && hasNonEmoji) {
         /*
          * Check primary face first. Coverage must be verified for
-         * EVERY character in the range, emoji included. 
+         * EVERY character in the range, emoji included.
          */
         if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
             int ok = 1;
@@ -1197,12 +1197,12 @@ FindFaceCoveringRange(
             }
             if (ok) return 0;
         }
-        
+
         /* Then try other faces -- same full-coverage requirement. */
         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
             FcCharSet *cs = fontPtr->faces[fi].charset;
             if (!cs) continue;
-            
+
             int ok = 1;
             for (int i = start; i < start + len; i++) {
                 if (!FcCharSetHasChar(cs, ucs4[i])) {
@@ -1246,7 +1246,7 @@ FindFaceCoveringRange(
         }
         if (ok) return 0;
     }
-    
+
     /* Second pass: any other face that covers all characters. */
     for (int fi = 1; fi < fontPtr->nfaces; fi++) {
         FcCharSet *cs = fontPtr->faces[fi].charset;
@@ -1260,7 +1260,7 @@ FindFaceCoveringRange(
         }
         if (ok) return fi;
     }
-    
+
     return 0; /* Fallback to primary face. */
 }
 
@@ -1317,7 +1317,7 @@ GetHbFont(
         face->isLoaded = 1;
         return NULL;
     }
-    
+
     hb_ot_font_set_funcs(face->hbFont);   /* use OpenType hmtx / glyf metrics */
 
     /*
@@ -1710,7 +1710,7 @@ ColorQueueDelete(NVGcontext *vg, int id)
  *   Calls nvgDeleteImage() and frees list nodes.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 ColorFlushPending(NVGcontext *vg)
 {
@@ -1744,7 +1744,7 @@ ColorFlushPending(NVGcontext *vg)
  *   Frees memory and queues image handles for deletion.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 ColorFreeSlot(ColorGlyphSlot *s)
 {
@@ -1974,7 +1974,7 @@ ColorSlotImage(
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 ColorGlyphContextDestroyed(NVGcontext *vg)
 {
@@ -2757,7 +2757,7 @@ WaylandShaper_ShapeString(
                  * sequences (flags, ZWJ combos, skin-tone modifiers) share
                  * a single byteOff/cluster and must not be pulled apart.
                  */
-                 
+
                 if (byteOff != lastClusterByteOff) {
                     if (lastClusterWasEmoji) {
 			runPenX += (int)(fontPtr->pixelSize *
@@ -2910,7 +2910,7 @@ WaylandShaper_ShapeString(
  * ExpandRangeToClusterBoundaries --
  *
  *   Expand a byte range to the nearest grapheme cluster boundaries
- *   based on the ShapedGlyphBuffer's cluster break table.  Ensures that 
+ *   based on the ShapedGlyphBuffer's cluster break table.  Ensures that
  *   rendering and measurement ranges never split a
  *   grapheme cluster (e.g., a base character and its combining mark),
  *   which would cause the combining mark to be rendered separately.
@@ -3137,7 +3137,7 @@ GetFontFileData(
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static bool
 IsJoiningScriptCodepoint(
     FcChar32 uc)
@@ -3167,7 +3167,7 @@ IsJoiningScriptCodepoint(
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static bool
 IsArabicJoiningCluster(
     const char *s,
@@ -3225,7 +3225,7 @@ typedef struct OutlineRec {
  *   May reallocate rec->ops and increments rec->count.
  *----------------------------------------------------------------------
  */
- 
+
 static OutlineOp *
 OutlineAdd(
     OutlineRec *r,
@@ -3260,7 +3260,7 @@ OutlineAdd(
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3283,7 +3283,7 @@ OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3306,7 +3306,7 @@ OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float cx, float cy, float x, float y, void *ud)
@@ -3329,7 +3329,7 @@ OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float c1x, float c1y, float c2x, float c2y, float x, float y, void *ud)
@@ -3355,7 +3355,7 @@ OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
- 
+
 static void
 OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
 {
@@ -3377,7 +3377,7 @@ OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
  *   Creates the draw-funcs object on first call.
  *----------------------------------------------------------------------
  */
- 
+
 static hb_draw_funcs_t *
 GetOutlineDrawFuncs(void)
 {
@@ -3409,7 +3409,7 @@ GetOutlineDrawFuncs(void)
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static int
 OutlineOpCoords(int type)
 {
@@ -3440,7 +3440,7 @@ OutlineOpCoords(int type)
  *   None.
  *----------------------------------------------------------------------
  */
- 
+
 static bool
 OutlineFaceUsable(
     WaylandFont *fontPtr,
@@ -3474,7 +3474,7 @@ OutlineFaceUsable(
  *   if nothing was drawn.
  *----------------------------------------------------------------------
  */
- 
+
 static bool
 DrawOutlineGlyph(
     NVGcontext *vg,
@@ -4104,7 +4104,7 @@ InitFont(
     bool isGenericSans = false;
     bool isGenericSerif = false;
     bool isGenericMono = false;
-    
+
     if (!family || family[0] == '\0' ||
         strcasecmp(family, "sans") == 0 ||
         strcasecmp(family, "sans-serif") == 0 ||
@@ -4121,8 +4121,8 @@ InitFont(
         strcasecmp(family, "TkIconFont") == 0 ||
         strcasecmp(family, "TkTooltipFont") == 0) {
         isGenericSans = true;
-    } else if (family && (strcasestr(family, "serif") || 
-               strcasestr(family, "times") || 
+    } else if (family && (strcasestr(family, "serif") ||
+               strcasestr(family, "times") ||
                strcasestr(family, "georgia") ||
                strcasestr(family, "garamond") ||
                strcasestr(family, "palatino"))) {
@@ -4146,7 +4146,7 @@ InitFont(
     if (family && family[0] != '\0') {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
     }
-    
+
     /*
      * Build appropriate fallback stack based on font category.
      * This preserves serif/mono when requested.
@@ -4213,9 +4213,9 @@ InitFont(
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* 
-     * Move any remaining color-emoji faces to the very end 
-     * so they can never become faces[0]. 
+    /*
+     * Move any remaining color-emoji faces to the very end
+     * so they can never become faces[0].
      */
     if (set && set->nfont > 1) {
         int n = set->nfont;
@@ -4234,10 +4234,10 @@ InitFont(
         set->nfont = n;
     }
 
-    /* 
-     * If we asked for a sans-like family and the primary face 
-     * looks like a serif, swap the first real sans face 
-     * to the front. 
+    /*
+     * If we asked for a sans-like family and the primary face
+     * looks like a serif, swap the first real sans face
+     * to the front.
      */
     if (isGenericSans && set && set->nfont > 1) {
         FcChar8 *primFam = NULL;
@@ -4278,9 +4278,9 @@ InitFont(
         }
     }
 
-    /* 
-     * When a concrete non-generic family was requested, 
-     * pull the best name match to the front (if any). 
+    /*
+     * When a concrete non-generic family was requested,
+     * pull the best name match to the front (if any).
      */
     if (!isGenericSans && family && family[0] && set && set->nfont > 0) {
         int best = -1;
@@ -4502,16 +4502,16 @@ InitFont(
             fseek(fd, 0, SEEK_END);
             long sz = ftell(fd);
             fseek(fd, 0, SEEK_SET);
-            
+
             /* Use stack allocation for font buffer when possible. */
             unsigned char *buf = NULL;
             bool heapAllocated = false;
-            
+
             /* Only stack allocate if size is reasonable (<= 1MB). */
             if (sz <= 1024 * 1024 && sz > 0) {
                 unsigned char stackBuf[sz];
                 buf = stackBuf;
-                
+
                 if (buf && (long)fread(buf, 1, sz, fd) == sz) {
                     stbtt_fontinfo info;
 		    int offset = stbtt_GetFontOffsetForIndex(
@@ -4549,10 +4549,10 @@ InitFont(
                         int adv_dot, adv_x;
                         stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                         stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
-                        fm->fixed = (adv_W == adv_space && 
-                                    adv_W == adv_dot && 
+                        fm->fixed = (adv_W == adv_space &&
+                                    adv_W == adv_dot &&
                                     adv_W == adv_x);
-                        
+
                         fa->size = ActualPointSize(tkwin, fontPtr->pixelSize, dpi);
                     }
                 }
@@ -4582,20 +4582,20 @@ InitFont(
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
                         stbtt_GetCodepointHMetrics(&info, ' ', &adv_space, &lsb);
-                        
+
                         /* Use the widest character for maxWidth. */
                         int adv_M;
                         stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
                         fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
-                        
+
                         /* Check if truly monospaced. */
                         int adv_dot, adv_x;
                         stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                         stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
-                        fm->fixed = (adv_W == adv_space && 
-                                    adv_W == adv_dot && 
+                        fm->fixed = (adv_W == adv_space &&
+                                    adv_W == adv_dot &&
                                     adv_W == adv_x);
-                        
+
                         fa->size = ActualPointSize(tkwin, fontPtr->pixelSize, dpi);
                     }
                 }
@@ -4606,7 +4606,7 @@ InitFont(
             fclose(fd);
         }
     }
-    
+
     /* Reasonable fallback metrics. */
     if (fm->ascent == 0 && fm->descent == 0) {
         fm->ascent   = (int)(fontPtr->pixelSize * 0.8 + 0.5);
@@ -4953,7 +4953,7 @@ TkpGetFontFromAttributes(
     const TkFontAttributes *faPtr)
 {
     WaylandFont *fontPtr;
-    
+
     if (tkFontPtr == NULL) {
         fontPtr = (WaylandFont *)Tcl_Alloc(sizeof(WaylandFont));
         memset(fontPtr, 0, sizeof(WaylandFont));
@@ -4962,13 +4962,13 @@ TkpGetFontFromAttributes(
         DeleteFont(fontPtr);
     }
 
-    
+
     InitFont(tkwin, faPtr, fontPtr);
-    
+
     /* Guarantee the public attribute is never null after construction. */
     if (!fontPtr->font.fa.family || fontPtr->font.fa.family[0] == '\0')
         fontPtr->font.fa.family = Tk_GetUid("sans-serif");
-        
+
     return (TkFont *)fontPtr;
 }
 
@@ -5673,7 +5673,7 @@ TkpDrawAngledCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /* 
+    /*
      * Check if the substring contains newline characters.
      * If it does, we need to split the rendering at each newline.
      */
@@ -5692,7 +5692,7 @@ TkpDrawAngledCharsInContext(
         const char *p = rangePtr;
         double lineY = y;
         double lineX = x;
-        
+
         while (p < rangeEnd) {
             if (*p == '\n' || *p == '\r') {
                 /* Render the line up to the newline. */
@@ -5786,11 +5786,11 @@ TkpDrawAngledCharsInContext(
      * Determine whether we need to add the width of preceding text to the
      * X coordinate. When the substring is part of a larger string and we're
      * rendering it in isolation, we need to know where it starts horizontally.
-     * 
+     *
      * This is needed when:
      * - The substring has combining characters (which need precise positioning).
      * - OR both the full string and substring are simple AND there's no emoji.
-     * 
+     *
      * When the full string is complex (e.g., contains bidirectional text),
      * shaping already provides absolute glyph positions from byte 0, so adding
      * the prefix width would incorrectly shift the rendering.
@@ -6099,14 +6099,14 @@ decorations:
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        
+
         /* Skip newlines when measuring for decorations. */
         const char *decoStart = rangePtr;
         const char *decoEnd = rangeEnd;
         /* Skip any leading/trailing newlines for decoration measurement. */
         while (decoStart < decoEnd && (*decoStart == '\n' || *decoStart == '\r')) decoStart++;
         while (decoEnd > decoStart && (*(decoEnd-1) == '\n' || *(decoEnd-1) == '\r')) decoEnd--;
-               
+
         runWidth = nvgTextBounds(vg, 0, 0, decoStart, decoEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));
@@ -6271,7 +6271,7 @@ TkUnixSetXftClipRegion(
  *
  * Results:
  *   NanoVG font ID (>=0) on success.
- * 
+ *
  * Side effects:
  *   None.
  *----------------------------------------------------------------------

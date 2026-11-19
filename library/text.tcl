@@ -1095,7 +1095,7 @@ proc ::tk::TextInsert {w s} {
 	$w edit separator
 	$w configure -autoseparators 1
     }
-    
+
     ::tk::TextScheduleRtlDetection $w
 }
 
