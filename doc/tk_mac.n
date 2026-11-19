@@ -31,7 +31,6 @@ tk::mac \- Access Mac-Specific Functionality on macOS from Tk
 
 \fB::tk::mac::standardAboutPanel\fR
 
-\fB::tk::mac::useCompatibilityMetrics \fIboolean\fR
 \fB::tk::mac::CGAntialiasLimit \fIlimit\fR
 \fB::tk::mac::antialiasedtext \fInumber\fR
 \fB::tk::mac::useThemedToplevel \fIboolean\fR
@@ -251,12 +250,6 @@ procedure will be called instead of opening the standardAboutPanel.
 .PP
 There are a number of additional global configuration options that control the
 details of how Tk renders by default.
-.\" COMMAND: useCompatibilityMetrics
-.TP
-\fB::tk::mac::useCompatibilityMetrics \fIboolean\fR
-.
-Preserves compatibility with older Tk/Aqua metrics; set to \fBfalse\fR for
-more native spacing.
 .\" COMMAND: CGAntialiasLimit
 .TP
 \fB::tk::mac::CGAntialiasLimit \fIlimit\fR
