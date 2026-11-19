@@ -689,6 +689,7 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
  * to see how clever this code is at reducing redisplays.
  */
 
+#if 0
 static int numRedisplays;	/* Number of calls to DisplayText. */
 static int linesRedrawn;	/* Number of calls to DisplayDLine. */
 static int numCopies;		/* Number of calls to XCopyArea to copy part
@@ -696,6 +697,8 @@ static int numCopies;		/* Number of calls to XCopyArea to copy part
 static int lineHeightsRecalculated;
 				/* Number of line layouts purely for height
 				 * calculation purposes.*/
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -3611,7 +3614,9 @@ FreeDLines(
     DLine *nextDLinePtr;
 
     if (action == DLINE_FREE_TEMP) {
+#if 0
 	lineHeightsRecalculated++;
+#endif
 	if (tkTextDebug) {
 	    char string[TK_POS_CHARS];
 
@@ -3922,7 +3927,9 @@ DisplayDLine(
 #else
     Tk_ClipDrawableToRect(display, pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
+#if 0
     linesRedrawn++;
+#endif
 }
 
 /*
@@ -5698,7 +5705,9 @@ DisplayText(
 	RestartLineMetricsUpdate(textPtr);
 	goto doScrollbars;
     }
+#if 0
     numRedisplays++;
+#endif
     if (tkTextDebug) {
 	CLEAR("tk_textRedraw");
     }
@@ -5856,7 +5865,9 @@ DisplayText(
 	    TextInvalidateRegion(textPtr, damageRgn);
 #endif
 	}
+#if 0
 	numCopies++;
+#endif
 	XDestroyRegion(damageRgn);
     }
 
