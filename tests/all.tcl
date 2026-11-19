@@ -20,7 +20,7 @@ package require tcltest 2.2
 #
 
 # Set defaults for the Tk test suite
-tcltest::configure -singleproc 1
+tcltest::configure -singleproc 0
 
 # Handle command line parameters
 if {[llength $argv] & 1} {
