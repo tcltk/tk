@@ -836,38 +836,79 @@ TkWaylandFramebufferSizeCallback(
     if (vg == NULL) {
         DEBUG_LOG("TkWaylandFramebufferSizeCallback: No NVG context!");
     } else {
-	/* Delete the old FBO if it exists. */
-	if (winPtr->privatePtr->fb) {
-	    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-	    winPtr->privatePtr->fb = NULL;
+	NVGLUframebuffer *oldFb = winPtr->privatePtr->fb;
+	int oldW = 0, oldH = 0;
+
+	if (oldFb) {
+	    nvgImageSize(vg, oldFb->image, &oldW, &oldH);
 	}
-	/* Create a new FBO. */
-	winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-	if (!winPtr->privatePtr->fb) {
-	    DEBUG_LOG("TkWaylandFramebufferSizeCallback: Failed to create FBO");
-	} else {
-	    /* Check FBO completeness. */
-	    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-	    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	    if (status != GL_FRAMEBUFFER_COMPLETE) {
-		DEBUG_LOG("FBO incomplete (status=0x%x)", status);
-		nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-		winPtr->privatePtr->fb = NULL;
-	    } else {
-		DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
-			"FBO created successfully: %dx%d", width, height);
+
+	/*
+	 * Reallocate only if the size really changed.  GLFW can report the
+	 * same framebuffer size more than once (scale and configure
+	 * changes), and each needless reallocation used to throw away the
+	 * window contents.
+	 */
+	if (!oldFb || oldW != width || oldH != height) {
+	    NVGLUframebuffer *newFb = nvgluCreateFramebuffer(vg, width, height, 0);
+
+	    if (newFb) {
+		nvgluBindFramebuffer(newFb);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER)
+			!= GL_FRAMEBUFFER_COMPLETE) {
+		    DEBUG_LOG("FBO incomplete, keeping the old one");
+		    nvgluDeleteFramebuffer(newFb);
+		    newFb = NULL;
+		}
+	    }
+
+	    if (newFb) {
+		GLboolean scissor = glIsEnabled(GL_SCISSOR_TEST);
+
+		if (scissor) {
+		    glDisable(GL_SCISSOR_TEST);
+		}
+		glViewport(0, 0, width, height);
 
 		/*
-		 * nvgluCreateFramebuffer does not clear the color attachment
-		 * it allocates, and this resize path unconditionally discards
-		 * the old FBO and its content along with it. Without an
-		 * explicit clear here, every resize (including the handful
-		 * that happen during initial layout) briefly/permanently
-		 * exposes raw GPU memory as visible static in any region a
-		 * widget hasn't repainted yet.
+		 * A new color attachment holds raw GPU memory.  Fill it with
+		 * the background so a newly exposed strip is never garbage ...
 		 */
 		glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		/*
+		 * ... then copy the old contents back over it.  Both buffers
+		 * are drawn top-left origin (nvgBeginFrame uses y-down), which
+		 * in GL's bottom-left coordinates means the content is
+		 * anchored at the top: align the copy on the top edges.  The
+		 * copy is queued behind the clear in the same GL stream, so
+		 * no intermediate state can reach the screen.
+		 */
+		if (oldFb && oldW > 0 && oldH > 0) {
+		    int cw = oldW < width ? oldW : width;
+		    int ch = oldH < height ? oldH : height;
+
+		    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFb->fbo);
+		    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, newFb->fbo);
+		    glBlitFramebuffer(0, oldH - ch, cw, oldH,
+			    0, height - ch, cw, height,
+			    GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		    nvgluBindFramebuffer(newFb);
+		}
+		if (scissor) {
+		    glEnable(GL_SCISSOR_TEST);
+		}
+
+		if (oldFb) {
+		    nvgluDeleteFramebuffer(oldFb);
+		}
+		winPtr->privatePtr->fb = newFb;
+		DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
+			"FBO resized %dx%d -> %dx%d", oldW, oldH, width, height);
+	    } else {
+		DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
+			"FBO resize failed; keeping old FBO");
 	    }
 	}
     }
