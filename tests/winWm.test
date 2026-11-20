@@ -697,7 +697,7 @@ test winWm-11.1 "stale position in WINDOWPOS with SWP_NOMOVE - bug 90f5cd3f21" -
     set res [list ]
 } -body {
     toplevel .t
-    wm geometry .t 200x100+300+200
+    wm geometry .t 500x100+300+200
     update
     bind .t <Configure> {lappend res [list configure %x %y %w %h]}
     # After Aero Shake, Windows sends WM_WINDOWPOSCHANGED with SWP_NOMOVE
@@ -709,7 +709,7 @@ test winWm-11.1 "stale position in WINDOWPOS with SWP_NOMOVE - bug 90f5cd3f21" -
 } -cleanup {
     destroy .t
     unset -nocomplain res
-} -result {{configure 300 200 200 100} 300 200 200x100+300+200}
+} -result {{configure 300 200 500 100} 300 200 500x100+300+200}
 
 test winWm-12.1 "WM_MOUSEACTIVATE with a non-Tk toplevel parent - bug 564897" -constraints {
     win testwinevent testforeignwindow

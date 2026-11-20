@@ -882,7 +882,7 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -body {
     set x [winfo rootx .geom]
     set y [winfo rooty .geom]
-    wm geometry .geom 300x200
+    wm geometry .geom 500x200
     update
     after 500
     update
@@ -891,7 +891,7 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -cleanup {
     destroy .geom
     unset -nocomplain x y
-} -result {0 0 300 200}
+} -result {0 0 500 200}
 test wm-geometry-2.3 {the position of a zoomed toplevel - bug 557441302b} -setup {
     destroy .geom
     toplevel .geom
