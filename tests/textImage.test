@@ -369,8 +369,8 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
     catch {
 	image create photo small -width 5 -height 5
 	small put red -to 0 0 4 4
-	image create photo large -width 50 -height 50
-	large put green -to 0 0 50 50
+	image create photo large -width 200 -height 200
+	large put green -to 0 0 200 200
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -388,7 +388,7 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
 } -cleanup {
     destroy .t
     image delete small large
-} -result {{default:50 22 5 5} {top:50 0 5 5} {bottom:50 45 5 5} {center:50 22 5 5}}
+} -result {{default:200 97 5 5} {top:200 0 5 5} {bottom:200 195 5 5} {center:200 97 5 5}}
 
 test textImage-4.2 {alignment checking - baseline} -setup {
     destroy .t
@@ -397,8 +397,8 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     catch {
 	image create photo small -width 5 -height 5
 	small put red -to 0 0 4 4
-	image create photo large -width 50 -height 50
-	large put green -to 0 0 50 50
+	image create photo large -width 200 -height 200
+	large put green -to 0 0 200 200
     }
     font create test_font2 -size 5
     text .t -font test_font2 -bd 0 -highlightthickness 0 -padx 0 -pady 0
@@ -407,8 +407,7 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     .t image create end -image small -align baseline
     .t insert end test
     update
-    # Sizes larger than 25 can be too big and lead to a negative 'norm',
-    # at least on Windows XP with certain settings.
+    # The large image must be higher than the text, which is centered on it.
     foreach size {10 15 20 25} {
 	font configure test_font2 -size $size
 	array set Metrics [font metrics test_font2]
@@ -429,17 +428,15 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     unset Metrics
 } -result {{10 0} {15 0} {20 0} {25 0}}
 
-test textImage-4.3 {alignment and padding checking} -constraints {
-    fonts
-} -setup {
+test textImage-4.3 {alignment and padding checking} -setup {
     destroy .t
     set result ""
 } -body {
     catch {
 	image create photo small -width 5 -height 5
 	small put red -to 0 0 4 4
-	image create photo large -width 50 -height 50
-	large put green -to 0 0 50 50
+	image create photo large -width 200 -height 200
+	large put green -to 0 0 200 200
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -451,13 +448,18 @@ test textImage-4.3 {alignment and padding checking} -constraints {
     foreach i {top bottom center baseline} {
 	.t image configure small -align $i
 	update
-	lappend result $i:[.t bbox small]
+	lassign [.t bbox small] x y w h
+	if {$i eq "baseline"} {
+	    # The baseline depends on the font.
+	    set y [expr {$y - [lindex [.t dlineinfo 1.0] 4]}]
+	}
+	lappend result "$i:$x $y $w $h"
     }
     return $result
 } -cleanup {
     destroy .t
     image delete small large
-} -result {{default:55 22 5 5} {top:55 10 5 5} {bottom:55 35 5 5} {center:55 22 5 5} {baseline:55 22 5 5}}
+} -result {{default:205 97 5 5} {top:205 10 5 5} {bottom:205 185 5 5} {center:205 97 5 5} {baseline:205 -5 5 5}}
 
 
 test textImage-5.1 {peer widget images} -setup {
