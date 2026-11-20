@@ -48,10 +48,26 @@ Utf8EncodedBytes(mjb_codepoint cp)
  * TclHasEncodedNul --
  *
  *   Test whether a Tcl (modified UTF-8) buffer contains an encoded
- *   NUL, i.e. the two-byte sequence C0 80. In valid Tcl UTF-8, a
- *   C0 byte can only occur as the first byte of that sequence: the
- *   NUL codepoint U+0000 is the only codepoint whose Tcl encoding
- *   differs from strict UTF-8, where it is the single byte 00.
+ *   NUL, the two-byte sequence C0 80. In valid Tcl UTF-8, C0 only
+ *   occurs as the first byte of that sequence (U+0000 is the only
+ *   codepoint Tcl encodes differently from strict UTF-8).
+ *
+ * Why this scan exists:
+ *   Mojibake accepts only strict UTF-8, and its mjb_next_*
+ *   iterators have no status return. On inspection of the
+ *   mojibake decoder, an unconverted C0 80 is not rejected
+ *   visibly: it decodes as two U+FFFD codepoints (class Other,
+ *   not Control), so the NUL would be silently misclassified
+ *   and its boundaries wrong. The buffer is therefore checked
+ *   before mojibake sees it, not after.
+ *
+ *   The check is a separate, allocation-free O(n) pass so that
+ *   the common case stays cheap: buffers with no encoded NUL,
+ *   which is nearly all text, take the fast path with no copy
+ *   and no offset map. Only buffers that actually contain C0 80
+ *   pay for ConvertTclToUtf8(), which allocates and remaps
+ *   offsets. Converting unconditionally would pay that cost
+ *   on every call.
  *
  * Results:
  *   Returns 1 if the buffer contains C0 80, 0 otherwise.
@@ -60,7 +76,7 @@ Utf8EncodedBytes(mjb_codepoint cp)
  *   None.
  * ---------------------------------------------------------------
  */
-
+ 
 static int
 TclHasEncodedNul(const char *buf,
 		 size_t byteLen)
@@ -332,7 +348,15 @@ GraphemeBoundaryFromState(const mjb_next_state *state,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
@@ -366,32 +390,30 @@ mojibake_grapheme_breaks(const char *buf,
     memset(breaks, 0, byteLen + 1);
     if (byteLen == 0) { breaks[0]=1; return 1; }
     breaks[0]=1;
-    /* Mojibake may stop at an embedded NUL (00 byte) even though a
-     * length is passed. Run it once per NUL-separated segment so
-     * breaks after a NUL are still found, and force a break on
-     * both sides of every NUL: NUL is its own grapheme cluster. */
-    {
-	size_t segStart = 0;
-	while (segStart <= byteLen) {
-	    size_t segEnd = segStart;
-	    while (segEnd < byteLen && buf[segEnd] != '\0') segEnd++;
-	    if (segEnd > segStart) {
-		state.index = 0;
-		lastBoundary = 0;
-		while ((bt = mjb_next_grapheme_break(buf + segStart, segEnd - segStart, MJB_ENC_UTF_8, &state)) != MJB_BT_NOT_SET) {
-		    if (bt == MJB_BT_ALLOWED) {
-			size_t pos = GraphemeBoundaryFromState(&state, segEnd - segStart, &lastBoundary);
-			breaks[segStart + pos]=1;
-		    }
-		}
-	    }
-	    if (segEnd < byteLen) {
-		breaks[segEnd]=1;
-		breaks[segEnd+1]=1;
-	    }
-	    segStart = segEnd + 1;
-	    if (segEnd == byteLen) break;
-	}
+    /*
+     * Call mojibake once on the whole buffer. After conversion,
+     * embedded U+0000 is represented as byte 00 and is expected
+     * to be handled as a normal control codepoint when an explicit
+     * length is supplied (as opposed to MJB_NUL_TERMINATED):
+     * decoded as U+0000, breaking before/after it per GB4/GB5,
+     * with RI / ZWJ / Indic state carried across it. Splitting
+     * at NULs and resetting state per segment would discard that
+     * cross-boundary context, so do not do that. The only reason
+     * the buffer ever contains 00 here is ConvertTclToUtf8()
+     * above, which collapsed each Tcl C0 80 pair to one 00;
+     * unconverted C0 80 would instead decode as two U+FFFDs.
+     * This relies on mojibake's length-delimited behaviour; if
+     * that ever changes, this single-call assumption must be
+     * re-checked against the mojibake source and tests.
+     */
+    state.index = 0;
+    while ((bt = mjb_next_grapheme_break(buf, byteLen, MJB_ENC_UTF_8, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_ALLOWED) {
+            size_t pos = GraphemeBoundaryFromState(&state, byteLen, &lastBoundary);
+            if (pos <= byteLen) {
+                breaks[pos] = 1;
+            }
+        }
     }
     breaks[byteLen]=1;
     if (converted) {
@@ -414,7 +436,15 @@ mojibake_grapheme_breaks(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
@@ -470,7 +500,15 @@ mojibake_grapheme_next(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
@@ -550,7 +588,15 @@ LineBoundaryFromState(const mjb_next_line_state *state,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
@@ -584,30 +630,24 @@ MojibakeLineBreaksBase(const char *buf,
     memset(breaks,0,byteLen+1);
     if (byteLen==0) { breaks[0]=1; return 1; }
     breaks[0]=1;
-    /* See grapheme base: segment at embedded NULs, force a break on
-     * both sides of every NUL. */
-    {
-	size_t segStart = 0;
-	while (segStart <= byteLen) {
-	    size_t segEnd = segStart;
-	    while (segEnd < byteLen && buf[segEnd] != '\0') segEnd++;
-	    if (segEnd > segStart) {
-		state.index=0;
-		lastBoundary=0;
-		while ((bt=mjb_next_line_break(buf + segStart, segEnd - segStart, MJB_ENC_UTF_8, &state))!=MJB_BT_NOT_SET) {
-		    if (bt==MJB_BT_ALLOWED) {
-			size_t pos=LineBoundaryFromState(&state, segEnd - segStart, &lastBoundary);
-			if (segStart + pos<=byteLen) breaks[segStart + pos]=1;
-		    }
-		}
-	    }
-	    if (segEnd < byteLen) {
-		breaks[segEnd]=1;
-		breaks[segEnd+1]=1;
-	    }
-	    segStart = segEnd + 1;
-	    if (segEnd == byteLen) break;
-	}
+    /*
+     * Call mojibake once on the whole buffer. After conversion,
+     * embedded U+0000 is represented as byte 00 and is expected
+     * to be handled as a normal control codepoint when an explicit
+     * length is supplied, with UAX #14 breaking around it.
+     * Splitting at NULs and resetting state per segment would
+     * discard the lookahead (spaces, quotes) that line breaking
+     * needs, so do not do that. See the grapheme bulk function
+     * for why C0 80 must be converted to 00 before this call,
+     * and for the caveat that this relies on mojibake's
+     * length-delimited behaviour.
+     */
+    state.index=0;
+    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+        if (bt==MJB_BT_ALLOWED) {
+            size_t pos=LineBoundaryFromState(&state, byteLen, &lastBoundary);
+            if (pos<=byteLen) breaks[pos]=1;
+        }
     }
     breaks[byteLen]=1;
     if (converted) {
@@ -630,7 +670,15 @@ MojibakeLineBreaksBase(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
@@ -686,7 +734,15 @@ mojibake_line_next(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
@@ -766,7 +822,15 @@ WordBoundaryFromState(const mjb_next_word_state *state,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
@@ -800,30 +864,24 @@ MojibakeWordBreaksBase(const char *buf,
     memset(breaks,0,byteLen+1);
     if (byteLen==0) { breaks[0]=1; return 1; }
     breaks[0]=1;
-    /* See grapheme base: segment at embedded NULs, force a break on
-     * both sides of every NUL (UAX #29 breaks around controls). */
-    {
-	size_t segStart = 0;
-	while (segStart <= byteLen) {
-	    size_t segEnd = segStart;
-	    while (segEnd < byteLen && buf[segEnd] != '\0') segEnd++;
-	    if (segEnd > segStart) {
-		state.index=0;
-		lastBoundary=0;
-		while ((bt=mjb_next_word_break(buf + segStart, segEnd - segStart, MJB_ENC_UTF_8, &state))!=MJB_BT_NOT_SET) {
-		    if (bt==MJB_BT_ALLOWED) {
-			size_t pos=WordBoundaryFromState(&state, segEnd - segStart, &lastBoundary);
-			if (segStart + pos<=byteLen) breaks[segStart + pos]=1;
-		    }
-		}
-	    }
-	    if (segEnd < byteLen) {
-		breaks[segEnd]=1;
-		breaks[segEnd+1]=1;
-	    }
-	    segStart = segEnd + 1;
-	    if (segEnd == byteLen) break;
-	}
+    /*
+     * Call mojibake once on the whole buffer. After conversion,
+     * embedded U+0000 is represented as byte 00 and is expected
+     * to be handled as a normal control codepoint when an explicit
+     * length is supplied, with UAX #29 breaking around it.
+     * Splitting at NULs and resetting state per segment would
+     * discard the cross-boundary context (e.g. ZWJ / Regional
+     * Indicator state), so do not do that. See the grapheme
+     * bulk function for why C0 80 must be converted to 00
+     * before this call, and for the caveat that this relies
+     * on mojibake's length-delimited behaviour.
+     */
+    state.index=0;
+    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+        if (bt==MJB_BT_ALLOWED) {
+            size_t pos=WordBoundaryFromState(&state, byteLen, &lastBoundary);
+            if (pos<=byteLen) breaks[pos]=1;
+        }
     }
     breaks[byteLen]=1;
     if (converted) {
@@ -846,7 +904,15 @@ MojibakeWordBreaksBase(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
@@ -902,7 +968,15 @@ mojibake_word_next(const char *buf,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
@@ -982,7 +1056,15 @@ SentenceBoundaryFromState(const mjb_next_sentence_state *state,
  *   contains an encoded NUL it is converted to strict UTF-8
  *   before calling mojibake, and every boundary returned is
  *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy.
+ *   encoded NUL take the fast path with no copy. The conversion
+ *   is required, not optional: on inspection of the mojibake
+ *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
+ *   not Control), and the mjb_next_* iterators have no status
+ *   return with which to report that, so they would silently
+ *   misclassify the NUL. After conversion, a 00 byte is a
+ *   genuine U+0000 Control and mojibake, given an explicit
+ *   byte length, is expected to iterate past it like any other
+ *   codepoint; this is the behaviour this file relies on.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
