@@ -899,13 +899,13 @@ SnapToGraphemeBreak(
     if (candidateBytes > rangeLength) {
 	candidateBytes = rangeLength;
     }
-    breaks = (unsigned char *) ckalloc((size_t) rangeLength + 1);
+    breaks = (unsigned char *) Tcl_Alloc((size_t) rangeLength + 1);
     if (breaks == NULL) {
 	return candidateBytes;
     }
     if (!mojibake_grapheme_breaks(source + rangeStart,
 	    (size_t) rangeLength, breaks)) {
-	ckfree((char *) breaks);
+	Tcl_Free((char *) breaks);
 	return candidateBytes;
     }
     snapped = 0;
@@ -924,7 +924,7 @@ SnapToGraphemeBreak(
 	    }
 	}
     }
-    ckfree((char *) breaks);
+    Tcl_Free((char *) breaks);
     return snapped;
 }
     

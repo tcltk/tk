@@ -137,12 +137,12 @@ CharIndexForByteOffset(
  
 static int
 TkIcuStartEndOfClusterCmd(
-    ClientData clientData,	/* 0 = startOfCluster, 1 = endOfCluster. */
+    void *clientData,		/* 0 = startOfCluster, 1 = endOfCluster. */
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int isEnd = (int) (intptr_t) clientData;
+    int isEnd = PTR2INT(clientData);
     Tcl_Size tclLen, index, result;
     const char *tclBytes;
     unsigned char *breaks = NULL;
@@ -189,13 +189,13 @@ TkIcuStartEndOfClusterCmd(
      * back to Tcl offsets. Pass the raw Tcl bytes; do NOT convert
      * here, and do NOT call any mjb_* function here.
      */
-    breaks = (unsigned char *) ckalloc((size_t) tclLen + 1);
+    breaks = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
     if (breaks == NULL) {
 	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
 	return TCL_ERROR;
     }
     if (!mojibake_grapheme_breaks(tclBytes, (size_t) tclLen, breaks)) {
-	ckfree((char *) breaks);
+	Tcl_Free((char *) breaks);
 	Tcl_SetResult(interp, "mojibake grapheme segmentation failed",
 		TCL_STATIC);
 	return TCL_ERROR;
@@ -204,7 +204,7 @@ TkIcuStartEndOfClusterCmd(
     if (!isEnd) {
 	if (index < 0) {
 	    /* startOfCluster with -1 / "": no result. */
-	    ckfree((char *) breaks);
+	    Tcl_Free((char *) breaks);
 	    return TCL_OK;
 	}
 	/* Greatest break <= index. breaks[0] is always set. */
@@ -239,11 +239,11 @@ TkIcuStartEndOfClusterCmd(
 	    }
 	}
 	if (result < 0) {
-	    ckfree((char *) breaks);
+	    Tcl_Free((char *) breaks);
 	    return TCL_OK;
 	}
     }
-    ckfree((char *) breaks);
+    Tcl_Free((char *) breaks);
     Tcl_SetObjResult(interp,
 	    Tcl_NewLongObj(CharIndexForByteOffset(tclBytes, result)));
     return TCL_OK;
@@ -479,12 +479,12 @@ IsSpaceAtByte(
  
 static int
 TkIcuWordCmd(
-    ClientData clientData,	/* ICU_WORD_* flags selecting the command. */
+    void *clientData,		/* ICU_WORD_* flags selecting the command. */
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int flags = (int) (intptr_t) clientData;
+    int flags = PTR2INT(clientData);
     int following = (flags & ICU_WORD_FOLLOWING) != 0;
     int wantSpace = (flags & ICU_WORD_SPACE) != 0;
     int wordFlags = 1; /* All three commands here are word commands. */
@@ -537,7 +537,7 @@ TkIcuWordCmd(
 	index = ByteOffsetForCharIndex(tclBytes, index);
     }
 
-    breakArr = (unsigned char *) ckalloc((size_t) tclLen + 1);
+    breakArr = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
     if (breakArr == NULL) {
 	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
 	return TCL_ERROR;
@@ -545,7 +545,7 @@ TkIcuWordCmd(
     /* Wrapper owns Tcl -> strict conversion; see header comment. */
     if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
 	    breakArr, NULL)) {
-	ckfree((char *) breakArr);
+	Tcl_Free((char *) breakArr);
 	Tcl_SetResult(interp, "mojibake word segmentation failed",
 		TCL_STATIC);
 	return TCL_ERROR;
@@ -558,10 +558,10 @@ TkIcuWordCmd(
 		count++;
 	    }
 	}
-	offsets = (Tcl_Size *) ckalloc(
+	offsets = (Tcl_Size *) Tcl_Alloc(
 		(size_t) (count + 1) * sizeof(Tcl_Size));
 	if (offsets == NULL) {
-	    ckfree((char *) breakArr);
+	    Tcl_Free((char *) breakArr);
 	    Tcl_SetResult(interp, "out of memory", TCL_STATIC);
 	    return TCL_ERROR;
 	}
@@ -572,7 +572,7 @@ TkIcuWordCmd(
 	}
 	numBreaks = w;
     }
-    ckfree((char *) breakArr);
+    Tcl_Free((char *) breakArr);
     breakArr = NULL;
 
     /*
@@ -624,7 +624,7 @@ TkIcuWordCmd(
 	}
     }
     result = idx;
-    ckfree((char *) offsets);
+    Tcl_Free((char *) offsets);
     if (result != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_NewLongObj(
 		CharIndexForByteOffset(tclBytes, result)));
@@ -672,12 +672,12 @@ TkIcuWordCmd(
 
 static int
 TkIcuWordBreakCmd(
-    ClientData clientData,	/* 0 = wordBreakBefore, 1 = wordBreakAfter. */
+    void *clientData,		/* 0 = wordBreakBefore, 1 = wordBreakAfter. */
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int after = (int) (intptr_t) clientData;
+    int after = PTR2INT(clientData);
     Tcl_Size tclLen, ulen, index, idx, pos = 0, numBreaks = 0, k;
     const char *tclBytes;
     unsigned char *breakArr;
@@ -719,22 +719,22 @@ TkIcuWordBreakCmd(
     }
     idx = ByteOffsetForCharIndex(tclBytes, index);
 
-    breakArr = (unsigned char *) ckalloc((size_t) tclLen + 1);
+    breakArr = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
     if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
 	    breakArr, NULL)) {
-	ckfree((char *) breakArr);
+	Tcl_Free((char *) breakArr);
 	Tcl_SetResult(interp, "mojibake word segmentation failed",
 		TCL_STATIC);
 	return TCL_ERROR;
     }
-    offsets = (Tcl_Size *) ckalloc(
+    offsets = (Tcl_Size *) Tcl_Alloc(
 	    (size_t) (tclLen + 1) * sizeof(Tcl_Size));
     for (k = 0; k <= tclLen; k++) {
 	if (breakArr[k]) {
 	    offsets[numBreaks++] = k;
 	}
     }
-    ckfree((char *) breakArr);
+    Tcl_Free((char *) breakArr);
 
     if (after) {
 	idx = BreakFollowing(offsets, numBreaks, &pos, idx);
@@ -751,7 +751,7 @@ TkIcuWordBreakCmd(
 	    idx = TCL_INDEX_NONE;
 	}
     }
-    ckfree((char *) offsets);
+    Tcl_Free((char *) offsets);
     if (idx != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		CharIndexForByteOffset(tclBytes, idx)));
@@ -776,7 +776,7 @@ TkIcuWordBreakCmd(
  *	::tk::startOfPreviousWord, ::tk::endOfWord, ::tk::wordBreakBefore,
  *	and ::tk::wordBreakAfter. Each is
  *	associated with the appropriate TkIcu*Cmd implementation and
- *	ClientData flags.
+ *	void * flags.
  *
  *----------------------------------------------------------------------
  */
@@ -788,19 +788,19 @@ Icu_Init(
     Tcl_CreateObjCommand2(interp, "::tk::startOfCluster",
 	    TkIcuStartEndOfClusterCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::endOfCluster",
-	    TkIcuStartEndOfClusterCmd, (ClientData) (intptr_t) 1, NULL);
+	    TkIcuStartEndOfClusterCmd, INT2PTR(1), NULL);
     Tcl_CreateObjCommand2(interp, "::tk::startOfNextWord",
-	    TkIcuWordCmd, (ClientData) (intptr_t) ICU_WORD_FOLLOWING, NULL);
+	    TkIcuWordCmd, INT2PTR(ICU_WORD_FOLLOWING), NULL);
     Tcl_CreateObjCommand2(interp, "::tk::startOfPreviousWord",
-	    TkIcuWordCmd, (ClientData) (intptr_t) 0, NULL);
+	    TkIcuWordCmd, INT2PTR(0), NULL);
     Tcl_CreateObjCommand2(interp, "::tk::endOfWord",
 	    TkIcuWordCmd,
-	    (ClientData) (intptr_t) (ICU_WORD_FOLLOWING | ICU_WORD_SPACE),
+	    INT2PTR(ICU_WORD_FOLLOWING | ICU_WORD_SPACE),
 	    NULL);
     Tcl_CreateObjCommand2(interp, "::tk::wordBreakBefore",
 	    TkIcuWordBreakCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::wordBreakAfter",
-	    TkIcuWordBreakCmd, (ClientData) (intptr_t) 1, NULL);
+	    TkIcuWordBreakCmd, INT2PTR(1), NULL);
 }
 
 
