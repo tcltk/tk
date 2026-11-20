@@ -484,6 +484,7 @@ test place-13.1 {test respect for internalborder} -setup {
 } -body {
     toplevel .pack
     wm geometry .pack 200x200
+    removeTitleBar .pack
     frame .pack.l -width 15 -height 10
     labelframe .pack.lf -labelwidget .pack.l
     pack .pack.lf -fill both -expand 1
