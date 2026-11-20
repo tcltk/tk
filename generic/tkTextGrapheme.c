@@ -3,7 +3,11 @@
  *
  *      Implements line breaks (UAX #14) and word/sentence breaks (UAX #29)
  *      for Unicode extended grapheme clusters utilizing the mojibake Unicode
- *      library.  Also, for scripts without spaces (Thai, Lao, Khmer),
+ *      library (version 0.8.0). Break boundaries come from the
+ *      iterator's state.position field, which mojibake sets to the
+ *      byte offset of the boundary the last returned break type
+ *      refers to; no boundary is reconstructed from the current
+ *      codepoint here.  Also, for scripts without spaces (Thai, Lao, Khmer),
  *      implements a forward maximum-matching word segmenter using
  *      ICU-derived dictionaries.
  *
@@ -19,29 +23,6 @@
 #include <stdlib.h>
 #include "dictionaries.h"
 
-/*
- * ---------------------------------------------------------------
- * Utf8EncodedBytes --
- *
- *   Determine the number of bytes required to encode a Unicode
- *   codepoint in UTF-8.
- *
- * Results:
- *   Returns 1, 2, 3, or 4 bytes depending on the codepoint value.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-static size_t
-Utf8EncodedBytes(mjb_codepoint cp)
-{
-    if (cp < 0x80) return 1;
-    if (cp < 0x800) return 2;
-    if (cp < 0x10000) return 3;
-    return 4;
-}
 
 /*
  * ---------------------------------------------------------------
@@ -53,7 +34,7 @@ Utf8EncodedBytes(mjb_codepoint cp)
  *   codepoint Tcl encodes differently from strict UTF-8).
  *
  * Why this scan exists:
- *   Mojibake accepts only strict UTF-8, and its mjb_next_*
+ *   Mojibake accepts only strict UTF-8, and its mjb_*_break_next
  *   iterators have no status return. On inspection of the
  *   mojibake decoder, an unconverted C0 80 is not rejected
  *   visibly: it decodes as two U+FFFD codepoints (class Other,
@@ -277,63 +258,8 @@ RemapBreaksToTcl(unsigned char *breaks,
     free(converted);
 }
 
-/*
- * ---------------------------------------------------------------
- * BoundaryFromState --
- *
- *   Compute the actual byte boundary position from a mojibake
- *   next-state structure. All mojibake next_* states have index =
- *   byte offset of lookahead codepoint, not the boundary itself.
- *   True boundary = index - encoded_len(current).
- *
- * Results:
- *   Returns the boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary to the computed boundary value.
- * ---------------------------------------------------------------
- */
-
-static size_t
-BoundaryFromState(size_t index,
-		  mjb_codepoint curCp,
-		  size_t byteLen,
-		  size_t *lastBoundary)
-{
-    size_t idx = (index > byteLen) ? byteLen : index;
-    size_t enc = Utf8EncodedBytes(curCp);
-    size_t boundary = (enc > idx) ? 0 : (idx - enc);
-    if (index > byteLen) {
-	/* End of text: no lookahead codepoint, curCp is the last one. */
-	boundary = byteLen;
-    }
-    if (boundary < *lastBoundary) boundary = *lastBoundary;
-    *lastBoundary = boundary;
-    return boundary;
-}
 
 
-/*
- * ---------------------------------------------------------------
- * GraphemeBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for grapheme break states.
- *
- * Results:
- *   Returns the grapheme cluster boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-GraphemeBoundaryFromState(const mjb_next_state *state,
-			  size_t byteLen,
-			  size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
 
 /*
  * ---------------------------------------------------------------
@@ -351,7 +277,7 @@ GraphemeBoundaryFromState(const mjb_next_state *state,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -372,9 +298,8 @@ mojibake_grapheme_breaks(const char *buf,
 			 size_t byteLen,
 			 unsigned char *breaks)
 {
-    mjb_next_state state;
+    mjb_grapheme_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary = 0;
     size_t tclLen = byteLen;
     char *convertedBuf = NULL;
     size_t *offsetMap = NULL;
@@ -407,9 +332,10 @@ mojibake_grapheme_breaks(const char *buf,
      * re-checked against the mojibake source and tests.
      */
     state.index = 0;
-    while ((bt = mjb_next_grapheme_break(buf, byteLen, MJB_ENC_UTF_8, &state)) != MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
         if (bt == MJB_BT_ALLOWED) {
-            size_t pos = GraphemeBoundaryFromState(&state, byteLen, &lastBoundary);
+            size_t pos = state.position;
             if (pos <= byteLen) {
                 breaks[pos] = 1;
             }
@@ -439,7 +365,7 @@ mojibake_grapheme_breaks(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -461,9 +387,8 @@ mojibake_grapheme_next(const char *buf,
 		       size_t byteOffset,
 		       size_t *nextOffset)
 {
-    mjb_next_state state;
+    mjb_grapheme_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     if (nextOffset==NULL) return 0;
     if (buf==NULL || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
 
@@ -479,9 +404,10 @@ mojibake_grapheme_next(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
 	}
     }
@@ -503,7 +429,7 @@ mojibake_grapheme_next(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -525,9 +451,9 @@ mojibake_grapheme_prev(const char *buf,
 		       size_t byteOffset,
 		       size_t *prevOffset)
 {
-    mjb_next_state state;
+    mjb_grapheme_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
+    size_t last=0;
     if (prevOffset==NULL) return 0;
     if (buf==NULL || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
 
@@ -543,9 +469,10 @@ mojibake_grapheme_prev(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>=byteOffset) break;
 	    last=pos;
 	}
@@ -553,27 +480,6 @@ mojibake_grapheme_prev(const char *buf,
     *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
 }
 
-/*
- * ---------------------------------------------------------------
- * LineBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for line break states.
- *
- * Results:
- *   Returns the line break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-LineBoundaryFromState(const mjb_next_line_state *state,
-		      size_t byteLen,
-		      size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
 
 /*
  * ---------------------------------------------------------------
@@ -591,7 +497,7 @@ LineBoundaryFromState(const mjb_next_line_state *state,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -612,9 +518,8 @@ MojibakeLineBreaksBase(const char *buf,
 		     size_t byteLen,
 		     unsigned char *breaks)
 {
-    mjb_next_line_state state;
+    mjb_line_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     size_t tclLen = byteLen;
     char *convertedBuf = NULL;
     size_t *offsetMap = NULL;
@@ -643,9 +548,10 @@ MojibakeLineBreaksBase(const char *buf,
      * length-delimited behaviour.
      */
     state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
         if (bt==MJB_BT_ALLOWED) {
-            size_t pos=LineBoundaryFromState(&state, byteLen, &lastBoundary);
+            size_t pos=state.position;
             if (pos<=byteLen) breaks[pos]=1;
         }
     }
@@ -673,7 +579,7 @@ MojibakeLineBreaksBase(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -695,9 +601,8 @@ mojibake_line_next(const char *buf,
 		   size_t byteOffset,
 		   size_t *nextOffset)
 {
-    mjb_next_line_state state;
+    mjb_line_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     if (!nextOffset) return 0;
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
 
@@ -713,9 +618,10 @@ mojibake_line_next(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
 	}
     }
@@ -737,7 +643,7 @@ mojibake_line_next(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -759,9 +665,9 @@ mojibake_line_prev(const char *buf,
 		   size_t byteOffset,
 		   size_t *prevOffset)
 {
-    mjb_next_line_state state;
+    mjb_line_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
+    size_t last=0;
     if (!prevOffset) return 0;
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
 
@@ -777,9 +683,10 @@ mojibake_line_prev(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>=byteOffset) break;
 	    last=pos;
 	}
@@ -787,27 +694,6 @@ mojibake_line_prev(const char *buf,
     *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
 }
 
-/*
- * ---------------------------------------------------------------
- * WordBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for word break states.
- *
- * Results:
- *   Returns the word break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-WordBoundaryFromState(const mjb_next_word_state *state,
-		      size_t byteLen,
-		      size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
 
 /*
  * ---------------------------------------------------------------
@@ -825,7 +711,7 @@ WordBoundaryFromState(const mjb_next_word_state *state,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -846,9 +732,8 @@ MojibakeWordBreaksBase(const char *buf,
 		     size_t byteLen,
 		     unsigned char *breaks)
 {
-    mjb_next_word_state state;
+    mjb_word_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     size_t tclLen = byteLen;
     char *convertedBuf = NULL;
     size_t *offsetMap = NULL;
@@ -877,9 +762,10 @@ MojibakeWordBreaksBase(const char *buf,
      * on mojibake's length-delimited behaviour.
      */
     state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
         if (bt==MJB_BT_ALLOWED) {
-            size_t pos=WordBoundaryFromState(&state, byteLen, &lastBoundary);
+            size_t pos=state.position;
             if (pos<=byteLen) breaks[pos]=1;
         }
     }
@@ -907,7 +793,7 @@ MojibakeWordBreaksBase(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -929,9 +815,8 @@ mojibake_word_next(const char *buf,
 		   size_t byteOffset,
 		   size_t *nextOffset)
 {
-    mjb_next_word_state state;
+    mjb_word_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     if (!nextOffset) return 0;
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
 
@@ -947,9 +832,10 @@ mojibake_word_next(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
 	}
     }
@@ -971,7 +857,7 @@ mojibake_word_next(const char *buf,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -993,9 +879,9 @@ mojibake_word_prev(const char *buf,
 		   size_t byteOffset,
 		   size_t *prevOffset)
 {
-    mjb_next_word_state state;
+    mjb_word_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
+    size_t last=0;
     if (!prevOffset) return 0;
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
 
@@ -1011,9 +897,10 @@ mojibake_word_prev(const char *buf,
 	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
     }
     state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos>=byteOffset) break;
 	    last=pos;
 	}
@@ -1021,27 +908,6 @@ mojibake_word_prev(const char *buf,
     *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
 }
 
-/*
- * ---------------------------------------------------------------
- * SentenceBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for sentence break states.
- *
- * Results:
- *   Returns the sentence break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-SentenceBoundaryFromState(const mjb_next_sentence_state *state,
-			  size_t byteLen,
-			  size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
 
 /*
  * ---------------------------------------------------------------
@@ -1059,7 +925,7 @@ SentenceBoundaryFromState(const mjb_next_sentence_state *state,
  *   encoded NUL take the fast path with no copy. The conversion
  *   is required, not optional: on inspection of the mojibake
  *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_next_* iterators have no status
+ *   not Control), and the mjb_*_break_next iterators have no status
  *   return with which to report that, so they would silently
  *   misclassify the NUL. After conversion, a 00 byte is a
  *   genuine U+0000 Control and mojibake, given an explicit
@@ -1080,9 +946,8 @@ mojibake_sentence_breaks(const char *buf,
 			 size_t byteLen,
 			 unsigned char *breaks)
 {
-    mjb_next_sentence_state state;
+    mjb_sentence_break_state state;
     mjb_break_type bt;
-    size_t lastBoundary=0;
     size_t tclLen = byteLen;
     char *convertedBuf = NULL;
     size_t *offsetMap = NULL;
@@ -1099,9 +964,10 @@ mojibake_sentence_breaks(const char *buf,
     if (byteLen==0) { breaks[0]=1; return 1; }
     breaks[0]=1;
     state.index=0;
-    while ((bt=mjb_next_sentence_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
+    mjb_text text = mjb_text_utf8(buf, byteLen);
+    while ((bt = mjb_sentence_break_next(&text, &state)) != MJB_BT_NOT_SET) {
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=SentenceBoundaryFromState(&state,byteLen,&lastBoundary);
+	    size_t pos=state.position;
 	    if (pos<=byteLen) breaks[pos]=1;
 	}
     }
