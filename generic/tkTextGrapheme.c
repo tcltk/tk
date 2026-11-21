@@ -523,23 +523,26 @@ WordBreaksWithDictInternal(const char *buf,
 	ComplexScript curSc=sc;
 	size_t j=i;
 	while (j < byteLen) {
-	    if (!gBreaks[j]) { j++; continue; }
-	    if (j>=byteLen) break;
-	    /* Decode at j. */
+	    /* Step by grapheme cluster, not by byte/codepoint: a cluster
+	     * such as Thai U+0E01 U+0E33 has no grapheme break before
+	     * the spacing mark, so stepping byte-by-byte decodes a UTF-8
+	     * continuation byte as SCRIPT_OTHER and truncates the run
+	     * mid-word. The script of a cluster is its first codepoint. */
+	    size_t nextG = j + 1;
+	    while (nextG < byteLen && !gBreaks[nextG]) nextG++;
+	    if (nextG > byteLen) nextG = byteLen;
 	    unsigned char bj = (unsigned char)buf[j];
-	    mjb_codepoint cpj=0; int lj=1;
-	    if (bj < 0x80) { cpj=bj; lj=1; }
-	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); lj=2; } }
-	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); lj=3; } }
-	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); lj=4; } }
-	    else { cpj=bj; lj=1; }
-
+	    mjb_codepoint cpj=0;
+	    if (bj < 0x80) { cpj=bj; }
+	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); } }
+	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); } }
+	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); } }
+	    else { cpj=bj; }
 	    ComplexScript scj = ScriptFromCodepoint(cpj);
 	    if (scj!=curSc) break;
-	    /* Break run on ASCII space or line break already? Keep spaces as separators, so stop before space */
 	    if (cpj==0x20 || cpj==0x09 || cpj==0x0A || cpj==0x0D) break;
-	    runEnd = j+lj;
-	    j += lj;
+	    runEnd = nextG;
+	    j = nextG;
 	}
 	if (runEnd>runStart+1) {
 	    /*
