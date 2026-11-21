@@ -466,7 +466,7 @@ test textGrapheme-4.1 {double-click on bb after NUL selects bb} -setup {
 
 # constrained on Windows: doubleclickat goes through bbox/@x,y
 # hit-testing, and windows fallback-font shaping for the
-# combining acute makes the click land on the wrong index.
+# combining Thai vowel/mark makes the click land on the wrong index.
 test textGrapheme-4.2 {Thai double-click selects a whole word, not a fragment} -constraints notWin32 -setup {
     text .t1 -font $fixedFont -wrap none
     pack .t1
