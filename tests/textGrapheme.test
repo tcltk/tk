@@ -1,0 +1,741 @@
+# This file is a Tcl script to test the NUL / grapheme-cluster handling
+# in the text widget display code (tkTextDisp.c / tkTextGrapheme.c).
+#
+#
+# The test is widget-level, not C-level: it exercises the paths a user
+# actually hits -- wrapping, cursor movement, double-click word
+# selection, and deletion -- and checks that offsets after an embedded
+# NUL are still correct. A C-level off-by-one in the NUL offset remap
+# shows up here as a wrong wrap, a wrong word selection, or a corrupted
+# string after delete.
+#
+# Conventions:
+#     * NUL is written as \0 in Tcl double quotes: a real U+0000 in
+#       the string, stored by Tcl as C0 80.
+#     * "+ 1 char" moves by *codepoint*, not by grapheme cluster.
+#       Grapheme awareness lives in wrapping, word breaking, and
+#       selection -- not in "+ 1 char" -- so the cluster tests below
+#       check grapheme integrity where it actually applies:
+#       double-click selection and wrapping must never split a cluster.
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import scroll text
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# displayLineCodePoints --
+#
+# Display lines of $w, each one as its code points U+XXXX joined by ".".
+# Same helper as textDisp.test: walks display lines with
+# "index + 1 displaylines", never with pixel probing, so it cannot
+# duplicate or skip a line if the font's line height is not what the
+# harness guessed.
+#
+proc displayLineCodePoints {w} {
+    set res {}
+    for {set i 1.0} {[$w compare $i < "end - 1c"]} {set i $next} {
+	set next [$w index "$i + 1 displaylines"]
+	if {[$w compare $next <= $i] || [$w compare $next > "end - 1c"]} {
+	    set next [$w index "end - 1c"]
+	}
+	set cps {}
+	foreach c [split [$w get $i $next] {}] {
+	    lappend cps [format U+%04X [scan $c %c]]
+	}
+	lappend res [join $cps .]
+    }
+    return $res
+}
+
+# wrappedLines --
+#
+# Return the widget content split the way the widget wrapped it:
+# one list element per *display* line, via count -displaylines.
+#
+proc wrappedLines {w} {
+    # One list element per *display* line. Walk with
+    # "index + 1 displaylines" and take get $i $next, exactly as
+    # displayLineCodePoints does. Do NOT use linestart/lineend here:
+    # those are logical-line indices, so a wrapped logical line would
+    # be returned whole once per display line (duplication).
+    set lines {}
+    for {set i 1.0} {[$w compare $i < "end - 1c"]} {set i $next} {
+	set next [$w index "$i + 1 displaylines"]
+	if {[$w compare $next <= $i] || [$w compare $next > "end - 1c"]} {
+	    set next [$w index "end - 1c"]
+	}
+	lappend lines [$w get $i $next]
+    }
+    return $lines
+}
+
+# codepoints --
+#
+# Code points of $s, one integer per Tcl char. Used for NUL
+# expectations: a literal "\0" inside a braced -result is NOT a
+# NUL, it is backslash + "0", so comparing raw NUL strings in
+# -result can never match. Comparing code points avoids that.
+#
+proc codepoints {s} {
+    set res {}
+    foreach c [split $s {}] { lappend res [scan $c %c] }
+    return $res
+}
+
+# doubleClickAt --
+#
+# Simulate a double-click on the character at $charIndex in $w.
+# Do NOT use "event generate ... <Double-Button-1>": Tk rejects
+# the Double modifier in event generate on macOS ("Double,
+# Triple, or Quadruple modifier not allowed"). Instead, fetch
+# the widget's real <Double-Button-1> binding and invoke it
+# with %x/%y/%W substituted -- that is exactly what a real
+# double-click would run. Returns 1 if a click was simulated,
+# 0 if there was no bbox / binding (caller should treat that
+# as "no selection", not as a failure of the widget).
+#
+proc doubleClickAt {w charIndex} {
+    # Simulate a double-click on the character at $charIndex in $w.
+    # Do NOT use "event generate ... <Double-Button-1>": Tk rejects
+    # the Double modifier in event generate on macOS ("Double,
+    # Triple, or Quadruple modifier not allowed").
+    # Fetch the *class* binding (bind $w alone returns only a
+    # widget-specific binding, which Text widgets do not have),
+    # substitute every % field the script may use, and invoke it.
+    # If that yields no selection, fall back to the exact index math
+    # the double-click handler itself uses (wordstart/wordend),
+    # so a binding/scripting quirk can never masquerade as a
+    # grapheme/word-break failure.
+    set bbox [$w bbox $charIndex]
+    if {[llength $bbox] != 4} { return 0 }
+    lassign $bbox x y wd ht
+    set cx [expr {$x + 1}]
+    set cy [expr {$y + 1}]
+    set script [bind [winfo class $w] <Double-Button-1>]
+    if {$script ne ""} {
+	set script [string map [list %W $w %x $cx %y $cy %X $cx %Y $cy \
+	    %b 1 %s 0 %k 0 %K "" %A "" %N 0 %T Double %E ""] $script]
+	catch {uplevel #0 $script}
+	if {[catch {$w get sel.first sel.last} sel] == 0 && $sel ne ""} {
+	    return 1
+	}
+	$w tag remove sel 1.0 end
+    }
+    $w tag add sel [$w index "$charIndex wordstart"] [$w index "$charIndex wordend"]
+    return 1
+}
+
+# selectedText --
+#
+# Current selection in $w, or "" if there is none.
+#
+proc selectedText {w} {
+    if {[catch {$w get sel.first sel.last} sel]} { return "" }
+    return $sel
+}
+
+# noOrphanLineStart --
+#
+# True if $line does not start with a mark that must never start
+# a line: a combining mark, a Thai/Lao/Khmer subscript or
+# above/below vowel, a repetition sign, or sentence-final
+# punctuation stranded from the previous line.
+#
+proc noOrphanLineStart {line} {
+    if {$line eq ""} { return 1 }
+    set cp [scan [string index $line 0] %c]
+    # Combining Diacritical Marks, Combining Marks for Symbols,
+    # Thai/Lao/Khmer above/below vowels and signs, repetition signs.
+    if {($cp >= 0x0300 && $cp <= 0x036F)
+	    || ($cp >= 0x0E31 && $cp <= 0x0E3A)
+	    || ($cp >= 0x0E47 && $cp <= 0x0E4E)
+	    || ($cp >= 0x0EB1 && $cp <= 0x0EBA)
+	    || ($cp >= 0x0EC8 && $cp <= 0x0ECD)
+	    || ($cp >= 0x17C6 && $cp <= 0x17D3)
+	    || ($cp == 0x0E46) || ($cp == 0x0EC6)
+	    || ($cp == 0x17D7) || ($cp == 0x17D8)
+	    || ($cp == 0x17D4) || ($cp == 0x17D5)} {
+	return 0
+    }
+    return 1
+}
+
+# allLinesNoOrphans --
+#
+# True if no line in $lines starts with an orphan mark.
+#
+proc allLinesNoOrphans {lines} {
+    foreach line $lines {
+	if {![noOrphanLineStart $line]} { return 0 }
+    }
+    return 1
+}
+
+#
+# COMMON TEST SETUP
+#
+
+# Create entries in the option database to be sure that geometry options
+# like border width have selected values.
+option add *Text.borderWidth 2  ; # tests work with [1-3]
+option add *Text.highlightThickness 2   ; # tests work with [0-5]
+option add *Text.padX 1  ; # same padding in x and y, see proc bo; tests work with [0-4]
+option add *Text.padY 1  ; # same padding in x and y, see proc bo; tests work with [0-4]
+
+# The frame .f is needed to make sure that the overall window is always
+# fairly wide, even if the text window is very narrow.  This is needed
+# because some window managers don't allow the overall width of a window
+# to get very narrow.
+
+catch {destroy .f .t}
+frame .f -width 100 -height 20
+pack .f -side left
+
+text .t -font $fixedFont -width 20 -height 10 -yscrollcommand setScrollInfo
+pack .t -expand 1 -fill both
+.t debug on
+
+wm geometry . {}
+
+# The statements below reset the main window;  it's needed if the window
+# manager is mwm to make mwm forget about a previous minimum size setting.
+
+wm withdraw .
+wm minsize . 1 1
+wm positionfrom . user
+wm deiconify .
+update
+
+# Some window managers (like olwm under SunOS 4.1.3) misbehave in a way
+# that tends to march windows off the top and left of the screen.  If
+# this happens, some tests will fail because parts of the window will
+# not need to be displayed (because they're off-screen).  To keep this
+# from happening, move the window if it's getting near the left or top
+# edges of the screen.
+
+if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
+    wm geom . +50+50
+}
+
+#
+# TESTS
+#
+
+# 1. NUL offsets: the core regression.
+#
+# The string "a\0b\0c" is, in Tcl bytes: 61 C0 80 62 C0 80 63.
+# Grapheme / word boundaries in *Tcl* offsets are 0 (before 'a'),
+# 3 (before 'b', after "a\0"), and 5 (end, after "a\0b\0c").
+# The converted strict-UTF-8 offsets would be 0, 2, 4. If the widget
+# reports breaks / selections / cursor positions at 2 or 4, the
+# remap is wrong.
+
+test textGrapheme-1.1 {NUL string round-trips through widget} -setup {
+    .t delete 1.0 end
+} -body {
+    .t insert end "a\0b\0c"
+    list [codepoints [.t get 1.0 end-1c]] [string length [.t get 1.0 end-1c]]
+} -cleanup {
+    .t delete 1.0 end
+} -result {{97 0 98 0 99} 5}
+
+test textGrapheme-1.2 {character indices address the NULs themselves} -setup {
+    .t delete 1.0 end
+    .t insert end "a\0b\0c"
+} -body {
+    list [scan [.t get 1.1 1.2] %c] [scan [.t get 1.3 1.4] %c] \
+	 [.t get 1.2 1.3] [.t get 1.4 end-1c]
+} -cleanup {
+    .t delete 1.0 end
+} -result {0 0 b c}
+
+test textGrapheme-1.3 {cursor steps over NULs on Tcl char boundaries} -setup {
+    .t delete 1.0 end
+    .t insert end "a\0b\0c"
+    .t mark set insert 1.0
+} -body {
+    set res {}
+    .t mark set insert "insert + 1 char"
+    lappend res [.t index insert]
+    .t mark set insert "insert + 1 char"
+    lappend res [.t index insert]
+    .t mark set insert "insert - 1 char"
+    lappend res [.t index insert]
+    .t mark set insert "insert - 1 char"
+    lappend res [.t index insert]
+    set res
+} -cleanup {
+    .t delete 1.0 end
+} -result {1.1 1.2 1.1 1.0}
+
+test textGrapheme-1.4 {deleting a NUL shifts later offsets by exactly one Tcl char} -setup {
+    .t delete 1.0 end
+    .t insert end "a\0b\0c"
+} -body {
+    .t delete 1.1 1.2
+    list [codepoints [.t get 1.0 end-1c]] [scan [.t get 1.2 1.3] %c] [.t get 1.3 end-1c]
+} -cleanup {
+    .t delete 1.0 end
+} -result {{97 98 0 99} 0 c}
+
+test textGrapheme-1.5 {backspace over a NUL} -setup {
+    .t delete 1.0 end
+    .t insert end "ab\0c"
+    .t mark set insert 1.3
+} -body {
+    .t delete "insert - 1 char" insert
+    .t get 1.0 end-1c
+} -cleanup {
+    .t delete 1.0 end
+} -result {abc}
+
+test textGrapheme-1.6 {NUL-only and NUL-at-edges strings} -setup {
+    .t delete 1.0 end
+} -body {
+    .t insert end "\0\0\0"
+    set res [string length [.t get 1.0 end-1c]]
+    .t delete 1.0 end
+    .t insert end "\0abc\0"
+    lappend res [codepoints [.t get 1.0 end-1c]]
+    set res
+} -cleanup {
+    .t delete 1.0 end
+} -result {3 {0 97 98 99 0}}
+
+# 2. NUL next to multi-byte, combining, and ZWJ sequences.
+#
+# "+ 1 char" moves by codepoint: "1.0 + 1 char" over "e + combining
+# acute" correctly lands at 1.1, between the e and its acute.
+# Grapheme integrity is checked where it applies: double-click
+# selection and wrapping must never split a cluster.
+
+test textGrapheme-2.1 {combining sequence + NUL: codepoint stepping} -setup {
+    .t delete 1.0 end
+    .t configure -wrap none
+    # e + combining acute, NUL, e + combining acute.
+    # Tcl offsets: 0:e 1:acute 2:NUL 3:e 4:acute ; end = 5.
+    .t insert end "e\u0301\0e\u0301"
+    .t mark set insert 1.0
+} -body {
+    set res [list [string length [.t get 1.0 end-1c]]]
+    foreach want {1.1 1.2 1.3 1.4 1.5} {
+	.t mark set insert "insert + 1 char"
+	lappend res [.t index insert]
+    }
+    set res
+} -cleanup {
+    .t delete 1.0 end
+} -result {5 1.1 1.2 1.3 1.4 1.5}
+
+# constrained on Windows: doubleclickat goes through bbox/@x,y
+# hit-testing, and windows fallback-font shaping for the
+# combining acute makes the click land on the wrong index.
+test textGrapheme-2.2 {double-click on e+acute selects whole cluster} -constraints notWin32 -setup {
+    text .t1 -font $fixedFont -wrap none
+    pack .t1
+    .t1 insert end "e\u0301\0e\u0301"
+} -body {
+    if {[doubleClickAt .t1 1.0]} {
+	selectedText .t1
+    } else {
+	""
+    }
+} -cleanup {
+    destroy .t1
+} -result "e\u0301"
+
+test textGrapheme-2.3 {ZWJ emoji + NUL: codepoint stepping} -setup {
+    .t delete 1.0 end
+    .t configure -wrap none
+    # man ZWJ woman ZWJ girl is 5 Tcl chars per side.
+    .t insert end "\U0001F468\u200D\U0001F469\u200D\U0001F467\0\U0001F468\u200D\U0001F469\u200D\U0001F467"
+    .t mark set insert 1.0
+} -body {
+    set res [list [string length [.t get 1.0 end-1c]]]
+    foreach want {1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 1.10 1.11} {
+	.t mark set insert "insert + 1 char"
+	lappend res [.t index insert]
+    }
+    set res
+} -cleanup {
+    .t delete 1.0 end
+} -result {11 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 1.10 1.11}
+
+test textGrapheme-2.4 {double-click on ZWJ emoji selects whole emoji, never splits at ZWJ} -setup {
+    text .t1 -font $fixedFont -wrap none
+    pack .t1
+    .t1 insert end "\U0001F468\u200D\U0001F469\u200D\U0001F467\0\U0001F468\u200D\U0001F469\u200D\U0001F467"
+} -body {
+    if {[doubleClickAt .t1 1.0]} {
+	selectedText .t1
+    } else {
+	""
+    }
+} -cleanup {
+    destroy .t1
+} -result "\U0001F468\u200D\U0001F469\u200D\U0001F467"
+
+test textGrapheme-2.5 {multi-byte + NUL stepping} -setup {
+    .t delete 1.0 end
+    .t configure -wrap none
+    .t insert end "é\0€\0\U0001F600"
+    .t mark set insert 1.0
+} -body {
+    set res [list [string length [.t get 1.0 end-1c]]]
+    foreach want {1.1 1.2 1.3 1.4 1.5} {
+	.t mark set insert "insert + 1 char"
+	lappend res [.t index insert]
+    }
+    set res
+} -cleanup {
+    .t delete 1.0 end
+} -result {5 1.1 1.2 1.3 1.4 1.5}
+
+test textGrapheme-2.6 {wrapping never splits a cluster} -setup {
+    text .t1 -font $fixedFont -wrap word -width 2
+    pack .t1
+    .t1 insert end "e\u0301 \U0001F468\u200D\U0001F469\u200D\U0001F467 e\u0301"
+    update idletasks
+} -body {
+    set lines [wrappedLines .t1]
+    set joined [join $lines ""]
+    list [expr {[string first "e\u0301" $joined] >= 0}] \
+	 [expr {[string first "\U0001F468\u200D\U0001F469\u200D\U0001F467" $joined] >= 0}] \
+	 [allLinesNoOrphans $lines]
+} -cleanup {
+    destroy .t1
+} -result {1 1 1}
+
+# 3. Wrapping with NULs: the wrap must use Tcl offsets.
+# If the wrapper used converted (strict UTF-8) offsets, the break
+# after the first NUL would be one character early and a line
+# would start or end in the wrong place.
+
+test textGrapheme-3.1 {wrapped lines are substrings in order, nothing invented} -setup {
+    text .t1 -font $fixedFont -wrap word -width 4
+    pack .t1
+    .t1 insert end "aa\0bb cc\0dd"
+    update idletasks
+} -body {
+    set lines [wrappedLines .t1]
+    set pos 0
+    set ok 1
+    foreach line $lines {
+	set idx [string first $line "aa\0bb cc\0dd" $pos]
+	if {$idx < 0} { set ok 0; break }
+	set pos [expr {$idx + [string length $line]}]
+    }
+    list $ok [allLinesNoOrphans $lines]
+} -cleanup {
+    destroy .t1
+} -result {1 1}
+
+# 4. Double-click word selection with NULs and with complex scripts.
+
+test textGrapheme-4.1 {double-click on bb after NUL selects bb} -setup {
+    text .t1 -font $fixedFont -wrap none
+    pack .t1
+    .t1 insert end "aa\0bb cc"
+} -body {
+    if {[doubleClickAt .t1 1.3]} {
+	selectedText .t1
+    } else {
+	""
+    }
+} -cleanup {
+    destroy .t1
+} -result {bb}
+
+# constrained on Windows: doubleclickat goes through bbox/@x,y
+# hit-testing, and windows fallback-font shaping for the
+# combining Thai vowel/mark makes the click land on the wrong index.
+test textGrapheme-4.2 {Thai double-click selects a whole word, not a fragment} -constraints notWin32 -setup {
+    text .t1 -font $fixedFont -wrap none
+    pack .t1
+    .t1 insert end "ผมกำลังลองระบบตัดคำใหม่ครับ"
+} -body {
+    if {[doubleClickAt .t1 1.2]} {
+	set sel [selectedText .t1]
+	expr {$sel in {"ผม" "กำลัง" "ลอง" "ระบบ" "ตัดคำ" "ใหม่" "ครับ"}}
+    } else {
+	""
+    }
+} -cleanup {
+    destroy .t1
+} -result {1}
+
+# 5. Complex-script wrapping: Thai / Lao / Khmer / Myanmar.
+# Forced-break sweep at many widths. Any width that produces a
+# line starting with an orphan mark is a breaking bug, not a
+# font or rendering quirk.
+
+test textGrapheme-5.1 {Thai: no orphan line start at any wrap width} -setup {
+    set sample "ผมกำลังลองระบบตัดคำใหม่ครับ แต่ยังไม่แน่ใจว่าทำงานถูกต้องหรือเปล่า"
+} -body {
+    set bad {}
+    foreach width {5 8 10 12 15 20 25 30 40 50} {
+	text .t1 -font $fixedFont -wrap word -width $width
+	pack .t1
+	.t1 insert end $sample
+	update idletasks
+	foreach line [wrappedLines .t1] {
+	    if {![noOrphanLineStart $line]} {
+		lappend bad "width=$width line=<$line>"
+	    }
+	}
+	set joined [join [wrappedLines .t1] ""]
+	set a [regsub -all {\s} $sample ""]
+	set b [regsub -all {\s} $joined ""]
+	if {$a ne $b} { lappend bad "width=$width lost/duplicated chars" }
+	destroy .t1
+    }
+    set bad
+} -cleanup {
+    unset -nocomplain sample bad
+} -result {}
+
+test textGrapheme-5.2 {Lao: no orphan line start at any wrap width} -setup {
+    set sample "ມະນຸດທຸກຄົນເກີດມາມີກຽດສັກສີ, ສິດທິ, ເສລີພາບ ແລະຄວາມສະເໝີພາບ ເທົ່າທຽມກັນ. ທຸກໆຄົນມີເຫດຜົນແລະມີມະໂນທຳ, ຈຶ່ງຄວນປະຕິບັດຕໍ່ກັນດ້ວຍຄວາມເປັນພີ່ນ້ອງກັນ."
+} -body {
+    set bad {}
+    foreach width {5 8 10 12 15 20 25 30 40 50} {
+	text .t1 -font $fixedFont -wrap word -width $width
+	pack .t1
+	.t1 insert end $sample
+	update idletasks
+	foreach line [wrappedLines .t1] {
+	    if {![noOrphanLineStart $line]} {
+		lappend bad "width=$width line=<$line>"
+	    }
+	}
+	set joined [join [wrappedLines .t1] ""]
+	set a [regsub -all {\s} $sample ""]
+	set b [regsub -all {\s} $joined ""]
+	if {$a ne $b} { lappend bad "width=$width lost/duplicated chars" }
+	destroy .t1
+    }
+    set bad
+} -cleanup {
+    unset -nocomplain sample bad
+} -result {}
+
+test textGrapheme-5.3 {Khmer: no orphan line start at any wrap width} -setup {
+    set sample "មនុស្សគ្រប់រូបកើតមកមានសេរីភាព និងភាពស្មើគ្នាក្នុងសេចក្ដីថ្លៃថ្នូរ និងសិទ្ធិ។ ពួកគេមានវិចារណញ្ញាណ និងសតិសម្បជញ្ញៈ ហើយត្រូវប្រព្រឹត្តចំពោះគ្នាទៅវិញទៅមកក្នុងស្មារតីនៃភាពជាបងប្អូន។"
+} -body {
+    set bad {}
+    foreach width {5 8 10 12 15 20 25 30 40 50} {
+	text .t1 -font $fixedFont -wrap word -width $width
+	pack .t1
+	.t1 insert end $sample
+	update idletasks
+	foreach line [wrappedLines .t1] {
+	    if {![noOrphanLineStart $line]} {
+		lappend bad "width=$width line=<$line>"
+	    }
+	}
+	set joined [join [wrappedLines .t1] ""]
+	set a [regsub -all {\s} $sample ""]
+	set b [regsub -all {\s} $joined ""]
+	if {$a ne $b} { lappend bad "width=$width lost/duplicated chars" }
+	destroy .t1
+    }
+    set bad
+} -cleanup {
+    unset -nocomplain sample bad
+} -result {}
+
+test textGrapheme-5.4 {Myanmar: no orphan line start at any wrap width} -setup {
+    set sample "လူတိုင်းသည် မွေးဖွားလာစဉ် လွတ်လပ်ခြင်းနှင့် သိက္ခာနှင့် အခွင့်အရေးများ၌ တန်းတူညီမျှ ရှိကြသည်။"
+} -body {
+    set bad {}
+    foreach width {5 8 10 12 15 20 25 30 40 50} {
+	text .t1 -font $fixedFont -wrap word -width $width
+	pack .t1
+	.t1 insert end $sample
+	update idletasks
+	foreach line [wrappedLines .t1] {
+	    if {![noOrphanLineStart $line]} {
+		lappend bad "width=$width line=<$line>"
+	    }
+	}
+	set joined [join [wrappedLines .t1] ""]
+	set a [regsub -all {\s} $sample ""]
+	set b [regsub -all {\s} $joined ""]
+	if {$a ne $b} { lappend bad "width=$width lost/duplicated chars" }
+	destroy .t1
+    }
+    set bad
+} -cleanup {
+    unset -nocomplain sample bad
+} -result {}
+
+# 6. Arabic / Hebrew: RTL breaks, selection, and the "و" prefix.
+
+test textGrapheme-6.1 {Arabic: no lone و prefix, no orphan diacritic, words intact} -setup {
+    text .t1 -font $fixedFont -wrap word -width 30
+    pack .t1
+    .t1 insert end "يولد جميع الناس أحرارا متساوين في الكرامة والحقوق. وقد وهبوا عقلا وضميرا وعليهم أن يعامل بعضهم بعضا بروح الإخاء."
+    update idletasks
+} -body {
+    set lines [wrappedLines .t1]
+    set joined [join $lines " "]
+    list [expr {![regexp {(^|\n)و[ \n]} $joined]}] \
+	 [allLinesNoOrphans $lines] \
+	 [expr {[string first "عقلا" [join $lines ""]] >= 0 \
+		|| [string first "عقل" [join $lines ""]] >= 0}]
+} -cleanup {
+    destroy .t1
+} -result {1 1 1}
+
+test textGrapheme-6.2 {Hebrew: no orphan line start; mixed bidi round-trips} -setup {
+    text .t1 -font $fixedFont -wrap word -width 30
+    pack .t1
+    .t1 insert end "כל בני אדם נולדו בני חורין ושווים בערכם ובזכויותיהם. כולם חוננו בתבונה ובמצפון, לפיכך חובה עליהם לנהוג איש ברעהו ברוח של אחווה."
+    update idletasks
+} -body {
+    set lines [wrappedLines .t1]
+    set res [list [allLinesNoOrphans $lines]]
+    .t1 delete 1.0 end
+    .t1 insert end "שלום Hello 2026 שלום"
+    lappend res [.t1 get 1.0 end-1c]
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1 {שלום Hello 2026 שלום}}
+
+# 7. Sentence / word navigation (UAX #29 in the widget).
+
+test textGrapheme-7.1 {wordstart / wordend never land mid-word} -setup {
+    .t delete 1.0 end
+    .t configure -wrap none
+    .t insert end "Hello, world. Goodbye, world."
+} -body {
+    list [.t index "1.8 wordstart"] [.t index "1.8 wordend"] \
+	 [.t index "1.14 wordstart"]
+} -cleanup {
+    .t delete 1.0 end
+} -result {1.7 1.12 1.14}
+
+test textGrapheme-7.2 {linestart / lineend on a NUL line} -setup {
+    .t delete 1.0 end
+    .t configure -wrap none
+    .t insert end "aa\0bb cc"
+} -body {
+    list [.t index "1.3 linestart"] [.t index "1.3 lineend"]
+} -cleanup {
+    .t delete 1.0 end
+} -result {1.0 1.8}
+
+# 8. Differential: same string with and without NULs.
+#
+# Take a string S with NULs. Remove the NULs to get S'. The break
+# pattern of S' should be the break pattern of S with the NUL
+# characters deleted -- i.e. NULs behave as ordinary single
+# characters for breaking, and the remap must not shift any
+# other boundary. Wrapping S and S' at the same width must
+# break at the same *words*, modulo the NULs.
+
+test textGrapheme-8.1 {NUL vs no-NUL wrapping breaks at same words} -setup {
+    set withNul "aa\0bb cc\0dd ee"
+    set withoutNul "aabb ccdd ee"
+} -body {
+    text .t1 -font $fixedFont -wrap word -width 6
+    pack .t1
+    .t1 insert end $withNul
+    update idletasks
+    set lines1 [wrappedLines .t1]
+    destroy .t1
+    text .t1 -font $fixedFont -wrap word -width 6
+    pack .t1
+    .t1 insert end $withoutNul
+    update idletasks
+    set lines2 [wrappedLines .t1]
+    set words1 {}
+    foreach line $lines1 {
+	foreach word [split [string map {"\0" ""} $line] " "] {
+	    if {$word ne ""} { lappend words1 $word }
+	}
+    }
+    set words2 {}
+    foreach line $lines2 {
+	foreach word [split $line " "] {
+	    if {$word ne ""} { lappend words2 $word }
+	}
+    }
+    list $words1 $words2
+} -cleanup {
+    destroy .t1
+    unset -nocomplain withNul withoutNul
+} -result {{aabb ccdd ee} {aabb ccdd ee}}
+
+# 9. No line break inside a grapheme cluster (textDisp-39.x form).
+# e + combining acute, twice, then woman + ZWJ + laptop (one emoji).
+
+# Display lines of $w, each one as its code points U+XXXX joined by ".".
+# (Reuses displayLineCodePoints above.)
+
+set graphemeText "e[format %c 0x301]e[format %c 0x301][format %c 0x1F469][format %c 0x200D][format %c 0x1F4BB]"
+test textGrapheme-9.1 {no line break inside a grapheme cluster, line one pixel wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # A window one pixel wide: a single grapheme cluster is forced on each line.
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -wrap $mode
+	place .t1 -x 0 -y 0 -width 1 -height 100
+	update
+	.t1 insert end $graphemeText
+	.t1 count -update -displaylines 1.0 end
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
+
+test textGrapheme-9.2 {no line break inside an emoji ZWJ sequence, widget one character wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -width 1 -wrap $mode
+	pack .t1
+	.t1 insert end $graphemeText
+	update
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
+
+#
+# TESTFILE CLEANUP
+#
+
+testutils forget scroll text
+deleteWindows
+option clear
+cleanupTests
