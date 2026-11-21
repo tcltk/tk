@@ -12,6 +12,7 @@
  *      ICU-derived dictionaries.
  *
  * Copyright (c) 2026 Kevin Walzer.
+ * Copyright (c) 2026 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution.
  */
@@ -23,266 +24,16 @@
 #include <stdlib.h>
 #include "dictionaries.h"
 
-
-/*
- * ---------------------------------------------------------------
- * TclHasEncodedNul --
- *
- *   Test whether a Tcl (modified UTF-8) buffer contains an encoded
- *   NUL, the two-byte sequence C0 80. In valid Tcl UTF-8, C0 only
- *   occurs as the first byte of that sequence (U+0000 is the only
- *   codepoint Tcl encodes differently from strict UTF-8).
- *
- * Why this scan exists:
- *   Mojibake accepts only strict UTF-8, and its mjb_*_break_next
- *   iterators have no status return. On inspection of the
- *   mojibake decoder, an unconverted C0 80 is not rejected
- *   visibly: it decodes as two U+FFFD codepoints (class Other,
- *   not Control), so the NUL would be silently misclassified
- *   and its boundaries wrong. The buffer is therefore checked
- *   before mojibake sees it, not after.
- *
- *   The check is a separate, allocation-free O(n) pass so that
- *   the common case stays cheap: buffers with no encoded NUL,
- *   which is nearly all text, take the fast path with no copy
- *   and no offset map. Only buffers that actually contain C0 80
- *   pay for ConvertTclToUtf8(), which allocates and remaps
- *   offsets. Converting unconditionally would pay that cost
- *   on every call.
- *
- * Results:
- *   Returns 1 if the buffer contains C0 80, 0 otherwise.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
- 
-static int
-TclHasEncodedNul(const char *buf,
-		 size_t byteLen)
-{
-    size_t i;
-
-    for (i = 0; i + 1 < byteLen; i++) {
-	if ((unsigned char) buf[i] == 0xC0
-		&& (unsigned char) buf[i + 1] == 0x80) {
-	    return 1;
-	}
-    }
-    return 0;
-}
-
-/*
- * ---------------------------------------------------------------
- * ConvertTclToUtf8 --
- *
- *   Convert a Tcl (modified UTF-8) buffer to strict UTF-8 for the
- *   mojibake library, which expects strict UTF-8 and rejects the
- *   overlong C0 80 encoding of U+0000 as malformed. Every C0 80
- *   pair is collapsed to the single byte 00; every other byte is
- *   copied unchanged, since Tcl UTF-8 and strict UTF-8 agree on all
- *   other codepoints.
- *
- *   Also builds an offset map so boundaries computed by mojibake in
- *   strict-UTF-8 coordinates can be translated back to Tcl
- *   coordinates: offsetMap[utf8Offset] is the Tcl byte offset of
- *   the byte at utf8Offset, and offsetMap[utf8Len] == tclLen.
- *   Each collapsed NUL therefore shifts every later Tcl offset by
- *   one relative to its strict-UTF-8 offset.
- *
- * Results:
- *   Returns 1 on success, with *utf8BufPtr set to a malloced
- *   strict-UTF-8 buffer (caller frees it), *utf8LenPtr set to its
- *   length, and *offsetMapPtr set to a malloced offset map of
- *   *utf8LenPtr + 1 entries (caller frees it). Returns 0 on
- *   allocation failure, with all three out-parameters left NULL/0.
- *
- * Side effects:
- *   Allocates memory.
- * ---------------------------------------------------------------
- */
-
-static int
-ConvertTclToUtf8(const char *buf,
-		 size_t byteLen,
-		 char **utf8BufPtr,
-		 size_t *utf8LenPtr,
-		 size_t **offsetMapPtr)
-{
-    char *utf8Buf;
-    size_t *offsetMap;
-    size_t i = 0, j = 0;
-
-    *utf8BufPtr = NULL;
-    *utf8LenPtr = 0;
-    *offsetMapPtr = NULL;
-
-    /*
-     * The converted buffer is at most as long as the input, since
-     * conversion only ever collapses two bytes into one. Allocate
-     * byteLen + 1 so the offset map can hold the end position, and
-     * so the buffer itself is always NUL-terminated for safety even
-     * though every consumer here is length-aware.
-     */
-    utf8Buf = (char *) malloc(byteLen + 1);
-    offsetMap = (size_t *) malloc((byteLen + 1) * sizeof(size_t));
-    if (utf8Buf == NULL || offsetMap == NULL) {
-	if (utf8Buf != NULL) {
-	    free(utf8Buf);
-	}
-	if (offsetMap != NULL) {
-	    free(offsetMap);
-	}
-	return 0;
-    }
-
-    while (i < byteLen) {
-	offsetMap[j] = i;
-	if (i + 1 < byteLen
-		&& (unsigned char) buf[i] == 0xC0
-		&& (unsigned char) buf[i + 1] == 0x80) {
-	    utf8Buf[j] = '\0';
-	    i += 2;
-	} else {
-	    utf8Buf[j] = buf[i];
-	    i += 1;
-	}
-	j++;
-    }
-    offsetMap[j] = byteLen;
-    utf8Buf[j] = '\0';
-
-    *utf8BufPtr = utf8Buf;
-    *utf8LenPtr = j;
-    *offsetMapPtr = offsetMap;
-    return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * TclOffsetToUtf8Offset --
- *
- *   Translate a Tcl byte offset to the corresponding strict-UTF-8
- *   byte offset using the map built by ConvertTclToUtf8. An offset
- *   in the middle of a C0 80 pair (i.e. just past the C0 byte) maps
- *   to just past the converted NUL byte, so callers that pass a
- *   non-boundary offset still land on the correct side of the NUL.
- *
- * Results:
- *   Returns the strict-UTF-8 offset.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-static size_t
-TclOffsetToUtf8Offset(const size_t *offsetMap,
-		      size_t utf8Len,
-		      size_t tclOffset)
-{
-    size_t j = 0;
-
-    while (j < utf8Len && offsetMap[j] < tclOffset) {
-	j++;
-    }
-    return j;
-}
-
-/*
- * ---------------------------------------------------------------
- * Utf8OffsetToTclOffset --
- *
- *   Translate a strict-UTF-8 byte offset back to a Tcl byte offset
- *   using the map built by ConvertTclToUtf8.
- *
- * Results:
- *   Returns the Tcl byte offset.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-static size_t
-Utf8OffsetToTclOffset(const size_t *offsetMap,
-		      size_t utf8Offset)
-{
-    return offsetMap[utf8Offset];
-}
-
-/*
- * ---------------------------------------------------------------
- * RemapBreaksToTcl --
- *
- *   Translate a breaks array computed by mojibake in strict-UTF-8
- *   coordinates back to Tcl coordinates, in place. The array on
- *   entry has utf8Len + 1 entries; on exit the first tclLen + 1
- *   entries hold the Tcl-coordinate breaks. A break at strict-UTF-8
- *   offset p becomes a break at Tcl offset offsetMap[p].
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Rewrites the breaks array. Frees the temporary copy.
- * ---------------------------------------------------------------
- */
-
-static void
-RemapBreaksToTcl(unsigned char *breaks,
-		 size_t utf8Len,
-		 size_t tclLen,
-		 const size_t *offsetMap)
-{
-    unsigned char *converted;
-    size_t i;
-
-    converted = (unsigned char *) malloc(utf8Len + 1);
-    if (converted == NULL) {
-	/*
-	 * Out of memory: leave the array as-is rather than corrupting
-	 * it. The offsets will be off by the NUL shift, but the array
-	 * still has valid break entries for the converted buffer.
-	 */
-	return;
-    }
-    memcpy(converted, breaks, utf8Len + 1);
-    memset(breaks, 0, tclLen + 1);
-    for (i = 0; i <= utf8Len; i++) {
-	if (converted[i]) {
-	    breaks[offsetMap[i]] = 1;
-	}
-    }
-    free(converted);
-}
-
-
-
-
 /*
  * ---------------------------------------------------------------
  * mojibake_grapheme_breaks --
  *
- *   Compute all grapheme cluster break boundaries in a UTF-8 buffer.
+ *   Computes all grapheme cluster break boundaries in a TUTF-8 buffer.
  *   Implements Unicode UAX #29 extended grapheme cluster boundaries.
  *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Uses mojibake to iterate through the buffer, recording each break by
+ *   setting a byte of the breaks buffer to 1 unless the break corresponds to
+ *   the \x80 byte of an encoded null byte, in which case it is ignored.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
@@ -298,55 +49,35 @@ mojibake_grapheme_breaks(const char *buf,
 			 size_t byteLen,
 			 unsigned char *breaks)
 {
+    const unsigned char *u = (const unsigned char*) buf;
     mjb_grapheme_break_state state;
     mjb_break_type bt;
-    size_t tclLen = byteLen;
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
+    if (buf == NULL || breaks == NULL) {
+	 return 0;
     }
-    if (buf == NULL || breaks == NULL) { if (converted) { free(convertedBuf); free(offsetMap); } return 0; }
     memset(breaks, 0, byteLen + 1);
-    if (byteLen == 0) { breaks[0]=1; return 1; }
+    if (byteLen == 0) {
+	breaks[0]=1;
+	return 1;
+    }
     breaks[0]=1;
-    /*
-     * Call mojibake once on the whole buffer. After conversion,
-     * embedded U+0000 is represented as byte 00 and is expected
-     * to be handled as a normal control codepoint when an explicit
-     * length is supplied (as opposed to MJB_NUL_TERMINATED):
-     * decoded as U+0000, breaking before/after it per GB4/GB5,
-     * with RI / ZWJ / Indic state carried across it. Splitting
-     * at NULs and resetting state per segment would discard that
-     * cross-boundary context, so do not do that. The only reason
-     * the buffer ever contains 00 here is ConvertTclToUtf8()
-     * above, which collapsed each Tcl C0 80 pair to one 00;
-     * unconverted C0 80 would instead decode as two U+FFFDs.
-     * This relies on mojibake's length-delimited behaviour; if
-     * that ever changes, this single-call assumption must be
-     * re-checked against the mojibake source and tests.
-     */
     state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
+            continue;
+        }
         if (bt == MJB_BT_ALLOWED) {
-            size_t pos = state.position;
             if (pos <= byteLen) {
-                breaks[pos] = 1;
+		breaks[pos] = 1;
             }
         }
     }
     breaks[byteLen]=1;
-    if (converted) {
-	RemapBreaksToTcl(breaks, byteLen, tclLen, offsetMap);
-	free(convertedBuf);
-	free(offsetMap);
-    }
     return 1;
 }
 
@@ -356,21 +87,9 @@ mojibake_grapheme_breaks(const char *buf,
  *
  *   Find the next grapheme cluster boundary after a given byte offset.
  *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Iterate through the buffer, ignoring any break at the \x80 byte
+ *   of an encoded nul codepoint. Write the offset of the first allowed
+ *   break into the nextOffset address.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
@@ -387,31 +106,35 @@ mojibake_grapheme_next(const char *buf,
 		       size_t byteOffset,
 		       size_t *nextOffset)
 {
+    const unsigned char *u = (const unsigned char*) buf;
     mjb_grapheme_break_state state;
     mjb_break_type bt;
-    if (nextOffset==NULL) return 0;
-    if (buf==NULL || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
-
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
+    if (nextOffset==NULL){
+	return 0;
     }
-    state.index=0;
+    if (buf==NULL || byteOffset>=byteLen) {
+	*nextOffset=byteLen;
+	return buf!=NULL;
+    }
+    state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
-	}
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
+        if (bt == MJB_BT_ALLOWED && pos > byteOffset) {
+            *nextOffset = pos;
+            return 1;
+        }
     }
-    *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, byteLen) : byteLen; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *nextOffset = byteLen;
+    return 1;
 }
 
 /*
@@ -420,21 +143,11 @@ mojibake_grapheme_next(const char *buf,
  *
  *   Find the previous grapheme cluster boundary before a given byte offset.
  *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   This requires iterating through the buffer from the start, remembering
+ *   each break while finding the next one.  As soon as the position
+ *   passes the byteOffset return the last saved value.  However,
+ *   we must completely ignore any break at the \x80 byte of an
+ *   encoded nul codepoint.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
@@ -451,58 +164,50 @@ mojibake_grapheme_prev(const char *buf,
 		       size_t byteOffset,
 		       size_t *prevOffset)
 {
+    unsigned char *u = (unsigned char*) buf;
     mjb_grapheme_break_state state;
     mjb_break_type bt;
-    size_t last=0;
-    if (prevOffset==NULL) return 0;
-    if (buf==NULL || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
-
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
+    size_t last = 0;
+    if (prevOffset==NULL) {
+	return 0;
     }
-    state.index=0;
+    if (buf==NULL || byteOffset==0) {
+	*prevOffset=0;
+	return buf!=NULL;
+    }
+    state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_grapheme_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>=byteOffset) break;
-	    last=pos;
+	    if (pos < byteOffset) {
+		last = pos;
+	    } else {
+		break;
+	    }
 	}
     }
-    *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *prevOffset = last;
+    return 1;
 }
-
 
 /*
  * ---------------------------------------------------------------
- * mojibake_line_breaks --
+ * mojibake_line_breaks_base --
  *
- *   Compute all line break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #14 line breaking rules.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Compute all line break boundaries in a TUTF-8 buffer.  Implements Unicode
+ *   UAX #14 line breaking rules.  Uses mojibake to iterate through the
+ *   buffer, recording each break by setting a byte of the breaks buffer to 1,
+ *   unless the break corresponds to the \x80 byte of an encoded null byte, in
+ *   which case it is ignored.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
@@ -514,53 +219,39 @@ mojibake_grapheme_prev(const char *buf,
  */
 
 static int
-MojibakeLineBreaksBase(const char *buf,
-		     size_t byteLen,
-		     unsigned char *breaks)
+mojibake_line_breaks_base(
+    const char *buf,
+    size_t byteLen,
+    unsigned char *breaks)
 {
+    unsigned char *u = (unsigned char*) buf;
     mjb_line_break_state state;
     mjb_break_type bt;
-    size_t tclLen = byteLen;
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
+    if (!buf || !breaks) {
+	return 0;
     }
-    if (!buf || !breaks) { if (converted) { free(convertedBuf); free(offsetMap); } return 0; }
     memset(breaks,0,byteLen+1);
     if (byteLen==0) { breaks[0]=1; return 1; }
     breaks[0]=1;
-    /*
-     * Call mojibake once on the whole buffer. After conversion,
-     * embedded U+0000 is represented as byte 00 and is expected
-     * to be handled as a normal control codepoint when an explicit
-     * length is supplied, with UAX #14 breaking around it.
-     * Splitting at NULs and resetting state per segment would
-     * discard the lookahead (spaces, quotes) that line breaking
-     * needs, so do not do that. See the grapheme bulk function
-     * for why C0 80 must be converted to 00 before this call,
-     * and for the caveat that this relies on mojibake's
-     * length-delimited behaviour.
-     */
     state.index=0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
         if (bt==MJB_BT_ALLOWED) {
-            size_t pos=state.position;
-            if (pos<=byteLen) breaks[pos]=1;
+            if (pos <= byteLen) {
+		breaks[pos] = 1;
+	    }
         }
     }
     breaks[byteLen]=1;
-    if (converted) {
-	RemapBreaksToTcl(breaks, byteLen, tclLen, offsetMap);
-	free(convertedBuf);
-	free(offsetMap);
-    }
     return 1;
 }
 
@@ -568,23 +259,10 @@ MojibakeLineBreaksBase(const char *buf,
  * ---------------------------------------------------------------
  * mojibake_line_next --
  *
- *   Find the next line break boundary after a given byte offset.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Find the next line break boundary after a given byte offset in a TUTF-8
+ *   byte sequence. Uses mojibake to iterate through the buffer from the
+ *   start, finding all line breaks which are not the offset of the \x80 byte
+ *   in an encoded nul codepoint. Return the first one after the given offset.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
@@ -596,59 +274,48 @@ MojibakeLineBreaksBase(const char *buf,
  */
 
 int
-mojibake_line_next(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *nextOffset)
+mojibake_line_next(
+   const char *buf,
+   size_t byteLen,
+   size_t byteOffset,
+   size_t *nextOffset)
 {
+    unsigned char *u = (unsigned char*) buf;
     mjb_line_break_state state;
     mjb_break_type bt;
     if (!nextOffset) return 0;
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
 
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
-    }
     state.index=0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
-	}
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
+        if (bt == MJB_BT_ALLOWED && pos > byteOffset) {
+            *nextOffset = pos;
+            return 1;
+        }
     }
-    *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, byteLen) : byteLen; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *nextOffset = byteLen;
+    return 1;
 }
 
 /*
  * ---------------------------------------------------------------
  * mojibake_line_prev --
  *
- *   Find the previous line break boundary before a given byte offset.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Find the previous line break boundary before a given byte offset.  in a
+ *   TUTF-8 buffer.  Uses mojibake to iterate through the buffer from the
+ *   beginning, remembering each break before finding the next one, but
+ *   ignoring any break at the \x80 byte of an encoded nul codepoint. Returns
+ *   the remembered offset as soon as the position passes the given offset.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
@@ -660,67 +327,56 @@ mojibake_line_next(const char *buf,
  */
 
 int
-mojibake_line_prev(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *prevOffset)
+mojibake_line_prev(
+   const char *buf,
+   size_t byteLen,
+   size_t byteOffset,
+   size_t *prevOffset)
 {
+    unsigned char *u = (unsigned char *)buf;
     mjb_line_break_state state;
     mjb_break_type bt;
     size_t last=0;
     if (!prevOffset) return 0;
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
 
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
-    }
-    state.index=0;
+    state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_line_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>=byteOffset) break;
-	    last=pos;
+	    if (pos < byteOffset) {
+		last = pos;
+	    } else {
+		break;
+	    }
 	}
     }
-    *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *prevOffset = last;
+    return 1;
 }
-
 
 /*
  * ---------------------------------------------------------------
- * mojibake_word_breaks --
+ * mojibake_word_breaks_base --
  *
- *   Compute all word break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #29 word breaking rules.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Compute all word break boundaries in a TUTF-8 buffer.  Implements Unicode
+ *   UAX #14 line breaking rules.  Implements Unicode UAX #14 line breaking
+ *   rules.  Uses mojibake to iterate through the buffer, recording each break
+ *   by setting a byte of the breaks buffer to 1, unless the break corresponds
+ *   to the \x80 byte of an encoded null byte, in which case it is ignored.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
- *   word break boundary byte offset (including 0 and byteLen).
+ *   line break boundary byte offset (including 0 and byteLen).
  *
  * Side effects:
  *   None.
@@ -728,53 +384,39 @@ mojibake_line_prev(const char *buf,
  */
 
 static int
-MojibakeWordBreaksBase(const char *buf,
-		     size_t byteLen,
-		     unsigned char *breaks)
+mojibake_word_breaks_base(
+    const char *buf,
+    size_t byteLen,
+    unsigned char *breaks)
 {
+    unsigned char *u = (unsigned char*) buf;
     mjb_word_break_state state;
     mjb_break_type bt;
-    size_t tclLen = byteLen;
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
+    if (!buf || !breaks) {
+	return 0;
     }
-    if (!buf || !breaks) { if (converted) { free(convertedBuf); free(offsetMap); } return 0; }
     memset(breaks,0,byteLen+1);
     if (byteLen==0) { breaks[0]=1; return 1; }
     breaks[0]=1;
-    /*
-     * Call mojibake once on the whole buffer. After conversion,
-     * embedded U+0000 is represented as byte 00 and is expected
-     * to be handled as a normal control codepoint when an explicit
-     * length is supplied, with UAX #29 breaking around it.
-     * Splitting at NULs and resetting state per segment would
-     * discard the cross-boundary context (e.g. ZWJ / Regional
-     * Indicator state), so do not do that. See the grapheme
-     * bulk function for why C0 80 must be converted to 00
-     * before this call, and for the caveat that this relies
-     * on mojibake's length-delimited behaviour.
-     */
     state.index=0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
         if (bt==MJB_BT_ALLOWED) {
-            size_t pos=state.position;
-            if (pos<=byteLen) breaks[pos]=1;
+            if (pos <= byteLen) {
+		breaks[pos] = 1;
+	    }
         }
     }
     breaks[byteLen]=1;
-    if (converted) {
-	RemapBreaksToTcl(breaks, byteLen, tclLen, offsetMap);
-	free(convertedBuf);
-	free(offsetMap);
-    }
     return 1;
 }
 
@@ -782,27 +424,16 @@ MojibakeWordBreaksBase(const char *buf,
  * ---------------------------------------------------------------
  * mojibake_word_next --
  *
- *   Find the next word break boundary after a given byte offset.
+ *   Find the next word break after a given byte offset in a TUTF-8 encoded
+ *   buffer.
  *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Uses mojibake to iterate through the buffer from the start and returns
+ *   the first break which is not the offset of the \x80 byte of an encoded
+ *   nul codepoing and which comes after the given offset.
  *
  * Results:
  *   Returns 1 on success. nextOffset is set to the byte offset of
- *   the next word break boundary, or byteLen if none exists.
+ *   the next line break boundary, or byteLen if none exists.
  *
  * Side effects:
  *   None.
@@ -810,63 +441,52 @@ MojibakeWordBreaksBase(const char *buf,
  */
 
 int
-mojibake_word_next(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *nextOffset)
+mojibake_word_next(
+   const char *buf,
+   size_t byteLen,
+   size_t byteOffset,
+   size_t *nextOffset)
 {
+    unsigned char *u = (unsigned char*) buf;
     mjb_word_break_state state;
     mjb_break_type bt;
     if (!nextOffset) return 0;
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
 
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
-    }
     state.index=0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>byteOffset) { *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, pos) : pos; if (converted) { free(convertedBuf); free(offsetMap); } return 1; }
-	}
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
+        if (bt == MJB_BT_ALLOWED && pos > byteOffset) {
+            *nextOffset = pos;
+            return 1;
+        }
     }
-    *nextOffset= converted ? Utf8OffsetToTclOffset(offsetMap, byteLen) : byteLen; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *nextOffset = byteLen;
+    return 1;
 }
 
 /*
  * ---------------------------------------------------------------
  * mojibake_word_prev --
  *
- *   Find the previous word break boundary before a given byte offset.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Find the last word break boundary before a given byte offset in a TUTF-8
+ *   buffer.  Uses mojibake to iterate through the buffer from the start,
+ *   remembering each break before finding the next one, but ignoring any
+ *   break at the \x80 byte of an encoded nul codepoint. Returns the
+ *   remembered offset as soon as the position passes the given offset.
  *
  * Results:
  *   Returns 1 on success. prevOffset is set to the byte offset of
- *   the previous word break boundary, or 0 if none exists.
+ *   the previous line break boundary, or 0 if none exists.
  *
  * Side effects:
  *   None.
@@ -874,67 +494,56 @@ mojibake_word_next(const char *buf,
  */
 
 int
-mojibake_word_prev(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *prevOffset)
+mojibake_word_prev(
+   const char *buf,
+   size_t byteLen,
+   size_t byteOffset,
+   size_t *prevOffset)
 {
+    unsigned char *u = (unsigned char *)buf;
     mjb_word_break_state state;
     mjb_break_type bt;
     size_t last=0;
     if (!prevOffset) return 0;
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
 
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
-	byteOffset = TclOffsetToUtf8Offset(offsetMap, byteLen, byteOffset);
-    }
-    state.index=0;
+    state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_word_break_next(&text, &state)) != MJB_BT_NOT_SET) {
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen &&
+	    (unsigned char) u[pos - 1] == 0xC0 &&
+	    (unsigned char) u[pos] == 0x80) {
+            continue;
+        }
 	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos>=byteOffset) break;
-	    last=pos;
+	    if (pos < byteOffset) {
+		last = pos;
+	    } else {
+		break;
+	    }
 	}
     }
-    *prevOffset= converted ? Utf8OffsetToTclOffset(offsetMap, last) : last; if (converted) { free(convertedBuf); free(offsetMap); } return 1;
+    *prevOffset = last;
+    return 1;
 }
-
 
 /*
  * ---------------------------------------------------------------
  * mojibake_sentence_breaks --
  *
- *   Compute all sentence break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #29 sentence breaking rules.
- *
- *   The input buffer is in Tcl (modified UTF-8) encoding, in
- *   which U+0000 is stored as C0 80. Mojibake expects strict
- *   UTF-8 and rejects C0 80 as malformed, so when the buffer
- *   contains an encoded NUL it is converted to strict UTF-8
- *   before calling mojibake, and every boundary returned is
- *   translated back to Tcl byte offsets. Buffers without an
- *   encoded NUL take the fast path with no copy. The conversion
- *   is required, not optional: on inspection of the mojibake
- *   decoder, unconverted C0 80 decodes as two U+FFFDs (Other,
- *   not Control), and the mjb_*_break_next iterators have no status
- *   return with which to report that, so they would silently
- *   misclassify the NUL. After conversion, a 00 byte is a
- *   genuine U+0000 Control and mojibake, given an explicit
- *   byte length, is expected to iterate past it like any other
- *   codepoint; this is the behaviour this file relies on.
+ *   Computes all sentence break boundaries in a TUTF-8 buffer.  Implements
+ *   Unicode UAX #29 sentence breaking rules..  Uses mojibake to iterate
+ *   through the buffer, recording each break by setting a byte of the breaks
+ *   buffer to 1, unless the break corresponds to the \x80 byte of an encoded
+ *   null byte, in which case it is ignored.
  *
  * Results:
  *   Returns 1 on success. The breaks array is filled with 1 at each
- *   sentence break boundary byte offset (including 0 and byteLen).
+ *   grapheme boundary byte offset (including 0 and byteLen).
  *
  * Side effects:
  *   None.
@@ -942,41 +551,40 @@ mojibake_word_prev(const char *buf,
  */
 
 int
-mojibake_sentence_breaks(const char *buf,
-			 size_t byteLen,
-			 unsigned char *breaks)
+mojibake_sentence_breaks(
+    const char *buf,
+    size_t byteLen,
+    unsigned char *breaks)
 {
+    const unsigned char *u = (const unsigned char*) buf;
     mjb_sentence_break_state state;
     mjb_break_type bt;
-    size_t tclLen = byteLen;
-    char *convertedBuf = NULL;
-    size_t *offsetMap = NULL;
-    int converted = 0;
-    if (buf != NULL && byteLen > 0 && TclHasEncodedNul(buf, byteLen)) {
-	if (!ConvertTclToUtf8(buf, byteLen, &convertedBuf, &byteLen, &offsetMap)) {
-	    return 0;
-	}
-	buf = convertedBuf;
-	converted = 1;
+    if (buf == NULL || breaks == NULL) {
+	 return 0;
     }
-    if (!buf || !breaks) { if (converted) { free(convertedBuf); free(offsetMap); } return 0; }
-    memset(breaks,0,byteLen+1);
-    if (byteLen==0) { breaks[0]=1; return 1; }
+    memset(breaks, 0, byteLen + 1);
+    if (byteLen == 0) {
+	breaks[0]=1;
+	return 1;
+    }
     breaks[0]=1;
-    state.index=0;
+    state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = mjb_sentence_break_next(&text, &state)) != MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=state.position;
-	    if (pos<=byteLen) breaks[pos]=1;
-	}
+        if (bt == MJB_BT_NO_BREAK) {
+            continue;
+        }
+	size_t pos = state.position;
+        if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
+            continue;
+        }
+        if (bt == MJB_BT_ALLOWED) {
+            if (pos <= byteLen) {
+		breaks[pos] = 1;
+            }
+        }
     }
     breaks[byteLen]=1;
-    if (converted) {
-	RemapBreaksToTcl(breaks, byteLen, tclLen, offsetMap);
-	free(convertedBuf);
-	free(offsetMap);
-    }
     return 1;
 }
 
@@ -1088,9 +696,8 @@ InitDictCache(DictCache *c, const char* const* words, size_t count)
     if (c->initialized) return;
     c->orig_words = words;
     c->count = count;
-    c->sorted = (const char**)malloc(count * sizeof(char*));
-    c->lens = (size_t*)malloc(count * sizeof(size_t));
-    if (!c->sorted || !c->lens) return;
+    c->sorted = Tcl_Alloc(count * sizeof(char*));
+    c->lens = Tcl_Alloc(count * sizeof(size_t));
     size_t max=0;
     for (size_t i=0;i<count;i++) {
 	c->sorted[i]=words[i];
@@ -1400,12 +1007,11 @@ WordBreaksWithDictInternal(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-	localG = (unsigned char*)malloc(byteLen+1);
-	if (!localG) return 0;
+	localG = Tcl_Alloc(byteLen+1);
 	gBreaks = localG;
     }
     mojibake_grapheme_breaks(buf, byteLen, gBreaks);
-    MojibakeWordBreaksBase(buf, byteLen, wBreaks);
+    mojibake_word_breaks_base(buf, byteLen, wBreaks);
 
     /* Now walk the buffer codepoint by codepoint to find runs of complex script. */
     size_t i=0;
@@ -1435,23 +1041,26 @@ WordBreaksWithDictInternal(const char *buf,
 	ComplexScript curSc=sc;
 	size_t j=i;
 	while (j < byteLen) {
-	    if (!gBreaks[j]) { j++; continue; }
-	    if (j>=byteLen) break;
-	    /* Decode at j. */
+	    /* Step by grapheme cluster, not by byte/codepoint: a cluster
+	     * such as Thai U+0E01 U+0E33 has no grapheme break before
+	     * the spacing mark, so stepping byte-by-byte decodes a UTF-8
+	     * continuation byte as SCRIPT_OTHER and truncates the run
+	     * mid-word. The script of a cluster is its first codepoint. */
+	    size_t nextG = j + 1;
+	    while (nextG < byteLen && !gBreaks[nextG]) nextG++;
+	    if (nextG > byteLen) nextG = byteLen;
 	    unsigned char bj = (unsigned char)buf[j];
-	    mjb_codepoint cpj=0; int lj=1;
-	    if (bj < 0x80) { cpj=bj; lj=1; }
-	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); lj=2; } }
-	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); lj=3; } }
-	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); lj=4; } }
-	    else { cpj=bj; lj=1; }
-
+	    mjb_codepoint cpj=0;
+	    if (bj < 0x80) { cpj=bj; }
+	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); } }
+	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); } }
+	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); } }
+	    else { cpj=bj; }
 	    ComplexScript scj = ScriptFromCodepoint(cpj);
 	    if (scj!=curSc) break;
-	    /* Break run on ASCII space or line break already? Keep spaces as separators, so stop before space */
 	    if (cpj==0x20 || cpj==0x09 || cpj==0x0A || cpj==0x0D) break;
-	    runEnd = j+lj;
-	    j += lj;
+	    runEnd = nextG;
+	    j = nextG;
 	}
 	if (runEnd>runStart+1) {
 	    /*
@@ -1525,7 +1134,9 @@ WordBreaksWithDictInternal(const char *buf,
 	}
     }
 
-    if (localG) free(localG);
+    if (localG) {
+	Tcl_Free(localG);
+    }
     return 1;
 }
 
@@ -1580,8 +1191,7 @@ mojibake_line_breaks_with_dict(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-	localG = (unsigned char*)malloc(byteLen+1);
-	if (!localG) return 0;
+	localG = Tcl_Alloc(byteLen+1);
 	gBreaks = localG;
 	mojibake_grapheme_breaks(buf, byteLen, gBreaks);
     }
@@ -1589,13 +1199,12 @@ mojibake_line_breaks_with_dict(const char *buf,
     unsigned char *wBreaks = wBreaks_tmp;
     unsigned char *localW = NULL;
     if (!wBreaks) {
-	localW = (unsigned char*)malloc(byteLen+1);
-	if (!localW) { if(localG) free(localG); return 0; }
+	localW = Tcl_Alloc(byteLen+1);
 	wBreaks = localW;
     }
 
     /* Base line breaks. */
-    MojibakeLineBreaksBase(buf, byteLen, lBreaks);
+    mojibake_line_breaks_base(buf, byteLen, lBreaks);
     /* Enhanced word breaks. Pass lBreaks so the dictionary
      * fallback marks line breaks for unknown runs (it must NOT
      * mark word breaks there -- see ForwardMaxMatchRun). */
@@ -1663,8 +1272,12 @@ mojibake_line_breaks_with_dict(const char *buf,
 	}
     }
 
-    if (localG) free(localG);
-    if (localW) free(localW);
+    if (localG) {
+	Tcl_Free(localG);
+    }
+    if (localW) {
+	Tcl_Free(localW);
+    }
     return 1;
 }
 
@@ -1807,11 +1420,7 @@ mojibake_snap_wrap_break(const char *buf,
 	return 1;
     }
 
-    gBreaks = (unsigned char *) malloc(byteLen + 1);
-    if (gBreaks == NULL) {
-	*adjusted = proposed;
-	return 0;
-    }
+    gBreaks = Tcl_Alloc(byteLen + 1);
     mojibake_grapheme_breaks(buf, byteLen, gBreaks);
 
     pos = proposed;
@@ -1821,7 +1430,7 @@ mojibake_snap_wrap_break(const char *buf,
 	pos++;
     }
     *adjusted = pos;
-    free(gBreaks);
+    Tcl_Free(gBreaks);
     return 1;
 }
 
