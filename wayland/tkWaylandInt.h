@@ -954,6 +954,7 @@ MODULE_SCOPE int Tktray_Init(Tcl_Interp *interp);
 MODULE_SCOPE int SysNotify_Init(Tcl_Interp *interp);
 MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
 MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
+MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
 void TkWaylandMenuInit(void);
 
 /*

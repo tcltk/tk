@@ -2006,6 +2006,7 @@ TkpInit(Tcl_Interp *interp)
     Tktray_Init(interp);
     SysNotify_Init(interp);
     Cups_Init(interp);
+    Icu_Init(interp);
     TkWaylandAccessibility_Init(interp);
     TkWaylandKeyInit();
     TkWaylandMenuInit();

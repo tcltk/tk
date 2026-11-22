@@ -1,8 +1,7 @@
-
 /*
- * tkMacOSXSubwindows.c --
+ * tkMacOSXPointer.c --
  *
- *	Implements subwindows for the macintosh version of Tk.
+ *	Implements pointer management for the macOS port of Tk.
  *
  * Copyright © 2026 Marc Culler
  *
