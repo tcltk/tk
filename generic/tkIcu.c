@@ -189,11 +189,7 @@ TkIcuStartEndOfClusterCmd(
      * back to Tcl offsets. Pass the raw Tcl bytes; do NOT convert
      * here, and do NOT call any mjb_* function here.
      */
-    breaks = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
-    if (breaks == NULL) {
-	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
-	return TCL_ERROR;
-    }
+    breaks = Tcl_Alloc((size_t) tclLen + 1);
     if (!mojibake_grapheme_breaks(tclBytes, (size_t) tclLen, breaks)) {
 	Tcl_Free((char *) breaks);
 	Tcl_SetResult(interp, "mojibake grapheme segmentation failed",
@@ -537,11 +533,7 @@ TkIcuWordCmd(
 	index = ByteOffsetForCharIndex(tclBytes, index);
     }
 
-    breakArr = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
-    if (breakArr == NULL) {
-	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
-	return TCL_ERROR;
-    }
+    breakArr = Tcl_Alloc((size_t) tclLen + 1);
     /* Wrapper owns Tcl -> strict conversion; see header comment. */
     if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
 	    breakArr, NULL)) {
@@ -560,11 +552,6 @@ TkIcuWordCmd(
 	}
 	offsets = (Tcl_Size *) Tcl_Alloc(
 		(size_t) (count + 1) * sizeof(Tcl_Size));
-	if (offsets == NULL) {
-	    Tcl_Free((char *) breakArr);
-	    Tcl_SetResult(interp, "out of memory", TCL_STATIC);
-	    return TCL_ERROR;
-	}
 	for (k = 0; k <= tclLen; k++) {
 	    if (breakArr[k]) {
 		offsets[w++] = k;
@@ -719,7 +706,7 @@ TkIcuWordBreakCmd(
     }
     idx = ByteOffsetForCharIndex(tclBytes, index);
 
-    breakArr = (unsigned char *) Tcl_Alloc((size_t) tclLen + 1);
+    breakArr = Tcl_Alloc((size_t) tclLen + 1);
     if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
 	    breakArr, NULL)) {
 	Tcl_Free((char *) breakArr);
