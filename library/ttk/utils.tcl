@@ -225,6 +225,7 @@ namespace eval ttk {
 	interval	100
 	timer		{}
 	script		{}
+	grab		{}
     }
 }
 
@@ -236,6 +237,7 @@ proc ttk::Repeatedly {args} {
     after cancel $Repeat(timer)
     set script [uplevel 1 [list namespace code $args]]
     set Repeat(script) $script
+    set Repeat(grab) [grab current]
     set Repeat(timer) [after $Repeat(delay) ttk::Repeat]
     uplevel #0 $script
 }
@@ -245,6 +247,12 @@ proc ttk::Repeatedly {args} {
 #
 proc ttk::Repeat {} {
     variable Repeat
+    # Stop if another window has got the grab since the repeat started
+    # (e.g. a modal dialog opened by the script, or the background error
+    # dialog): the button release will not reach the widget.
+    if {[grab current] ne $Repeat(grab)} {
+	return
+    }
     set Repeat(timer) [after $Repeat(interval) ttk::Repeat]
     uplevel #0 $Repeat(script)
 }

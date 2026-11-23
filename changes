@@ -8652,4 +8652,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-11-17 (patch) [f64df5] Remove unused troughGC and copyGC from MacScrollbar (chavez)
 
+2026-11-23 (bug) [1842c9] ttk auto-repeat goes on endlessly if the command raises an error or opens a modal dialog (storchaka)
+
 - Released 8.6.19, Dec ??, 2026 - https://core.tcl-lang.org/tk/ for details
