@@ -250,9 +250,11 @@ radiobutton, the button activates whenever the mouse pointer is inside
 the button, and deactivates whenever the mouse pointer leaves the
 button.
 .IP [2]
-When mouse button 1 is pressed over a radiobutton it is invoked (it
-becomes selected and the command associated with the button is
-invoked, if there is one).
+When mouse button 1 is pressed over a radiobutton and later released over
+the radiobutton, it is invoked (it becomes selected and the command
+associated with the button is invoked, if there is one).
+However, if the mouse is not over the radiobutton when button 1 is
+released, then no invocation occurs.
 .IP [3]
 When a radiobutton has the input focus, the space key causes the radiobutton
 to be invoked.
