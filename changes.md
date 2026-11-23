@@ -193,6 +193,7 @@ to the userbase.
  - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
  - [Every Tk_Init registers another thread exit handler](https://core.tcl-lang.org/tk/tktview/703a7f)
  - [Remove unused troughGC and copyGC from MacScrollbar](https://core.tcl-lang.org/tk/tktview/f64df5)
+ - [ttk auto-repeat goes on endlessly if the command raises an error or opens a modal dialog](https://core.tcl-lang.org/tk/tktview/1842c9)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

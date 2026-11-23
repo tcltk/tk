@@ -489,6 +489,41 @@ test spinbox-6.4 {arrows of a tall spinbox take half of its height} -constraints
 
 rename tallSpinbox {}
 
+test spinbox-12.1 {auto-repeat stops when the command grabs} -setup {
+    ttk::spinbox .sb -from 0 -to 100 -command {
+	if {[incr ::count] == 1} {
+	    toplevel .d
+	    update
+	    grab .d
+	    after 500 {destroy .d}
+	    tkwait window .d
+	}
+    }
+    pack .sb
+    update
+    set count 0
+    # Find a point on the up arrow.
+    set w [winfo width .sb]
+    set h [winfo height .sb]
+    foreach x [list [expr {$w - 3}] [expr {$w - 6}] [expr {$w - 10}]] {
+	if {[string match *uparrow [.sb identify element $x [expr {$h / 4}]]]} {
+	    break
+	}
+    }
+    set y [expr {$h / 4}]
+} -body {
+    # The button is released while the dialog has the grab: the press runs
+    # the command, and so the dialog, synchronously.
+    after 50 [list event generate .sb <ButtonRelease-1> -x $x -y $y]
+    event generate .sb <Button-1> -x $x -y $y
+    after 1000 {set done 1}
+    vwait done
+    set count
+} -cleanup {
+    destroy .sb .d
+    unset -nocomplain count done x y w h
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
