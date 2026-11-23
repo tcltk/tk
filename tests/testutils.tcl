@@ -157,6 +157,22 @@ namespace eval ::tk::test::generic {
 	vwait [namespace current]::_pause($num)
     }
 
+    # removeTitleBar --
+    #
+    #	Windows does not let a toplevel get narrower than its title bar, which
+    #	is wider at high scale. Without the title bar, the window can be as
+    #	small as the tests need. The minimal width is the same for all
+    #	toplevels, so it is taken from the always mapped root window.
+    #
+    proc removeTitleBar {w} {
+	if {[tk windowingsystem] eq "win32" && [lindex [wm minsize .] 0] > 160} {
+	    wm overrideredirect $w 1
+	    if {[winfo ismapped $w]} {
+		update
+	    }
+	}
+    }
+
     # resetWindows --
     #
     #	Restores a proper initial window setup for a test file, cleaning up from
@@ -887,12 +903,18 @@ namespace eval ::tk::test::select {
 	variable selValue {} selInfo {}
 	variable abortCount
 	variable pass
+	# A selection which only the tests use.  Tests whose handlers log,
+	# delay or abort the conversion use it instead of PRIMARY, so that
+	# other clients (e.g. clipboard managers) requesting PRIMARY do not
+	# interfere with them.
+	variable privateSelection TK_TEST
     }
 
     proc badHandler {path type offset count} {
+	variable privateSelection
 	variable selInfo
 	variable selValue
-	selection handle -type $type $path {}
+	selection handle -selection $privateSelection -type $type $path {}
 	lappend selInfo $path $type $offset $count
 	set numBytes [expr {[string length $selValue] - $offset}]
 	if {$numBytes <= 0} {
@@ -902,12 +924,13 @@ namespace eval ::tk::test::select {
     }
 
     proc badHandler2 {path type offset count} {
+	variable privateSelection
 	variable abortCount
 	variable selInfo
 	variable selValue
 	incr abortCount -1
 	if {$abortCount == 0} {
-	    selection handle -type $type $path {}
+	    selection handle -selection $privateSelection -type $type $path {}
 	}
 	lappend selInfo $path $type $offset $count
 	set numBytes [expr {[string length $selValue] - $offset}]
@@ -954,6 +977,7 @@ namespace eval ::tk::test::select {
     }
 
     proc reallyBadHandler {path type offset count} {
+	variable privateSelection
 	variable selInfo
 	variable selValue
 	variable pass
@@ -961,7 +985,7 @@ namespace eval ::tk::test::select {
 	    if {$pass == 0} {
 		set pass 1
 	    } else {
-		selection handle -type $type $path {}
+		selection handle -selection $privateSelection -type $type $path {}
 	    }
 	}
 	lappend selInfo $path $type $offset $count
@@ -972,7 +996,7 @@ namespace eval ::tk::test::select {
 	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
-    proc selectionSetup {{path .f1} {display {}}} {
+    proc selectionSetup {{path .f1} {display {}} {selection PRIMARY}} {
 	catch {destroy $path}
 	if {$display eq ""} {
 	    frame $path
@@ -980,7 +1004,7 @@ namespace eval ::tk::test::select {
 	    toplevel $path -screen $display
 	    wm geom $path +0+0
 	}
-	selection own $path
+	selection own -selection $selection $path
     }
 
     testutils export

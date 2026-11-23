@@ -272,9 +272,11 @@ checkbutton, the button activates whenever the mouse pointer is inside
 the button, and deactivates whenever the mouse pointer leaves the
 button.
 .IP [2]
-When mouse button 1 is pressed over a checkbutton, it is invoked (its
-selection state toggles and the command associated with the button is
-invoked, if there is one).
+When mouse button 1 is pressed over a checkbutton and later released over
+the checkbutton, it is invoked (its selection state toggles and the
+command associated with the button is invoked, if there is one).
+However, if the mouse is not over the checkbutton when button 1 is
+released, then no invocation occurs.
 .IP [3]
 When a checkbutton has the input focus, the space key causes the checkbutton
 to be invoked.  Under Windows, there are additional key bindings; plus

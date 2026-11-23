@@ -734,9 +734,12 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	# Catch the very special case with dead peers.
 	return
     }
+    # A selection without a press before it is anchored at the pointer: the
+    # mark which TextAnchor generates is at the start of the text.
+    set fresh [expr {![info exists Priv(textanchor,$w)]}]
     set anchorname [tk::TextAnchor $w]
     set cur [TextCursorPos $w $x $y]
-    if {![$w mark exists $anchorname]} {
+    if {$fresh || ![$w mark exists $anchorname]} {
 	$w mark set $anchorname $cur
     }
     set anchor [$w index $anchorname]

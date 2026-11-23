@@ -562,7 +562,7 @@ static bool runMenuCommand = true;
 
 	    if (!mePtr || !(mePtr->entryFlags & ENTRY_APPLE_MENU)) {
 		applicationMenuItem = [NSMenuItem itemWithSubmenu:
-			[_defaultApplicationMenu copy]];
+			[[_defaultApplicationMenu copy] autorelease]];
 		[menu insertItem:applicationMenuItem atIndex:0];
 	    }
 	    [menu setSpecial:tkMainMenu];
@@ -570,7 +570,7 @@ static bool runMenuCommand = true;
 	applicationMenu = (TKMenu *)[applicationMenuItem submenu];
 	if (![applicationMenu isSpecial:tkApplicationMenu]) {
 	    for (NSMenuItem *item in _defaultApplicationMenuItems) {
-		[applicationMenu addItem:[item copy]];
+		[applicationMenu addItem:[[item copy] autorelease]];
 	    }
 	    [applicationMenu setSpecial:tkApplicationMenu];
 	}
@@ -586,7 +586,7 @@ static bool runMenuCommand = true;
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultWindowsMenuItems) {
-			[submenu insertItem:[i copy] atIndex:index++];
+			[submenu insertItem:[[i copy] autorelease] atIndex:index++];
 		    }
 		    [self setWindowsMenu:submenu];
 		    [submenu setSpecial:tkWindowsMenu];
@@ -595,7 +595,7 @@ static bool runMenuCommand = true;
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultHelpMenuItems) {
-			[submenu insertItem:[i copy] atIndex:index++];
+			[submenu insertItem:[[i copy] autorelease] atIndex:index++];
 		    }
 		    [submenu setSpecial:tkHelpMenu];
 		}

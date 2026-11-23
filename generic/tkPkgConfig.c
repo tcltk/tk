@@ -41,6 +41,8 @@
 #  define CFG_FONTSYSTEM	"gdi"
 #elif defined(MAC_OSX_TK)
 #  define CFG_FONTSYSTEM	"cocoa"
+#elif defined(TK_USE_WAYLAND)
+#  define CFG_FONTSYSTEM "wayland"
 #elif defined(HAVE_XFT) || defined(HAVE_BIDI)
 #  define CFG_FONTSYSTEM	"xft"
 #else

@@ -60,6 +60,19 @@ unset skipFiles
 #
 
 # Note: the environment variable ERROR_ON_FAILURES is set by Github CI
-if {[tcltest::runAllTests] && [info exists env(ERROR_ON_FAILURES)]} {
-    exit 1
+# Under Tk, tcltest::cleanupTests ends the process with exit status 0 when
+# runAllTests calls it after the last test file, so runAllTests would neither
+# list the test files that exited with errors nor return whether anything
+# failed. Prevent that exit with the "interactive" constraint: at that point
+# all tests have run, so it no longer affects which tests run.
+# Tcl ticket 7abc1460c0; not needed with a tcltest where it is fixed.
+rename tcltest::cleanupTests tcltest::CleanupTestsAndExit
+proc tcltest::cleanupTests {{calledFromAllFile 0}} {
+    if {$calledFromAllFile} {
+	testConstraint interactive 1
+    }
+    tailcall CleanupTestsAndExit $calledFromAllFile
 }
+
+set failed [tcltest::runAllTests]
+exit [expr {$failed && [info exists env(ERROR_ON_FAILURES)]}]

@@ -51,7 +51,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     destroy $w
     if {$windowingsystem eq "aqua"} {
 	toplevel $w -class Dialog
-	wm attributes $w -hidden 1 
+	wm attributes $w -hidden 1
 	wm attributes $w -stylemask {titled fullsizecontent}
     } else {
 	toplevel $w -class Dialog

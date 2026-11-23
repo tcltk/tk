@@ -81,9 +81,12 @@ proc psfontname {name} {
 
 set defaultfontlist [font names]
 
+# Beware that on Windows "Courier" is not regarded as a fixed font (at all sizes).
+# Therefore, on win32 use TkFixedFont, which currently translates to "Courier New".
+# See ticket #deca13e833.
 switch [tk windowingsystem] {
     x11		{set fixed "TkFixedFont"}
-    win32	{set fixed "courier 12"}
+    win32	{set fixed "TkFixedFont"}
     aqua	{set fixed "monaco 9"}
 }
 
