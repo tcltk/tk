@@ -32,10 +32,14 @@ if {[llength $argv] & 1} {
 set ignoredOptions [list -testdir]
 
 #
-# Options that are specific for the Tk test suite. These are handled separate
-# from options defined by the tcltest package.
+# Options that are specific for the Tk test suite:
 #
-lappend tktestOptions -eyefriendly
+# -eyefriendly	: if set to one, test execution halts at appropriate places to
+#		  allow the human eye to follow the changes on the screen.
+#
+array set tktestConf {
+    -eyefriendly 0
+}
 
 set index 0
 array set indices {
@@ -46,14 +50,8 @@ foreach {key value} $argv {
     if {$key in $ignoredOptions} {
 	lappend indices(ignored) $index
 	puts stderr "warning: the Tk test suite ignores the option \"$key\" on the command line."
-    } elseif {$key in $tktestOptions} {
-	#
-	# Store configuration settings specific for the Tk test suite in a
-	# separate environment variable, so that they can be picked up by
-	# testfiles that run in a separate process ("-singleproc 0").
-	# Further processing takes place in main.tcl.
-	#
-	lappend env(TK_TESTFLAGS) $key $value
+    } elseif {$key in [array names tktestConf]} {
+	set tktestConf($key) $value
 	lappend indices(tkTestSuite) $index
     }
     incr index 2
@@ -64,6 +62,16 @@ foreach index [lsort -integer -decreasing [concat $indices(ignored) $indices(tkT
 }
 tcltest::configure {*}$tcltestOptions
 unset ignoredOptions index indices tcltestOptions
+
+if {[tcltest::configure -singleproc] == 0} {
+    #
+    # Store configuration settings specific for the Tk test suite in a
+    # dedicated environment variable, so that they can be picked up by
+    # testfiles that run in a separate process ("-singleproc 0").
+    # Further processing takes place in main.tcl.
+    #
+    set env(TK_TESTFLAGS) [array get tktestConf]
+}
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]

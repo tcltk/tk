@@ -14,28 +14,22 @@ if {[namespace exists ::tk::test]} {
 }
 
 #
-# CONFIGURATION FOR THE TK TEST SUITE
-#
-# The settings specific for the Tk test suite have already been filtered out
-# by all.tcl, and stored in env(TK_TESTFLAGS). Supported settings:
-#
-# -eyefriendly	: if set to one, test execution halts at appropriate places to
-#		  allow the human eye to follow the changes on the screen.
-#
-array set tktestConf {
-    -eyefriendly 0
-}
-if {[info exists env(TK_TESTFLAGS)]} {
-    array set tktestConf $env(TK_TESTFLAGS)
-}
-
-#
 # SETUP FOR APPLICATION AND ROOT WINDOW
 #
 encoding system utf-8
 if {[tcltest::configure -singleproc] == 0} {
     # Support test suite invocation by tclsh (as is the case with "-singleproc 1")
     package require tk
+
+    #
+    # Process options specific for the Tk test suite. These have already been
+    # separated out by all.tcl, and stored in env(TK_TESTFLAGS).
+    #
+    if {[info exists env(TK_TESTFLAGS)]} {
+	array set tktestConf $env(TK_TESTFLAGS)
+    } else {
+	array set tktestConf {}
+    }
 }
 tk appname tktest
 wm title . tktest

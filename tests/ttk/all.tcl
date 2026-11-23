@@ -57,11 +57,21 @@ foreach {key value} $argv {
     incr index 2
 }
 set tcltestOptions $argv
-foreach index [lsort -decreasing [concat $indices(ignored) $indices(tkTestSuite)]] {
+foreach index [lsort -integer -decreasing [concat $indices(ignored) $indices(tkTestSuite)]] {
     set tcltestOptions [lreplace $tcltestOptions $index [expr {$index + 1}]]
 }
 tcltest::configure {*}$tcltestOptions
 unset ignoredOptions index indices tcltestOptions
+
+if {[tcltest::configure -singleproc] == 0} {
+    #
+    # Store configuration settings specific for the Tk test suite in a
+    # dedicated environment variable, so that they can be picked up by
+    # testfiles that run in a separate process ("-singleproc 0").
+    # Further processing takes place in main.tcl.
+    #
+    set env(TK_TESTFLAGS) [array get tktestConf]
+}
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
