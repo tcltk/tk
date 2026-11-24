@@ -824,6 +824,19 @@ TkWaylandInitialize(Tcl_Interp *interp)
      * this is the only point at which the root window's app_id can be set.
      */
     TkWaylandSetAppId("tk");
+    
+	/* Display first, global assigned, then clipboard, then any window. */
+	waylandDisplay = glfwGetWaylandDisplay();
+	if (!waylandDisplay) {
+		DEBUG_LOG("TkWaylandInitialize: glfwGetWaylandDisplay() failed");
+		glfwTerminate();
+		return TCL_ERROR;
+	}
+	
+	if (!TkWaylandClipboardEarlyInit()) {
+		DEBUG_LOG("TkWaylandInitialize: clipboard early-init not ready");
+		/* non-fatal: lazy path retries on first clipboard op */
+	}
 
     /*
      * Create the bootstrap window invisible.  Showing it here (even
@@ -906,16 +919,6 @@ TkWaylandInitialize(Tcl_Interp *interp)
     glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
-
-    /*
-     * Wayland display (for wl_subsurfaces/popups).
-     */
-    waylandDisplay = glfwGetWaylandDisplay();
-    if (!waylandDisplay) {
-        DEBUG_LOG("TkWaylandInitialize: glfwGetWaylandDisplay() failed");
-        glfwTerminate();
-        return TCL_ERROR;
-    }
 
     /*
      * Popup system only needs:
