@@ -53,6 +53,48 @@ set columns [list Color Hex Decimal Float]
 # LOCAL UTILITY PROCS
 #
 
+# The tests were written for 96 DPI (72 DPI on Aqua). The fonts and the sizes
+# in the default theme are in points, so sizes and coordinates given in pixels
+# at that resolution are converted to points (pt) where Tk accepts a screen
+# distance, and multiplied by the display scale relative to it (px) where it
+# needs an integer.
+set scale [expr {round(100 * [tk scaling] /
+	([tk windowingsystem] ne "aqua" ? 96/72.0 : 1.0)) / 100.0}]
+proc px {pixels} {
+    expr {round($pixels * $::scale)}
+}
+proc pt {pixels} {
+    return [expr {$pixels * ([tk windowingsystem] ne "aqua" ? 0.75 : 1)}]p
+}
+# Match lists of pixel values given for 96 DPI. A "?" in a value stands for any
+# digit, as in glob matching.
+proc scaledMatch {expected actual} {
+    if {[llength $expected] != [llength $actual]} {
+	return 0
+    }
+    if {[llength $expected] == 1 && [lindex $expected 0] eq $expected} {
+	if {![regexp {^-?[0-9]+\??$} $expected]} {
+	    return [expr {$expected eq $actual}]
+	}
+	if {![string is integer -strict $actual]} {
+	    return 0
+	}
+	set low [expr {[string map {? 0} $expected] * $::scale - $::scale}]
+	set high [expr {[string map {? 9} $expected] * $::scale + $::scale}]
+	if {$low > $high} {
+	    lassign [list $low $high] high low
+	}
+	return [expr {$actual >= $low && $actual <= $high}]
+    }
+    foreach e $expected a $actual {
+	if {![scaledMatch $e $a]} {
+	    return 0
+	}
+    }
+    return 1
+}
+tcltest::customMatch scaled scaledMatch
+
 proc insert {w parent color} {
     lassign [winfo rgb . $color] r g b
     set num [expr {($r>>8) << 16 | ($g>>8) << 8 | ($b>>8)}]
@@ -60,9 +102,9 @@ proc insert {w parent color} {
 }
 
 proc create {w} {
-    ttk::style configure Treeview -rowheight 20 -headingheight 20
+    ttk::style configure Treeview -rowheight [pt 20] -headingheight [pt 20]
     ttk::treeview .tv -columns [lrange $::columns 1 end] -show {tree headings} \
-	-height 10 -rowheight 20 -headingheight 20 \
+	-height 10 -rowheight [px 20] -headingheight [px 20] \
 	-xscrollcommand [list .sx set] -yscrollcommand [list .sy set]
     ttk::scrollbar .sx -orient horizontal -command [list .tv xview]
     ttk::scrollbar .sy -orient vertical -command [list .tv yview]
@@ -73,6 +115,7 @@ proc create {w} {
     set i -1
     foreach col $::columns {
 	.tv heading [format "#%d" [incr i]] -text $col
+	.tv column [format "#%d" $i] -width [px 200] -minwidth [px 20]
     }
     foreach {color children} $::colors {
 	set id [insert .tv {} $color]
@@ -82,16 +125,16 @@ proc create {w} {
     }
     .tv expand -recurse {}
     tkwait visibility .tv
-    wm geometry . 800x250
+    wm geometry . [px 800]x[px 250]
     update
     focus .tv
     return .tv
 }
 
 proc fixed_table {w} {
-    ttk::style configure Treeview -font {Arial 10} -rowheight 20 -headingheight 0
+    ttk::style configure Treeview -font {Arial 10} -rowheight [pt 20] -headingheight 0
     ttk::style configure Heading -font {Arial 10}
-    $w configure -height 10 -rowheight 20 -headingheight 20
+    $w configure -height 10 -rowheight [px 20] -headingheight [px 20]
     update
 }
 
@@ -99,7 +142,7 @@ proc columns_no_stretch {w} {
     set columns [concat #0 [$w cget -columns]]
     $w configure -columns [lrange $columns 1 end]
     foreach column $columns {
-	$w column $column -width 200 -stretch 0
+	$w column $column -width [px 200] -minwidth [px 20] -stretch 0
     }
     update
 }
@@ -108,7 +151,7 @@ proc columns_stretch {w} {
     set columns [concat #0 [$w cget -columns]]
     $w configure -columns [lrange $columns 1 end]
     foreach column $columns {
-	$w column $column -width 200 -stretch 1
+	$w column $column -width [px 200] -minwidth [px 20] -stretch 1
     }
     update
 }
@@ -141,12 +184,12 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     lassign [$w bbox $item $column] x y wd h
 
     if {$offset > 0} {
-	incr x $offset
+	incr x [px $offset]
     } else {
 	incr x $wd
-	incr x -10
+	incr x [px -10]
     }
-    incr y 5
+    incr y [px 5]
     event generate $w <Button-1> -x $x -y $y
     pause 25
     event generate $w <ButtonRelease-1> -x $x -y $y
@@ -915,7 +958,7 @@ proc scrollcallback {args} {
 test Xview-9.1 {Create} -body {
     set w [create .tv]
     fixed_table $w
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     set w
 } -result {.tv}
 
@@ -933,7 +976,7 @@ test Xview-9.4 {Moveto invalid} -body {
 
 test Xview-9.5 {Get current} -setup {
     columns_no_stretch .tv
-    .tv xview 200
+    .tv xview [px 200]
     update
 } -body {
     .tv xview
@@ -1011,7 +1054,7 @@ test Xview-9.17 {Cleanup} -body {
 test Yview-10.1 {Create} -body {
     set w [create .tv]
     fixed_table $w
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
 }
 
 test Yview-10.2 {Invalid function} -body {
@@ -1181,7 +1224,7 @@ test Column-11.18 {Set stretch invalid} -body {
 
 test Column-11.19 {Get width} -body {
     .tv column 0 -width
-} -result {200}
+} -match scaled -result {200}
 
 test Column-11.20 {Set width} -body {
     .tv column 0 -width 25
@@ -1340,7 +1383,7 @@ test Heading-13.19 {Cleanup} -body {
 
 test Drag_and_Drop-14.1 {Create} -body {
     set w [create .tv]
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     set w
 } -result {.tv}
 
@@ -1412,79 +1455,79 @@ test Drag_and_Drop-14.15 {Drag beyond right edge is allowed} -setup {
     columns_stretch .tv
 } -body {
     set res [list [.tv column #0 -width]]
-    .tv drag #0 1000
+    .tv drag #0 [px 1000]
     update
     lappend res [.tv column #0 -width]
     set res
-} -result {200 1000}
+} -match scaled -result {200 1000}
 
 test Drag_and_Drop-14.16 {Drag beyond left edge is not allowed} -setup {
     columns_stretch .tv
 } -body {
     set res [list [.tv column #0 -width]]
-    .tv drag #1 -100
+    .tv drag #1 [px -100]
     update
     lappend res [.tv column #0 -width]
     set res
-} -result {200 20}
+} -match scaled -result {200 20}
 
 test Drag_and_Drop-14.17 {Drag First Column} -setup {
     columns_stretch .tv
 } -body {
     set res [list [.tv column #0 -width]]
-    .tv drag #0 -100
+    .tv drag #0 [px -100]
     update
     lappend res [.tv column #0 -width]
     set res
-} -result {196 20}
+} -match scaled -result {196 20}
 
 test Drag_and_Drop-14.18 {Drag Last Column} -setup {
     columns_stretch .tv
 } -body {
     set res [list [.tv column #3 -width]]
-    .tv drag #3 1000
+    .tv drag #3 [px 1000]
     update
     lappend res [.tv column #3 -width]
     set res
-} -result {197 412}
+} -match scaled -result {197 412}
 
 test Drag_and_Drop-14.19 {Shrink Column In Stretch Mode Adds Space to Next Column} -setup {
     columns_stretch .tv
 } -body {
     set res [list [.tv column #2 -width]]
-    .tv drag #1 300
+    .tv drag #1 [px 300]
     update
     lappend res [.tv column #2 -width]
     set res
-} -result {200 285}
+} -match scaled -result {200 285}
 
 test Drag_and_Drop-14.20 {Expand Column In Stretch Mode Reduces Space in Next Column} -body {
     set res [list [.tv column #2 -width]]
-    .tv drag #1 500
+    .tv drag #1 [px 500]
     update
     lappend res [.tv column #2 -width]
     set res
-} -result {285 85}
+} -match scaled -result {285 85}
 
 test Drag_and_Drop-14.21 {Shrink Column Not In Stretch Mode Does Not Change Next Column} -setup {
     columns_no_stretch .tv
 } -body {
     set res [list [.tv column #2 -width]]
-    .tv drag #1 300
+    .tv drag #1 [px 300]
     update
     lappend res [.tv column #2 -width]
     set res
-} -result {200 200}
+} -match scaled -result {200 200}
 
 test Drag_and_Drop-14.22 {Expand Column Not In Stretch Mode Does Not Change Next Column} -setup {
     columns_no_stretch .tv
 } -body {
     set res [list [.tv column #2 -width]]
-    .tv drag #1 500
+    .tv drag #1 [px 500]
     update
     lappend res [.tv column #2 -width]
     set res
-} -result {200 200}
+} -match scaled -result {200 200}
 
 test Drag_and_Drop-14.23 {Cleanup} -body {
     destroy .tv .sx .sy
@@ -1498,7 +1541,7 @@ test Drag_and_Drop-14.23 {Cleanup} -body {
 proc cell_bbox {w item} {
     set res [list]
     foreach col [concat #0 [$w cget -columns]] {
-	lappend res [.tv bbox $item $col]
+	lappend res [$w bbox $item $col]
     }
     return $res
 }
@@ -1507,7 +1550,7 @@ proc cell_bbox {w item} {
 test Bbox-15.1 {Create} -body {
     set w [create .tv]
     fixed_table $w
-    . configure -width 600
+    . configure -width [pt 600]
     set w
 } -result {.tv}
 
@@ -1529,15 +1572,15 @@ test Bbox-15.5 {Invalid column} -body {
 
 test Bbox-15.6 {Get Item Coords} -body {
     .tv bbox red
-} -match {glob} -result {0 2? 800 20}
+} -match scaled -result {0 2? 800 20}
 
 test Bbox-15.7 {Get Item and Column Coords} -body {
     .tv bbox red #0
-} -match {glob} -result {0 2? 200 20}
+} -match scaled -result {0 2? 200 20}
 
 test Bbox-15.8 {Get Cell Coords} -body {
     .tv bbox {*}[list pink #0]
-} -match {glob} -result {20 4? 180 20}
+} -match scaled -result {20 4? 180 20}
 
 test Bbox-15.9 {Root} -body {
     .tv bbox {}
@@ -1551,11 +1594,11 @@ test Bbox-15.10 {Detached Item} -setup {
 
 test Bbox-15.11 {Item in Y view} -setup {
     columns_no_stretch .tv
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     update
 } -body {
     .tv bbox red
-} -match {glob} -result {0 2? 800 20}
+} -match scaled -result {0 2? 800 20}
 
 test Bbox-15.12 {Y view scroll item out of view} -body {
     .tv yview 0
@@ -1567,7 +1610,7 @@ test Bbox-15.12 {Y view scroll item out of view} -body {
     set res
 } -cleanup {
     .tv yview 0
-} -match {glob} -result {{0 2? 200 20} {}}
+} -match scaled -result {{0 2? 200 20} {}}
 
 test Bbox-15.13 {Y view scroll item into view} -body {
     .tv yview 400
@@ -1579,30 +1622,30 @@ test Bbox-15.13 {Y view scroll item into view} -body {
     set res
 } -cleanup {
     .tv yview 0
-} -match {glob} -result {{} {0 2? 200 20}}
+} -match scaled -result {{} {0 2? 200 20}}
 
 test Bbox-15.14 {Column in X view} -setup {
     columns_no_stretch .tv
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     update
 } -body {
     .tv bbox red #0
-} -match {glob} -result {0 2? 200 20}
+} -match scaled -result {0 2? 200 20}
 
 test Bbox-15.15 {X view scroll cell out of view Bug #2381555} -body {
     .tv xview 0
     update
     set res [list [.tv bbox red #0]]
-    .tv xview 200
+    .tv xview [px 200]
     update
     lappend res [.tv bbox red #0]
     set res
 } -cleanup {
     .tv xview 0
-} -match {glob} -result {{0 2? 200 20} {-200 2? 200 20}}
+} -match scaled -result {{0 2? 200 20} {-200 2? 200 20}}
 
 test Bbox-15.16 {X view scroll cell into view Bug #2381555} -body {
-    .tv xview 400
+    .tv xview [px 400]
     update
     set res [list [.tv bbox red #0]]
     .tv xview 0
@@ -1611,7 +1654,7 @@ test Bbox-15.16 {X view scroll cell into view Bug #2381555} -body {
     set res
 } -cleanup {
     .tv xview 0
-} -match {glob} -result {{-400 2? 200 20} {0 2? 200 20}}
+} -match scaled -result {{-400 2? 200 20} {0 2? 200 20}}
 
 test Bbox-15.17 {Title Columns No Scroll} -setup {
     .tv configure -titlecolumns 1
@@ -1619,11 +1662,11 @@ test Bbox-15.17 {Title Columns No Scroll} -setup {
     update
 } -body {
     set res [list [cell_bbox .tv red]]
-    .tv xview 400
+    .tv xview [px 400]
     update
     lappend res [cell_bbox .tv red]
     return $res
-} -match {glob} -result {{{0 2? 200 20} {200 2? 200 20} {400 2? 200 20} {600 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
+} -match scaled -result {{{0 2? 200 20} {200 2? 200 20} {400 2? 200 20} {600 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
 
 test Bbox-15.18 {Title Columns Scroll} -setup {
     .tv configure -titlecolumns 1
@@ -1631,11 +1674,11 @@ test Bbox-15.18 {Title Columns Scroll} -setup {
     update
 } -body {
     set res [list [cell_bbox .tv blue]]
-    .tv xview 400
+    .tv xview [px 400]
     update
     lappend res [cell_bbox .tv blue]
     return $res
-} -match {glob} -result {{{0 22? 200 20} {200 22? 200 20} {400 22? 200 20} {600 22? 200 20}} {{0 22? 200 20} {-200 22? 200 20} {0 22? 200 20} {200 22? 200 20}}}
+} -match scaled -result {{{0 22? 200 20} {200 22? 200 20} {400 22? 200 20} {600 22? 200 20}} {{0 22? 200 20} {-200 22? 200 20} {0 22? 200 20} {200 22? 200 20}}}
 
 test Bbox-15.19 {Title Rows No Scroll} -setup {
     .tv configure -titleitems 1
@@ -1648,7 +1691,7 @@ test Bbox-15.19 {Title Rows No Scroll} -setup {
 
     lappend res [cell_bbox .tv red]
     return $res
-} -match {glob} -result {{{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
+} -match scaled -result {{{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
 
 test Bbox-15.20 {Title Rows Scroll} -setup {
     .tv configure -titleitems 1
@@ -1660,7 +1703,7 @@ test Bbox-15.20 {Title Rows Scroll} -setup {
     update
     lappend res [cell_bbox .tv blue]
     return $res
-} -match {glob} -result {{{0 22? 200 20} {-200 22? 200 20} {0 22? 200 20} {200 22? 200 20}} {{} {} {} {}}}
+} -match scaled -result {{{0 22? 200 20} {-200 22? 200 20} {0 22? 200 20} {200 22? 200 20}} {{} {} {} {}}}
 
 test Bbox-15.21 {Title Columns > Number of Columns} -setup {
     .tv configure -titlecolumns 5
@@ -1942,7 +1985,7 @@ test Current-19.2 {Too many args} -body {
 } -result {wrong # args: should be ".tv current"} -returnCodes {1}
 
 test Current-19.3 {Default current} -body {
-    event generate .tv <Motion> -warp 1 -x 1000 -y 1000
+    event generate .tv <Motion> -warp 1 -x [pt 1000] -y [pt 1000]
     .tv current
 }
 
@@ -1955,7 +1998,7 @@ test Current-19.4 {Set current item} -setup {
 
 test Current-19.5 {Set current item and column} -setup {
     lassign [.tv bbox red #1] x y w h
-    incr x 10
+    incr x [px 10]
     event generate .tv <Motion> -warp 1 -x $x -y $y
 } -body {
     .tv current
@@ -4625,7 +4668,7 @@ proc ydelta {w item} {
 test See-46.1 {Create} -body {
     set w [create .tv]
     columns_no_stretch $w
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     set w
 } -result {.tv}
 
@@ -8601,7 +8644,7 @@ proc get_col_id {w x y} {
     return [$w column [$w identify column $x $y] -id]
 }
 proc mm {pixels} {
-    return [format "%dm" [expr {int(round(double([winfo screenmmwidth .])/double([winfo screenwidth .]) * double($pixels)))}]]
+    return [expr {$pixels * 25.4 / ([tk windowingsystem] ne "aqua" ? 96 : 72)}]m
 }
 
 
@@ -8632,7 +8675,7 @@ test Identify-89.6 {Invalid y} -body {
 } -result {expected screen distance but got "bogus"} -returnCodes {1}
 
 test Identify-89.7 {Region Heading Columns} -body {
-    list [.tv identify region 100 10] [.tv identify region 300 10] [.tv identify region 500 10] [.tv identify region 700 10]
+    list [.tv identify region [pt 100] [pt 10]] [.tv identify region [pt 300] [pt 10]] [.tv identify region [pt 500] [pt 10]] [.tv identify region [pt 700] [pt 10]]
 } -result [lrepeat 4 heading]
 
 test Identify-89.8 {Region Heading Columns mm} -body {
@@ -8640,7 +8683,7 @@ test Identify-89.8 {Region Heading Columns mm} -body {
 } -result [lrepeat 4 heading]
 
 test Identify-89.9 {Region Tree Rows} -body {
-    list [.tv identify region 10 30] [.tv identify region 30 50] [.tv identify region 50 70] [.tv identify region 70 90]
+    list [.tv identify region [pt 10] [pt 30]] [.tv identify region [pt 30] [pt 50]] [.tv identify region [pt 50] [pt 70]] [.tv identify region [pt 70] [pt 90]]
 } -result [lrepeat 4 tree]
 
 test Identify-89.10 {Region Tree Rows mm} -body {
@@ -8648,7 +8691,7 @@ test Identify-89.10 {Region Tree Rows mm} -body {
 } -result [lrepeat 4 tree]
 
 test Identify-89.11 {Region Cell} -body {
-    list [.tv identify region 100 30] [.tv identify region 300 50] [.tv identify region 500 70] [.tv identify region 700 90]
+    list [.tv identify region [pt 100] [pt 30]] [.tv identify region [pt 300] [pt 50]] [.tv identify region [pt 500] [pt 70]] [.tv identify region [pt 700] [pt 90]]
 } -result {tree cell cell cell}
 
 test Identify-89.12 {Region Cell mm} -body {
@@ -8660,15 +8703,15 @@ test Identify-89.13 {Region Separator} -body {
 } -result {separator}
 
 test Identify-89.14 {Region Out of Range} -body {
-    .tv identify region 900 900
+    .tv identify region [pt 900] [pt 900]
 } -result {nothing}
 
 test Identify-89.15 {Item heading} -body {
-    .tv identify item 100 10
+    .tv identify item [pt 100] [pt 10]
 }
 
 test Identify-89.16 {Items} -body {
-    list [.tv identify item 100 25] [.tv identify item 300 45] [.tv identify item 500 65] [.tv identify item 700 85]
+    list [.tv identify item [pt 100] [pt 25]] [.tv identify item [pt 300] [pt 45]] [.tv identify item [pt 500] [pt 65]] [.tv identify item [pt 700] [pt 85]]
 } -result {red pink maroon darkred}
 
 test Identify-89.17 {Items mm} -body {
@@ -8676,15 +8719,15 @@ test Identify-89.17 {Items mm} -body {
 } -result {red pink maroon darkred}
 
 test Identify-89.18 {Item Out of Range} -body {
-    .tv identify item 1000 110
+    .tv identify item [pt 1000] [pt 110]
 } -result {magenta}
 
 test Identify-89.19 {Column Heading} -body {
-    get_col_id .tv 100 10
+    get_col_id .tv [pt 100] [pt 10]
 } -result {#0}
 
 test Identify-89.20 {Columns} -body {
-    list [get_col_id .tv 100 30] [get_col_id .tv 300 50] [get_col_id .tv 500 70] [get_col_id .tv 700 90]
+    list [get_col_id .tv [pt 100] [pt 30]] [get_col_id .tv [pt 300] [pt 50]] [get_col_id .tv [pt 500] [pt 70]] [get_col_id .tv [pt 700] [pt 90]]
 } -result {{#0} Hex Decimal Float}
 
 test Identify-89.21 {Columns mm} -body {
@@ -8692,15 +8735,15 @@ test Identify-89.21 {Columns mm} -body {
 } -result {{#0} Hex Decimal Float}
 
 test Identify-89.22 {Column Out of Range} -body {
-    .tv identify column 900 110
+    .tv identify column [pt 900] [pt 110]
 }
 
 test Identify-89.23 {Cell Heading} -body {
-    .tv identify cell 100 10
+    .tv identify cell [pt 100] [pt 10]
 }
 
 test Identify-89.24 {Cells} -body {
-    list [.tv identify cell 100 30] [.tv identify cell 300 50] [.tv identify cell 500 70] [.tv identify cell 700 90]
+    list [.tv identify cell [pt 100] [pt 30]] [.tv identify cell [pt 300] [pt 50]] [.tv identify cell [pt 500] [pt 70]] [.tv identify cell [pt 700] [pt 90]]
 } -result {{red #0} {pink #1} {maroon #2} {darkred #3}}
 
 test Identify-89.25 {Cells mm} -body {
@@ -8708,16 +8751,16 @@ test Identify-89.25 {Cells mm} -body {
 } -result {{red #0} {pink #1} {maroon #2} {darkred #3}}
 
 test Identify-89.26 {Cell Out of Range} -body {
-    .tv identify cell 900 110
+    .tv identify cell [pt 900] [pt 110]
 }
 # Heading elements are not reported
 
 test Identify-89.27 {Element Heading} -body {
-    list [.tv identify element 100 10] [.tv identify element 300 10] [.tv identify element 500 10] [.tv identify element 700 10]
+    list [.tv identify element [pt 100] [pt 10]] [.tv identify element [pt 300] [pt 10]] [.tv identify element [pt 500] [pt 10]] [.tv identify element [pt 700] [pt 10]]
 } -result [lrepeat 4 {}]
 
 test Identify-89.28 {Element Padding} -body {
-    list [.tv identify element 50 30] [.tv identify element 70 50] [.tv identify element 90 70] [.tv identify element 110 90]
+    list [.tv identify element [pt 50] [pt 30]] [.tv identify element [pt 70] [pt 50]] [.tv identify element [pt 90] [pt 70]] [.tv identify element [pt 110] [pt 90]]
 } -result [lrepeat 4 padding]
 
 test Identify-89.29 {Element Padding mm} -body {
@@ -8725,7 +8768,7 @@ test Identify-89.29 {Element Padding mm} -body {
 } -result [lrepeat 4 padding]
 
 test Identify-89.30 {Element Indicator} -body {
-    list [.tv identify element 10 30] [.tv identify element 25 50] [.tv identify element 25 70] [.tv identify element 25 90]
+    list [.tv identify element [pt 10] [pt 30]] [.tv identify element [pt 25] [pt 50]] [.tv identify element [pt 25] [pt 70]] [.tv identify element [pt 25] [pt 90]]
 } -result [lrepeat 4 Treeitem.indicator]
 
 test Identify-89.31 {Element Indicator mm} -body {
@@ -8736,7 +8779,7 @@ test Identify-89.31 {Element Indicator mm} -body {
 } -result [lrepeat 4 Treeitem.indicator]
 
 test Identify-89.32 {Element Text} -body {
-    list [.tv identify element 20 30] [.tv identify element 40 50] [.tv identify element 45 70] [.tv identify element 45 90]
+    list [.tv identify element [pt 20] [pt 30]] [.tv identify element [pt 40] [pt 50]] [.tv identify element [pt 45] [pt 70]] [.tv identify element [pt 45] [pt 90]]
 } -result [lrepeat 4 text]
 
 test Identify-89.33 {Element Text mm} -body {
@@ -8744,18 +8787,18 @@ test Identify-89.33 {Element Text mm} -body {
 } -result [lrepeat 4 text]
 
 test Identify-89.34 {Element Out of Range} -body {
-    .tv identify element 900 900
+    .tv identify element [pt 900] [pt 900]
 }
 
 test Identify-89.35 {Row} -body {
-    .tv identify row 300 50
+    .tv identify row [pt 300] [pt 50]
 } -result {pink}
 
 test Identify-89.36 {Reverse display order} -setup {
     .tv configure -displaycolumns [list 2 1 0]
     update idletasks
 } -body {
-    list [get_col_id .tv 100 30] [get_col_id .tv 300 50] [get_col_id .tv 500 70] [get_col_id .tv 700 90]
+    list [get_col_id .tv [pt 100] [pt 30]] [get_col_id .tv [pt 300] [pt 50]] [get_col_id .tv [pt 500] [pt 70]] [get_col_id .tv [pt 700] [pt 90]]
 } -result {{#0} Float Decimal Hex}
 
 test Identify-89.37 {Identify Columns mm} -body {
@@ -8767,17 +8810,17 @@ test Identify-89.37 {Identify Columns mm} -body {
 
 test Identify-89.38 {Identify Scrolled Columns Bug #2381555} -setup {
     columns_no_stretch .tv
-    .tv xview 200
+    .tv xview [px 200]
     update
 } -body {
-    list [get_col_id .tv 100 30] [get_col_id .tv 300 50] [get_col_id .tv 500 70] [get_col_id .tv 700 90]
+    list [get_col_id .tv [pt 100] [pt 30]] [get_col_id .tv [pt 300] [pt 50]] [get_col_id .tv [pt 500] [pt 70]] [get_col_id .tv [pt 700] [pt 90]]
 } -result {{#0} Hex Decimal Float}
 
 test Identify-89.39 {Identify Scrolled Cells Bug #2381555} -body {
-    list [.tv identify cell 100 30] [.tv identify cell 300 50] [.tv identify cell 500 70] [.tv identify cell 700 90]
+    list [.tv identify cell [pt 100] [pt 30]] [.tv identify cell [pt 300] [pt 50]] [.tv identify cell [pt 500] [pt 70]] [.tv identify cell [pt 700] [pt 90]]
 } -cleanup {
     .tv xview 0
-    wm geometry . 400x300
+    wm geometry . [px 400]x[px 300]
     update
 } -result {{red #0} {pink #1} {maroon #2} {darkred #3}}
 
@@ -8785,14 +8828,14 @@ test Identify-89.40 {No tree column} -setup {
     .tv configure -show {headings}
     update idletasks
 } -body {
-    .tv identify region 10 30
+    .tv identify region [pt 10] [pt 30]
 } -result {cell}
 
 test Identify-89.41 {No tree column and reverse display order} -setup {
     .tv configure -displaycolumns [list 2 1 0]
     update idletasks
 } -body {
-    list [get_col_id .tv 100 30] [get_col_id .tv 300 50] [get_col_id .tv 500 50]
+    list [get_col_id .tv [pt 100] [pt 30]] [get_col_id .tv [pt 300] [pt 50]] [get_col_id .tv [pt 500] [pt 50]]
 } -cleanup {
     .tv configure -displaycolumns {}
 } -result {Float Decimal Hex}
@@ -8866,10 +8909,10 @@ font configure TkDefaultFont {*}$dfont
 font configure TkHeadingFont {*}$hfont
 
 foreach p {ButtonPress checkorder columns_no_stretch columns_stretch create \
-	fixed_table insert KeyPress lcompare MouseMove} {
+	fixed_table insert KeyPress lcompare MouseMove pt px scaledMatch} {
     rename $p {}
 }
-unset -nocomplain changed_item colors columns dtheme dfont focus hfont p size scrolldata
+unset -nocomplain changed_item colors columns dtheme dfont focus hfont p scale size scrolldata
 
 
 tcltest::cleanupTests
