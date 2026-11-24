@@ -7,7 +7,12 @@
 # Copyright (c) 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
@@ -53,6 +58,16 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
     expr {($r/256 == $red) && ($g/256 == $green) && ($b/256 == $blue)}
 }
 
+# optnames --
+#
+# Returns the option names out of a list of option details.
+#
+# Arguments:
+# options -		The option detail list.
+proc optnames {options} {
+    lsort [lmap desc $options {lindex $desc 0}]
+}
+
 # uniq --
 #
 # Returns the unique items of a list in the order they first appear.
@@ -67,15 +82,9 @@ proc uniq {list} {
     return [dict keys $d]
 }
 
-# optnames --
 #
-# Returns the option names out of a list of option details.
+# TESTS
 #
-# Arguments:
-# options -		The option detail list.
-proc optnames {options} {
-    lsort [lmap desc $options {lindex $desc 0}]
-}
 
 test frame-1.1 {frame configuration options} -setup {
     deleteWindows
@@ -169,18 +178,22 @@ test frame-1.12 {frame configuration options} -setup {
     frame .f
     set opts {}
     foreach opt [.f configure] {
-        if {[llength $opt] == 5} {
-            lappend opts [lindex $opt 0] [lindex $opt 4]
-        }
+	if {[llength $opt] == 5} {
+	    lappend opts [lindex $opt 0] [lindex $opt 4]
+	}
     }
-    eval frame .g $opts
+    frame .g {*}$opts
 } -cleanup {
     destroy .f .g
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .f
 frame .f
+
 test frame-1.13 {frame configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -304,6 +317,10 @@ test frame-1.38 {frame configuration options} -body {
 test frame-1.39 {frame configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-2.1 {toplevel configuration options} -setup {
@@ -476,20 +493,24 @@ test frame-2.19 {toplevel configuration options} -setup {
     # Make sure all options can be set to the default value
     toplevel .f
     foreach opt [.f configure] {
-        if {[llength $opt] == 5} {
-            lappend opts [lindex $opt 0] [lindex $opt 4]
-        }
+	if {[llength $opt] == 5} {
+	    lappend opts [lindex $opt 0] [lindex $opt 4]
+	}
     }
-    eval toplevel .g $opts
+    toplevel .g {*}$opts
 } -cleanup {
     destroy .f .g
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .t
 toplevel .t -width 300 -height 150
 wm geometry .t +0+0
 update
+
 test frame-2.20 {toplevel configuration options} -body {
     .t configure -background #ff0000
     lindex [.t configure -background] 4
@@ -574,6 +595,10 @@ test frame-2.42 {toplevel configuration options} -body {
 test frame-2.43 {toplevel configuration options} -body {
     .t configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 
 test frame-3.1 {TkCreateFrame procedure} -returnCodes error -body {
@@ -685,12 +710,18 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     destroy .t
     option clear
 } -result {0 0 140 300}
+
+#
+# COMMON TEST SETUP
+#
+
 # The tests below require specific display characteristics (i.e. that they are
 # run on a pseudocolor display of depth 8).  Even so, they are non-portable:
 # some machines don't seem to ever run out of colors.
 if {[testConstraint defaultPseudocolor8]} {
     eatColors .t1
 }
+
 test frame-3.11 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -837,9 +868,14 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
+
 test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {
     deleteWindows
 } -body {
@@ -880,7 +916,11 @@ test frame-4.2 {TkCreateFrame procedure} -setup {
     deleteWindows
 } -result {.f 1}
 
+#
+# COMMON TEST SETUP
+#
 frame .f -highlightcolor black
+
 test frame-5.1 {FrameWidgetCommand procedure} -body {
     .f
 } -returnCodes error -result {wrong # args: should be ".f option ?arg ...?"}
@@ -925,6 +965,10 @@ test frame-5.12 {FrameWidgetCommand procedure} -body {
 test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
     optnames [. configure]
 } -result {-background -bd -bg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -use -visual -width}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-6.1 {ConfigureFrame procedure} -setup {
@@ -1106,26 +1150,26 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     # Test all -labelanchor positions
     set font {helvetica 12}
     labelframe .f -highlightthickness 1 -bd 3 -padx 1 -pady 2 -font $font \
-            -text "Mupp"
+	    -text "Mupp"
     set fh [expr {max([font metrics $font -linespace] + 2 - 3, 0)}]
     set fw [expr {max([font measure $font "Mupp"] + 2 - 3, 0)}]
     place .f -x 0 -y 0 -width 100 -height 100
     pack [frame .f.f] -fill both -expand 1
     set result {}
     foreach lp {nw n ne en e es se s sw ws w wn} {
-        .f configure -labelanchor $lp
-        update
-        set expx 5
-        set expy 6
-        set expw 90
-        set exph 88
-        switch -glob $lp {
-            n* {incr expy $fh ; incr exph -$fh}
-            s* {incr exph -$fh}
-            w* {incr expx $fw ; incr expw -$fw}
-            e* {incr expw -$fw}
-        }
-        lappend result [expr {
+	.f configure -labelanchor $lp
+	update
+	set expx 5
+	set expy 6
+	set expw 90
+	set exph 88
+	switch -glob $lp {
+	    n* {incr expy $fh ; incr exph -$fh}
+	    s* {incr exph -$fh}
+	    w* {incr expx $fw ; incr expw -$fw}
+	    e* {incr expw -$fw}
+	}
+	lappend result [expr {
 	    [winfo x .f.f] == $expx && [winfo y .f.f] == $expy &&
 	    [winfo width .f.f] == $expw && [winfo height .f.f] == $exph
 	}]
@@ -1138,14 +1182,14 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     deleteWindows
 } -body {
     # Check reaction on font change
-    font create myfont -family courier -size 10
+    font create myfont -family courier -size -13
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
     update
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
-    font configure myfont -size 20
+    font configure myfont -size -27
     update  ; # services the "TheWorldHasChanged" event, queues "TkWorldChanged" events
     update  ; # services the queued "TkWorldChanged" events
     set h2 [font metrics myfont -linespace]
@@ -1223,8 +1267,14 @@ test frame-13.9 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -container option after widget is created}
+
+#
+# COMMON TEST SETUP
+#
+
 destroy .f
 labelframe .f
+
 test frame-13.10 {labelframe configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -1387,6 +1437,10 @@ test frame-13.43 {labelframe configuration options} -body {
 test frame-13.44 {labelframe configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-14.1 {labelframe labelwidget option} -setup {
@@ -1400,7 +1454,7 @@ test frame-14.1 {labelframe labelwidget option} -setup {
     pack .f.f
     update
     list [winfo children .] [winfo width .f] \
-        [expr {[winfo height .f] - [winfo height .l]}]
+	[expr {[winfo height .f] - [winfo height .l]}]
 } -cleanup {
     deleteWindows
 } -result {{.f .l} 54 52}
@@ -1494,13 +1548,17 @@ test frame-14.6 {labelframe labelwidget option} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
+
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
 apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
     eatColors colorsFree uniq optnames
 }
 
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl
