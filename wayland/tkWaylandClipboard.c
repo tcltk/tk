@@ -1412,13 +1412,22 @@ MonotonicMs(void)
  *      freeze Tk.  Returns NULL if no offer exists or no suitable mime
  *      type is offered.
  *
+ *      Before deciding which offer to read, synchronize with the
+ *      compositor: a set_selection() we just issued, or a foreign
+ *      clear/append the compositor just processed, may still be in
+ *      flight.  Without the roundtrip, [clipboard get] right after
+ *      [clipboard append] (or after [clipboard clear] while a stale
+ *      offer from startup is present) would read the offer that was
+ *      current before the operation.
+ *
  * Results:
  *      Returns a ckalloc'd buffer and stores its length in *lenPtr,
  *      or returns NULL with *lenPtr == 0.
  *
  * Side effects:
  *      Creates a pipe, issues wl_data_offer_receive, pumps Wayland
- *      events and polls the pipe (bounded), closes the pipe.
+ *      events and polls the pipe (bounded), closes the pipe.  May
+ *      roundtrip with the compositor.
  *
  *----------------------------------------------------------------------
  */
@@ -1438,8 +1447,20 @@ WaylandReadOffer(size_t *lenPtr)
 	return NULL;
     }
 
-    /* Make sure a selection/offer already received is the one we read. */
+    /*
+     * Synchronize with the compositor before trusting clip.offer.  A
+     * set_selection() we just issued, or a foreign clear/append the
+     * compositor just processed, may still be in flight.  The default
+     * queue roundtrip guarantees the compositor has processed all our
+     * requests; dispatching our private queue then delivers the
+     * resulting selection (or data_offer/offer) events.
+     */
     WaylandDispatch();
+    if (clip.display != NULL) {
+	wl_display_roundtrip(clip.display);
+	wl_display_dispatch_queue_pending(clip.display, clip.queue);
+    }
+
     if (clip.offer == NULL) {
 	DEBUG_LOG("WaylandReadOffer: no offer");
 	return NULL;
@@ -1761,14 +1782,22 @@ TkSelGetSelection(
  *
  * XSetSelectionOwner --
  *
- *      Stub kept for Tk's generic code.  Real ownership is via
- *      wl_data_device_set_selection() in WaylandPublish.
+ *      Stub kept for Tk's generic code.  Claiming (w != None) is done
+ *      by WaylandPublish via TkSelUpdateClipboard.  Giving up the
+ *      selection (w == None), which generic Tk does for
+ *      `selection clear -s CLIPBOARD` and `clipboard clear`, must
+ *      reach the compositor: WaylandClear() destroys our wl_data_source
+ *      and, if we still own the selection, issues set_selection(NULL)
+ *      so the compositor drops it and other applications see an empty
+ *      clipboard.  Doing nothing here would leave Tk's text visible to
+ *      wl-paste even after `selection clear`.
  *
  * Results:
  *      Always Success.
  *
  * Side effects:
- *      None.
+ *      For w == None, may destroy our wl_data_source, free clip.text,
+ *      and issue set_selection(NULL).
  *
  *----------------------------------------------------------------------
  */
@@ -1776,9 +1805,12 @@ TkSelGetSelection(
 int
 XSetSelectionOwner(TCL_UNUSED(Display *),
 		   TCL_UNUSED(Atom),
-		   TCL_UNUSED(Window),
+		   Window w,
 		   TCL_UNUSED(Time))
 {
+    if (w == None) {
+	WaylandClear();
+    }
     return Success;
 }
 

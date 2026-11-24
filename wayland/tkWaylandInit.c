@@ -790,7 +790,6 @@ TkWaylandErrorCallback(int error, const char *desc)
  *----------------------------------------------------------------------
  */
 
-
 MODULE_SCOPE int
 TkWaylandInitialize(Tcl_Interp *interp)
 {
