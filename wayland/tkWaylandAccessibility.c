@@ -222,9 +222,12 @@ static void tk_atk_window_interface_init(TCL_UNUSED(AtkWindowIface *)) /* iface 
  * timer means every call can wait out the poll interval. Instead, register
  * the file descriptors GLib is waiting on (the AT-SPI bus connection) with
  * Tcl's notifier, so Tcl_WaitForEvent returns the moment a request arrives.
- * The timer stays only as a fallback for GLib timeouts.
+ * The block time is limited only by the next GLib timeout, so an idle
+ * application is not woken up unless GLib has something to do. If GLib
+ * cannot be prepared here, or waits on more descriptors than are watched,
+ * the context is polled every ATK_POLL_MS milliseconds instead.
  */
-#define ATK_IDLE_POLL_US 10000
+#define ATK_POLL_MS 10
 #define ATK_MAX_WATCH_FDS 16
 static int atk_watched_fds[ATK_MAX_WATCH_FDS];
 static int atk_n_watched = 0;
@@ -247,17 +250,37 @@ static int AtkFdInList(const int *list, int n, int fd)
     return 0;
 }
 
-/* Keep Tcl's file handlers in sync with the fds GLib is polling. */
-static void AtkWatchGLibFds(void)
+/*
+ * Prepare the GLib context and keep Tcl's file handlers in sync with the
+ * fds GLib is polling. Returns the maximum time in milliseconds to wait
+ * before GLib has to be dispatched, or -1 if GLib only waits for its fds.
+ */
+static gint AtkWatchGLibFds(void)
 {
     GPollFD fds[ATK_MAX_WATCH_FDS];
     int newFds[ATK_MAX_WATCH_FDS];
     int nNew = 0;
-    gint timeout = -1;
-    gint n = g_main_context_query(acc_context, G_MAXINT, &timeout,
-				  fds, ATK_MAX_WATCH_FDS);
+    gint priority, timeout = -1, n;
+    gboolean ready;
 
-    if (n > ATK_MAX_WATCH_FDS) n = ATK_MAX_WATCH_FDS;
+    if (!g_main_context_acquire(acc_context)) {
+	/* The context is run by another thread. */
+	return ATK_POLL_MS;
+    }
+    ready = g_main_context_prepare(acc_context, &priority);
+    n = g_main_context_query(acc_context, G_MAXINT, &timeout,
+			     fds, ATK_MAX_WATCH_FDS);
+    g_main_context_release(acc_context);
+
+    if (ready) {
+	timeout = 0;
+    }
+    if (n > ATK_MAX_WATCH_FDS) {
+	n = ATK_MAX_WATCH_FDS;
+	if (timeout < 0 || timeout > ATK_POLL_MS) {
+	    timeout = ATK_POLL_MS;
+	}
+    }
     for (gint i = 0; i < n; i++) {
 	if ((fds[i].events & (G_IO_IN | G_IO_HUP | G_IO_ERR)) && fds[i].fd >= 0
 		&& !AtkFdInList(newFds, nNew, fds[i].fd)) {
@@ -279,6 +302,7 @@ static void AtkWatchGLibFds(void)
 	atk_watched_fds[i] = newFds[i];
     }
     atk_n_watched = nNew;
+    return timeout;
 }
 
 /* Configure event loop. */
@@ -286,17 +310,18 @@ static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    Tcl_Time block_time = {0, ATK_IDLE_POLL_US};
+    gint timeout;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
     }
 
-    if (g_main_context_pending(acc_context)) {
-	block_time.usec = 0;
+    timeout = AtkWatchGLibFds();
+    if (timeout >= 0) {
+	Tcl_Time block_time = {timeout / 1000, (timeout % 1000) * 1000};
+
+	Tcl_SetMaxBlockTime(&block_time);
     }
-    AtkWatchGLibFds();
-    Tcl_SetMaxBlockTime(&block_time);
 }
 
 /* Check event queue. */
