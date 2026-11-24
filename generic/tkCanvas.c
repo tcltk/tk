@@ -3164,7 +3164,7 @@ DisplayCanvas(
 	pixmap = Tk_WindowId(tkwin); /* Really it's a window, not a pixmap. */
 	/* Expand the clipping rectangle if we are anti-aliasing. */
 	int clipX = screenX1 - canvasPtr->xOrigin - AA_PAD;
-	int clipY = screenY1 - canvasPtr->yOrigin - AA_PAD; 
+	int clipY = screenY1 - canvasPtr->yOrigin - AA_PAD;
 	int clipW = width + 2*AA_PAD;
 	int clipH = height + 2*AA_PAD;
 	if (AA_PAD) {
@@ -3210,11 +3210,11 @@ DisplayCanvas(
 	 * by the anti-aliasing.  Otherwise, dragging an object in the
 	 * canvas will leave a vapor trail of boundary-colored pixels.
 	 */
-	
+
 	XFillRectangle(Tk_Display(tkwin), pixmap, canvasPtr->pixmapGC,
 		screenX1 - canvasPtr->drawableXOrigin - AA_PAD,
 		screenY1 - canvasPtr->drawableYOrigin - AA_PAD,
-	        (unsigned int) width + 2*AA_PAD,
+		(unsigned int) width + 2*AA_PAD,
 		(unsigned int) height + 2*AA_PAD);
 
 	/*
@@ -3227,9 +3227,9 @@ DisplayCanvas(
 	 * If the items are anti-aliased we use a larger bounding box,
 	 * expanded by AA_PAD, which is an upper bound for the thickness of
 	 * the feathering halo.
-	 * 
+	 *
 	 */
-	
+
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
 	    if ((itemPtr->x1 - AA_PAD >= screenX2)

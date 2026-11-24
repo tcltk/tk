@@ -61,18 +61,18 @@ BREAK_FUNCTION(
     state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = MJB(_next)(&text, &state)) != MJB_BT_NOT_SET) {
-        if (bt == MJB_BT_NO_BREAK) {
-            continue;
-        }
+	if (bt == MJB_BT_NO_BREAK) {
+	    continue;
+	}
 	size_t pos = state.position;
-        if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
-            continue;
-        }
-        if (bt == MJB_BT_ALLOWED) {
-            if (pos <= byteLen) {
+	if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
+	    continue;
+	}
+	if (bt == MJB_BT_ALLOWED) {
+	    if (pos <= byteLen) {
 		breaks[pos] = 1;
-            }
-        }
+	    }
+	}
     }
     breaks[byteLen]=1;
     return 1;
@@ -118,17 +118,17 @@ BREAK_NEXT_FUNCTION(
     state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = MJB(_next)(&text, &state)) != MJB_BT_NOT_SET) {
-        if (bt == MJB_BT_NO_BREAK) {
-            continue;
-        }
+	if (bt == MJB_BT_NO_BREAK) {
+	    continue;
+	}
 	size_t pos = state.position;
 	if (pos <= byteOffset) {
 	    continue;
 	}
-        if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
-            continue;
-        }
-        *nextOffset = (bt == MJB_BT_ALLOWED) ? pos : byteLen;
+	if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
+	    continue;
+	}
+	*nextOffset = (bt == MJB_BT_ALLOWED) ? pos : byteLen;
 	break;
     }
     return 1;
@@ -177,13 +177,13 @@ BREAK_PREV_FUNCTION(
     state.index = 0;
     mjb_text text = mjb_text_utf8(buf, byteLen);
     while ((bt = MJB(_next)(&text, &state)) != MJB_BT_NOT_SET) {
-        if (bt == MJB_BT_NO_BREAK) {
-            continue;
-        }
+	if (bt == MJB_BT_NO_BREAK) {
+	    continue;
+	}
 	size_t pos = state.position;
-        if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
-            continue;
-        }
+	if (pos > 0 && pos < byteLen && u[pos - 1] == 0xC0 && u[pos] == 0x80) {
+	    continue;
+	}
 	if (bt==MJB_BT_ALLOWED) {
 	    if (pos < byteOffset) {
 		last = pos;

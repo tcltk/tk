@@ -58,7 +58,7 @@ extern int mojibake_word_breaks_with_dict(const char *buf, size_t byteLen,
  *	no lasting state is changed.
  * ----------------------------------------------------------------------
  */
- 
+
 static int
 TextWordBreak(
     TkTextIndex *indexPtr,
