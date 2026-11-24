@@ -1329,7 +1329,7 @@ tkTextBTree.o: $(GENERIC_DIR)/tkTextBTree.c
 tkTextDisp.o: $(GENERIC_DIR)/tkTextDisp.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextDisp.c
 
-tkTextGrapheme.o: $(GENERIC_DIR)/tkTextGrapheme.c
+tkTextGrapheme.o: $(GENERIC_DIR)/tkTextGrapheme.c $(GENERIC_DIR)/tkTextGrapheme.inc
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextGrapheme.c
 
 tkTextImage.o: $(GENERIC_DIR)/tkTextImage.c
@@ -1800,6 +1800,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/*.[ch] $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/README $(DISTDIR)/generic
+	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/tkTextGrapheme.inc $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/changes.md $(TOP_DIR)/README.md \
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/generic/ttk
