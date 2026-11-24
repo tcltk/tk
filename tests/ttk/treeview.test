@@ -32,6 +32,9 @@ source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
 # Ensure a pristine initial window state
 resetWindows
 
+set scaling [tk scaling]
+tk scaling [expr {96 / 72.0}]
+
 #
 # COMMON TEST SETUP
 #
@@ -8869,7 +8872,8 @@ foreach p {ButtonPress checkorder columns_no_stretch columns_stretch create \
 	fixed_table insert KeyPress lcompare MouseMove} {
     rename $p {}
 }
-unset -nocomplain changed_item colors columns dtheme dfont focus hfont p size scrolldata
 
+tk scaling $scaling
+unset -nocomplain scaling changed_item colors columns dtheme dfont focus hfont p size scrolldata
 
 tcltest::cleanupTests

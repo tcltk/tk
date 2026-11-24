@@ -33,6 +33,9 @@ source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
 # Ensure a pristine initial window state
 resetWindows
 
+set scaling [tk scaling]
+tk scaling [expr {96 / 72.0}]
+
 # Import utility procs for specific functional areas
 testutils import entry scroll
 
@@ -473,6 +476,9 @@ test entry-13.1 {selected text of an unfocused entry uses the -foreground state 
 #
 # TESTFILE CLEANUP
 #
+
+tk scaling $scaling
+unset -nocomplain scaling
 
 testutils forget entry scroll
 tcltest::cleanupTests
