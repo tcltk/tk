@@ -650,9 +650,14 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 
+# The files and directories of the library, so that the zip file is rebuilt
+# when any of them changes, or a file is added or removed.
+TK_LIBRARY_FILES = $(wildcard $(TOP_DIR)/library/* $(TOP_DIR)/library/*/* \
+	$(TOP_DIR)/library/*/*/*)
+
 tkzipfile: ${TK_ZIP_FILE}
 
-${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
+${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS} ${TK_LIBRARY_FILES}
 	@rm -rf ${TK_VFS_ROOT}
 	@mkdir -p ${TK_VFS_PATH}
 	@echo "creating ${TK_VFS_PATH} (prepare compression)"
