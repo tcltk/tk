@@ -597,8 +597,8 @@ WordBreaksWithDictInternal(const char *buf,
      * line-break wrapper filters them again for line breaks,
      * but word wrap also consumes this word-break array, so a
      * break before U+0EC6 / U+17D4 here is what put a wrapped
-     * line starting with U+0EC6 at widths 12 and 20. Clearing the 
-     * break merges the repetition sign / mark into the preceding word, 
+     * line starting with U+0EC6 at widths 12 and 20. Clearing the
+     * break merges the repetition sign / mark into the preceding word,
      * which is what it belongs to: it repeats or modifies that word, it
      * does not start a new one. Breaks at 0 and byteLen are
      * always kept. The same filter is applied to lBreaks when
@@ -771,7 +771,7 @@ mojibake_line_breaks_with_dict(const char *buf,
  *   selection). It MUST NOT be bare mojibake: bare UAX #29 marks
  *   a word break after every cluster in Thai/Lao/Khmer runs
  *   (double-click then selects one cluster, not a word --
- *   and it can return word breaks inside a grapheme cluster. 
+ *   and it can return word breaks inside a grapheme cluster.
  *   Delegates to the _with_dict implementation, which applies
  *   the dictionary segmenter for complex scripts and the
  *   grapheme-subset filter (a word break is kept only if it is

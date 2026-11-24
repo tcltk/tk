@@ -61,10 +61,10 @@ test icu-2.7 {word commands work on astral text, char indices} -body {
 # --- availability: these must exist with no libicu installed ---
 test icu-3.1 {all five commands exist} -body {
     expr {[info commands ::tk::startOfCluster] ne ""
-        && [info commands ::tk::endOfCluster] ne ""
-        && [info commands ::tk::startOfNextWord] ne ""
-        && [info commands ::tk::startOfPreviousWord] ne ""
-        && [info commands ::tk::endOfWord] ne ""}
+	&& [info commands ::tk::endOfCluster] ne ""
+	&& [info commands ::tk::startOfNextWord] ne ""
+	&& [info commands ::tk::startOfPreviousWord] ne ""
+	&& [info commands ::tk::endOfWord] ne ""}
 } -result 1
 
 # --- TCL8 compat delegation still works ---

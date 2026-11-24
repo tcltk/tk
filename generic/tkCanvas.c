@@ -3214,7 +3214,7 @@ DisplayCanvas(
 	XFillRectangle(Tk_Display(tkwin), pixmap, canvasPtr->pixmapGC,
 		screenX1 - canvasPtr->drawableXOrigin - AA_PAD,
 		screenY1 - canvasPtr->drawableYOrigin - AA_PAD,
-	        (unsigned int) width + 2*AA_PAD,
+		(unsigned int) width + 2*AA_PAD,
 		(unsigned int) height + 2*AA_PAD);
 
 	/*

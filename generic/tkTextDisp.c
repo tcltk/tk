@@ -9737,7 +9737,7 @@ WordBreakIndex(
     for (i = bytesThatFit; i > 0; --i) {
 	/*
 	 * A break is only usable if the next line would not start
-	 * with a character that may not start a line. 
+	 * with a character that may not start a line.
 	 */
 	if (i < n && mojibake_cannot_start_line_at(chars, (size_t) n, (size_t) i)) {
 	    continue;
