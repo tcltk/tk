@@ -255,7 +255,8 @@ test wm-attributes-1.3.4 {change -fullscreen after map} -setup {
 } -result {0 1 1 0}
 test wm-attributes-1.3.5 {change -fullscreen after map} -setup {
     set results [list]
-    set normal_geom "301x302+101+102"
+    # The window cannot be narrower than its title bar.
+    set normal_geom "[expr {max(301, [lindex [wm minsize .] 0] + 1)}]x302+101+102"
     set fullscreen_geom "[winfo screenwidth .]x[winfo screenheight .]+0+0"
 } -constraints win -body {
     toplevel .t
@@ -702,6 +703,7 @@ test wm-geometry-2.1 {setting values} -body {
     update
     return [list $result [string equal [wm geometry .t] $result]]
 } -cleanup {
+    wm overrideredirect .t 0
     unset result
 } -match glob -result [list 480x150+*+* 0]
 test wm-geometry-2.2 {setting only the size does not move the window - bug 2995339} -setup {
@@ -714,7 +716,7 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -body {
     set x [winfo rootx .geom]
     set y [winfo rooty .geom]
-    wm geometry .geom 300x200
+    wm geometry .geom 500x200
     update
     after 500
     update
@@ -723,7 +725,7 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -cleanup {
     destroy .geom
     unset -nocomplain x y
-} -result {0 0 300 200}
+} -result {0 0 500 200}
 test wm-geometry-2.3 {the position of a zoomed toplevel - bug 557441302b} -setup {
     destroy .geom
     toplevel .geom

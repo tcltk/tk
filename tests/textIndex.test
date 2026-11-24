@@ -13,7 +13,7 @@ namespace import -force tcltest::test
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
-pack .t -expand 1 -fill both
+pack .t -anchor nw
 update
 .t debug on
 wm geometry . {}
@@ -724,7 +724,7 @@ set varFont {Times -14}
 set bigFont {Helvetica -24}
 destroy .t
 text .t -font $fixedFont -width 20 -height 10 -wrap char
-pack .t -expand 1 -fill both
+pack .t -anchor nw
 .t tag configure big -font $bigFont
 .t debug on
 wm geometry . {}
