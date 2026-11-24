@@ -8,19 +8,6 @@
  *      wl_surface GLFW already owns. Supports both external integration
  *      with Wayland system clipboard and Tk's internal clipboard.
  *
- *      Initialization timing is critical.  Mutter only sends the
- *      current selection to a data device that already existed when the
- *      window gained keyboard focus.  A data device created lazily at
- *      the first [clipboard get]/[clipboard append], when the window
- *      already has focus, therefore never sees the current selection
- *      and [clipboard get] fails until the next focus change.
- *
- *      TkWaylandClipboardEarlyInit() must therefore be called from
- *      TkWaylandInitialize(), after glfwInit() and after the
- *      wl_display is available, but before any window is created.  It
- *      binds the registry, wl_seat and wl_data_device synchronously so
- *      the data device exists before the first window is mapped.  The
- *      lazy WaylandEnsureInitialized() path is kept as a fallback.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
