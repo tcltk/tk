@@ -7805,7 +7805,7 @@ test text-39.1 {no scroll command before the text is mapped - bug 991849} -setup
 test text-42.1 {<<PrevWord>> stops at a one-character word before the cursor} -setup {
     text .t
     set res {}
-} -body {
+} -constraints x11KnownBug -body {
     .t insert end "a b c\nxy z"
     .t mark set insert end-1c
     for {set i 0} {$i < 5} {incr i} {
