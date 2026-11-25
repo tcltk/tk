@@ -156,6 +156,10 @@ FinishPrint(
 	fileName = file;
 
 	CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
+	if (printURL == NULL) {
+	    NSLog(@ "Could not get file to print.");
+	    return noErr;
+	}
 
 	PMPrinter currentPrinter;
 	PMDestinationType printDestination;
