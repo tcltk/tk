@@ -25,43 +25,11 @@
 #include "tkMacOSXImage.h"
 #include "tkMacOSXPrivate.h"
 
-NSString * fileName = nil;
-CFStringRef urlFile = NULL;
-
 /*Forward declaration of functions.*/
 static Tcl_ObjCmdProc StartPrint;
 static OSStatus	FinishPrint(NSString *file, int buttonValue);
 static Tcl_ObjCmdProc MakePDF;
 int			MacPrint_Init(Tcl_Interp * interp);
-
-/* Delegate class for print dialogs. */
-@interface PrintDelegate: NSObject
-    - (id) init;
-    - (void) printPanelDidEnd: (NSPrintPanel *) printPanel
-		   returnCode: (int) returnCode
-		  contextInfo: (void *) contextInfo;
-@end
-
-@implementation PrintDelegate
-- (id) init {
-    self = [super init];
-    return self;
-}
-
-- (void) printPanelDidEnd: (NSPrintPanel *) printPanel
-	       returnCode: (int) returnCode
-	      contextInfo: (void *) contextInfo {
-    (void) printPanel;
-    (void) contextInfo;
-
-    /*
-     * Pass returnCode to FinishPrint function to determine how to
-     * handle.
-     */
-
-    FinishPrint(fileName, returnCode);
-}
-@end
 
 /*
  *----------------------------------------------------------------------
@@ -93,17 +61,10 @@ StartPrint(
 	return TCL_ERROR;
     }
 
-    fileName = [[NSString alloc] initWithUTF8String: Tcl_GetString(objv[1])];
-    urlFile = (CFStringRef) fileName;
-
-    /* Initialize the delegate for the callback from the page panel. */
-    PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
+    NSString *fileName = [[NSString alloc] initWithUTF8String: Tcl_GetString(objv[1])];
 
     accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
-    [printDelegate printPanelDidEnd: printPanel
-			 returnCode: accepted
-			contextInfo: printInfo];
-    [printDelegate release];
+    ChkErr(FinishPrint, fileName, accepted);
 
     return TCL_OK;
 }
@@ -132,6 +93,7 @@ FinishPrint(
     PMPrintSettings printSettings;
     OSStatus status = noErr;
     CFStringRef mimeType = NULL;
+    CFStringRef urlFile = (CFStringRef)file;
 
     /*
      * If value passed here is NSCancelButton, return noErr;
@@ -152,8 +114,6 @@ FinishPrint(
 	    NSLog(@ "Could not get file to print.");
 	    return noErr;
 	}
-
-	fileName = file;
 
 	CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
 	if (printURL == NULL) {
