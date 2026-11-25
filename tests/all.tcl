@@ -19,20 +19,16 @@ package require tcltest 2.2
 # CONFIGURATION FOR TCLTEST AND THE TK TEST SUITE
 #
 
-# Set defaults for the Tk test suite
-tcltest::configure -singleproc 0; # temporarily for Github CI
-
-# Handle command line parameters
-if {[llength $argv] & 1} {
-    puts stderr "error: the number of command line parameters must be even (name - value pairs)."
-    exit 1
-}
-
-# tcltest options that are not configurable for the Tk test suite
+# Options provided by the package tcltest
+#
+# defaults for the Tk test suite
+tcltest::configure -singleproc 1
+#
+# options not configurable for the Tk test suite
 set ignoredOptions [list -testdir]
 
 #
-# Options that are specific for the Tk test suite:
+# Non-tcltest options that are specific for the Tk test suite:
 #
 # -eyefriendly	: if set to one, test execution halts at appropriate places to
 #		  allow the human eye to follow the changes on the screen.
@@ -41,6 +37,11 @@ array set tktestConf {
     -eyefriendly 0
 }
 
+# Process command line parameters
+if {[llength $argv] & 1} {
+    puts stderr "error: the number of command line parameters must be even (name - value pairs)."
+    exit 1
+}
 set index 0
 array set indices {
     ignored {}

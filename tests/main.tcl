@@ -22,8 +22,8 @@ if {[tcltest::configure -singleproc] == 0} {
     package require tk
 
     #
-    # Process options specific for the Tk test suite. These have already been
-    # separated out by all.tcl, and stored in env(TK_TESTFLAGS).
+    # Process non-tcltest options specific for the Tk test suite. These have
+    # already been separated out by all.tcl, and stored in env(TK_TESTFLAGS).
     #
     if {[info exists env(TK_TESTFLAGS)]} {
 	array set tktestConf $env(TK_TESTFLAGS)
