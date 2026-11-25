@@ -160,6 +160,7 @@ FinishPrint(
 	    NSLog(@ "Could not get file to print.");
 	    return noErr;
 	}
+	CFAutorelease(printURL);
 
 	PMPrinter currentPrinter;
 	PMDestinationType printDestination;
