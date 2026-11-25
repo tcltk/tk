@@ -1205,7 +1205,16 @@ proc ::tk::TextPrevPos {w start op {index end}} {
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text $index]
+	if {$index eq "end+1"} {
+	    # Append a character and pass its index, so that the last character
+	    # of the text is taken into account with any Tcl 8.6 version:
+	    # tcl_startOfPreviousWord does not accept "end+1" in Tcl 8.6.13
+	    # and older, and ignores the last character when the index is the
+	    # length of the string in Tcl 8.6.14 to 8.6.18.
+	    set pos [$op "$text " [string length $text]]
+	} else {
+	    set pos [$op $text $index]
+	}
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
