@@ -66,7 +66,7 @@ unset ignoredOptions index indices tcltestOptions
 
 if {[tcltest::configure -singleproc] == 0} {
     #
-    # Store configuration settings specific for the Tk test suite in a
+    # Store non-tcltest settings specific for the Tk test suite in a
     # dedicated environment variable, so that they can be picked up by
     # testfiles that run in a separate process ("-singleproc 0").
     # Further processing takes place in main.tcl.
