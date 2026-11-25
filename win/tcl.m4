@@ -54,17 +54,17 @@ AC_DEFUN([SC_PATH_TCLCONFIG], [
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
 			../tcl \
-			`ls -dr ../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../tcl[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../tcl9.[[1-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../tcl9.[[1-9]] 2>/dev/null` \
+			`ls -dr ../tcl9.[[1-9]]* 2>/dev/null` \
 			../../tcl \
-			`ls -dr ../../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../../tcl[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../tcl9.[[1-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../tcl9.[[1-9]] 2>/dev/null` \
+			`ls -dr ../../tcl9.[[1-9]]* 2>/dev/null` \
 			../../../tcl \
-			`ls -dr ../../../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../../../tcl[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../../../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
+			`ls -dr ../../../tcl9.[[1-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../../tcl9.[[1-9]] 2>/dev/null` \
+			`ls -dr ../../../tcl9.[[1-9]]* 2>/dev/null` ; do
 		    if test -f "$i/win/tclConfig.sh" ; then
 			ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
 			break
@@ -95,9 +95,9 @@ AC_DEFUN([SC_PATH_TCLCONFIG], [
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
 			${srcdir}/../tcl \
-			`ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
+			`ls -dr ${srcdir}/../tcl9.[[1-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ${srcdir}/../tcl9.[[1-9]] 2>/dev/null` \
+			`ls -dr ${srcdir}/../tcl9.[[1-9]]* 2>/dev/null` ; do
 		    if test -f "$i/win/tclConfig.sh" ; then
 		    ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
 		    break
@@ -172,17 +172,17 @@ AC_DEFUN([SC_PATH_TKCONFIG], [
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
 		for i in \
 			../tk \
-			`ls -dr ../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../tk[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../tk[[8-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../tk9.[[0-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../tk9.[[0-9]] 2>/dev/null` \
+			`ls -dr ../tk9.[[0-9]]* 2>/dev/null` \
 			../../tk \
-			`ls -dr ../../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../../tk[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../../tk[[8-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../tk9.[[0-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../tk9.[[0-9]] 2>/dev/null` \
+			`ls -dr ../../tk9.[[0-9]]* 2>/dev/null` \
 			../../../tk \
-			`ls -dr ../../../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ../../../tk[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ../../../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
+			`ls -dr ../../../tk9.[[0-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ../../../tk9.[[0-9]] 2>/dev/null` \
+			`ls -dr ../../../tk9.[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/win/tkConfig.sh" ; then
 			ac_cv_c_tkconfig="`(cd $i/win; pwd)`"
 			break
@@ -213,9 +213,9 @@ AC_DEFUN([SC_PATH_TKCONFIG], [
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
 		for i in \
 			${srcdir}/../tk \
-			`ls -dr ${srcdir}/../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
-			`ls -dr ${srcdir}/../tk[[8-9]].[[0-9]] 2>/dev/null` \
-			`ls -dr ${srcdir}/../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
+			`ls -dr ${srcdir}/../tk9.[[0-9]].[[0-9]]* 2>/dev/null` \
+			`ls -dr ${srcdir}/../tk9.[[0-9]] 2>/dev/null` \
+			`ls -dr ${srcdir}/../tk9.[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/win/tkConfig.sh" ; then
 			ac_cv_c_tkconfig="`(cd $i/win; pwd)`"
 			break
@@ -995,7 +995,7 @@ AC_DEFUN([SC_PROG_TCLSH], [
     AC_CACHE_VAL(ac_cv_path_tclsh, [
 	search_path=`echo ${PATH} | sed -e 's/:/ /g'`
 	for dir in $search_path ; do
-	    for j in `ls -r $dir/tclsh[[8-9]]*.exe 2> /dev/null` \
+	    for j in `ls -r $dir/tclsh9*.exe 2> /dev/null` \
 		    `ls -r $dir/tclsh* 2> /dev/null` ; do
 		if test x"$ac_cv_path_tclsh" = x ; then
 		    if test -f "$j" ; then
