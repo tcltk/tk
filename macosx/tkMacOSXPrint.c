@@ -204,7 +204,7 @@ FinishPrint(
 		NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
 
-	/*
+		/*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
@@ -226,7 +226,7 @@ FinishPrint(
 		 * through CUPS filter to convert back to PostScript.
 		 */
 
-	      if ([pathExtension isEqualToString: @ "ps"]) {
+		if ([pathExtension isEqualToString: @ "ps"]) {
 		    char source[5012];
 		    char target[5012];
 		    [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
@@ -242,16 +242,16 @@ FinishPrint(
 		     */
 		    pid_t pid;
 		    if ((pid = fork()) == -1) {
-		      return -1;
+			return -1;
 		    } else if (pid == 0) {
-		      /* Redirect output to file and silence debugging output.*/
-		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
-		      dup2(open("/dev/null", O_WRONLY), 2);
-		      execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, (char *)NULL);
-		      exit(0);
+			/* Redirect output to file and silence debugging output.*/
+			dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
+			dup2(open("/dev/null", O_WRONLY), 2);
+			execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, (char *)NULL);
+			exit(0);
 		    }
-	      return status;
-	      }
+		    return status;
+		}
 	    }
 	}
 
