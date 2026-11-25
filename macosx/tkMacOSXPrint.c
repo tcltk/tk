@@ -276,12 +276,6 @@ FinishPrint(
 	}
     }
 
-    /* Return because cancel button was clicked. */
-    if (buttonValue == NSModalResponseCancel) {
-	PMRelease(printSession);
-	return status;
-    }
-
     return status;
 }
 
