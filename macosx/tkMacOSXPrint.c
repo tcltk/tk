@@ -197,6 +197,9 @@ FinishPrint(
 		CFStringRef savePath = CFURLCopyFileSystemPath(outputLocation, kCFURLPOSIXPathStyle);
 		NSString * sourcePath = (NSString * ) sourceFile;
 		NSString * finalPath = (NSString * ) savePath;
+		CFRelease(outputLocation);
+		[sourcePath autorelease];
+		[finalPath autorelease];
 		NSString * pathExtension = [finalPath pathExtension];
 		NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
