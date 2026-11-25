@@ -65,6 +65,7 @@ StartPrint(
 
     accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
     ChkErr(FinishPrint, fileName, accepted);
+    [fileName release];
 
     return TCL_OK;
 }
@@ -139,7 +140,6 @@ FinishPrint(
 		    mimeType = CFSTR("application/pdf");
 		    if (CFArrayContainsValue(mimeTypes, CFRangeMake(0, CFArrayGetCount(mimeTypes)), mimeType)) {
 			status = PMPrinterPrintWithFile(currentPrinter, printSettings, pageFormat, mimeType, printURL);
-			CFRelease(urlFile);
 			return status;
 		    }
 		}
