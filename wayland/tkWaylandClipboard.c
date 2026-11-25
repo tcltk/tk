@@ -7,7 +7,7 @@
  *      wl_data_source / wl_data_offer, using the same wl_display and
  *      wl_surface GLFW already owns. Supports both external integration
  *      with Wayland system clipboard and Tk's internal clipboard.
-
+ *
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -513,6 +513,26 @@ KeyboardLeave(TCL_UNUSED(void *),
     DEBUG_LOG("KeyboardLeave: retaining serial=%u", clip.lastSerial);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * KeyboardKey --
+ *
+ *      wl_keyboard "key" handler.  Keeps the freshest input serial:
+ *      Ctrl+C reaches us as a key event immediately before
+ *      [clipboard append], and compositors are most willing to honor
+ *      set_selection() with a recent serial.  The keyboard enter serial
+ *      can be too old by then.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates lastSerial/haveSerial.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 KeyboardKey(void *data,
 	    TCL_UNUSED(struct wl_keyboard *),
@@ -521,16 +541,28 @@ KeyboardKey(void *data,
 	    TCL_UNUSED(uint32_t),
 	    TCL_UNUSED(uint32_t))
 {
-    /*
-     * Keep the freshest input serial: Ctrl+C reaches us as a key event
-     * immediately before [clipboard append], and compositors are most
-     * willing to honor set_selection() with a recent serial.  The
-     * keyboard enter serial can be too old by then.
-     */
     WaylandClipboard *c = (WaylandClipboard *)data;
     c->lastSerial = serial;
     c->haveSerial = 1;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * KeyboardModifiers --
+ *
+ *      wl_keyboard "modifiers" handler.  Also carries a serial; record
+ *      it so a modifier press can freshen the serial used by a
+ *      subsequent set_selection().
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates lastSerial/haveSerial.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 KeyboardModifiers(void *data,
@@ -593,12 +625,19 @@ static const struct wl_keyboard_listener keyboardListener = {
  *      tracking) and creates the wl_data_device once both the manager
  *      and the seat are known.  Idempotent.
  *
+ *      Keyboard capability removal is handled: when the capability
+ *      disappears (for example the only keyboard is unplugged) the old
+ *      wl_keyboard is released and the pointer cleared, so that a fresh
+ *      one is bound when the capability comes back.  Keeping the old
+ *      object would leave the clipboard without enter/key events and
+ *      therefore without fresh serials.
+ *
  * Results:
  *      None.
  *
  * Side effects:
- *      May create keyboard/device objects and add listeners; sets
- *      clip.ready when the device is installed.
+ *      May create or release keyboard/device objects and add
+ *      listeners; sets clip.ready when the device is installed.
  *
  *----------------------------------------------------------------------
  */
@@ -609,10 +648,31 @@ SeatCapabilities(void *data, struct wl_seat *seat, uint32_t caps)
     WaylandClipboard *c = (WaylandClipboard *)data;
     DEBUG_LOG("SeatCapabilities: caps=0x%x kbd=%p dev=%p",
 	      caps, (void *)c->keyboard, (void *)c->device);
-    if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && c->keyboard == NULL) {
-        c->keyboard = wl_seat_get_keyboard(seat);
-        wl_keyboard_add_listener(c->keyboard, &keyboardListener, c);
+
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
+        if (c->keyboard == NULL) {
+            c->keyboard = wl_seat_get_keyboard(seat);
+            wl_keyboard_add_listener(c->keyboard, &keyboardListener, c);
+            DEBUG_LOG("SeatCapabilities: created keyboard %p",
+		      (void *)c->keyboard);
+        }
+    } else if (c->keyboard != NULL) {
+        /*
+         * Keyboard capability removed.  Release the old wl_keyboard so
+         * that a fresh one is bound when the capability comes back;
+         * otherwise no new enter/key events, and no new serials, would
+         * ever arrive.
+         */
+        DEBUG_LOG("SeatCapabilities: releasing keyboard %p",
+		  (void *)c->keyboard);
+        if (wl_proxy_get_version((struct wl_proxy *)c->keyboard) >= 3) {
+            wl_keyboard_release(c->keyboard);
+        } else {
+            wl_keyboard_destroy(c->keyboard);
+        }
+        c->keyboard = NULL;
     }
+
     if (c->device == NULL && c->manager != NULL) {
         c->device = wl_data_device_manager_get_data_device(c->manager, seat);
         wl_data_device_add_listener(c->device, &deviceListener, c);
@@ -681,6 +741,7 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
 	       const char *interface, uint32_t version)
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
+
     if (strcmp(interface, wl_data_device_manager_interface.name) == 0) {
         uint32_t v = version < 3 ? version : 3;
         DEBUG_LOG("RegistryGlobal: binding %s v%u (advertised %u)",
@@ -716,7 +777,7 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
  *
  * RegistryGlobalRemove --
  *
- *      wl_registry "global" handler.
+ *      wl_registry "global_remove" handler.
  *
  * Results:
  *      None. No-op with GLFW.
@@ -747,18 +808,140 @@ static const struct wl_registry_listener registryListener = {
 /*
  *----------------------------------------------------------------------
  *
+ * WaylandSetupQueueAndRegistry --
+ *
+ *      Shared helper used by both the early and the lazy initialization
+ *      paths: create the private event queue and the registry proxy
+ *      wrapper that points at it, add the registry listener, install
+ *      the Tcl event source and the thread exit handler.  Does NOT
+ *      flush or roundtrip, and is idempotent.
+ *
+ * Results:
+ *      Returns 1 on success, 0 if the display or the queue could not
+ *      be created.
+ *
+ * Side effects:
+ *      Creates the display reference (if not already set), the private
+ *      wl_event_queue and the wl_registry, and registers the Tcl event
+ *      source and thread exit handler.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WaylandSetupQueueAndRegistry(void)
+{
+    struct wl_display *wrapper;
+
+    if (clip.display == NULL) {
+	clip.display = glfwGetWaylandDisplay();
+	DEBUG_LOG("WaylandSetupQueueAndRegistry: display=%p",
+		  (void *)clip.display);
+	if (clip.display == NULL) {
+	    return 0;
+	}
+    }
+    if (clip.queue == NULL) {
+	clip.queue = wl_display_create_queue(clip.display);
+	if (clip.queue == NULL) {
+	    return 0;
+	}
+    }
+    if (clip.registry == NULL) {
+	/*
+	 * Create the registry through a proxy wrapper that already
+	 * points at our queue; this is the race-free way to get the
+	 * registry (and everything bound from it) into a private queue.
+	 */
+	wrapper = (struct wl_display *)wl_proxy_create_wrapper(clip.display);
+	if (wrapper == NULL) {
+	    return 0;
+	}
+	wl_proxy_set_queue((struct wl_proxy *)wrapper, clip.queue);
+	clip.registry = wl_display_get_registry(wrapper);
+	wl_proxy_wrapper_destroy(wrapper);
+	wl_registry_add_listener(clip.registry, &registryListener, &clip);
+    }
+    if (!clip.sourceInstalled) {
+	Tcl_CreateEventSource(ClipSourceSetup, ClipSourceCheck, NULL);
+	clip.sourceInstalled = 1;
+	Tcl_CreateThreadExitHandler(ClipExitHandler, NULL);
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandClipboardEarlyInit --
+ *
+ *      Called from TkWaylandInitialize() right after glfwInit() and
+ *      after the wl_display is available, but BEFORE any window is
+ *      created.  Bind the registry, wl_seat and wl_data_device
+ *      synchronously so the data device exists before the first
+ *      window is mapped and before it gains keyboard focus.  This is
+ *      what makes Mutter deliver the current selection to us when the
+ *      window is focused later.
+ *
+ *      Uses wl_display_roundtrip() on GLFW's display; this is safe
+ *      here because we are on the main thread before the event loop
+ *      has started and before any GLFW window exists.  The number of
+ *      iterations is bounded; if the compositor is unusually slow the
+ *      function returns 0 and the lazy path retries later.
+ *
+ * Results:
+ *      Returns 1 if the clipboard is fully ready (display, manager,
+ *      seat, and data device all present), 0 otherwise.
+ *
+ * Side effects:
+ *      Creates the private event queue, the registry, the seat and the
+ *      data device; registers the Tcl event source and thread exit
+ *      handler.  Dispatches pending Wayland events while waiting for
+ *      the registry globals.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWaylandClipboardEarlyInit(void)
+{
+    int i;
+
+    if (clip.ready) {
+	return 1;
+    }
+    if (!WaylandSetupQueueAndRegistry()) {
+	return 0;
+    }
+    /*
+     * Pump the registry globals.  Roundtrip on the default queue
+     * dispatches everything the compositor has sent for us; the
+     * registry/seat listeners live on our private queue, so also drain
+     * that one.  A few iterations are enough for the compositor to
+     * send globals and for wl_seat.capabilities to arrive.
+     */
+    for (i = 0; i < 8 && !clip.ready; i++) {
+	wl_display_roundtrip(clip.display);
+	wl_display_dispatch_queue_pending(clip.display, clip.queue);
+    }
+    wl_display_flush(clip.display);
+    DEBUG_LOG("TkWaylandClipboardEarlyInit: ready=%d manager=%p seat=%p device=%p",
+	      clip.ready, (void *)clip.manager, (void *)clip.seat,
+	      (void *)clip.device);
+    return clip.ready;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WaylandEnsureInitialized --
  *
- *      Non-blocking lazy initialization.  On first touch, grab the
- *      wl_display GLFW already owns and create a private wl_event_queue
- *      for every clipboard object (registry, seat, keyboard, data
- *      device, data source, data offers).  Objects inherit the queue of
- *      the proxy that creates them, so everything below the registry
- *      lands in this queue and GLFW's own objects stay in the default
- *      queue.  The queue is serviced by a Tcl event source; no Tcl file
- *      handler is installed on the display fd, because Tcl keeps one
- *      handler per fd and ours would replace the notifier's.  Do NOT
- *      roundtrip here: that would block the main thread.
+ *      Lazy fallback used if TkWaylandClipboardEarlyInit() was not
+ *      called or did not complete.  On first touch it creates the
+ *      wl_display reference, the private wl_event_queue, the registry
+ *      and its listener, and the Tcl event source; subsequent calls
+ *      are cheap.  Do NOT roundtrip here: that would block the main
+ *      thread, and the caller is typically inside an event loop.
  *
  *      Returns 1 only when the clipboard is fully ready (display,
  *      manager, seat, and data device all present).  Callers that get
@@ -780,44 +963,10 @@ static int
 WaylandEnsureInitialized(void)
 {
     if (!clip.Initialized) {
-	struct wl_display *wrapper;
-
 	clip.Initialized = 1;
-
-	clip.display = glfwGetWaylandDisplay();
-	DEBUG_LOG("WaylandEnsureInitialized: glfwGetWaylandDisplay()=%p",
-		  (void *)clip.display);
-	if (clip.display == NULL) {
+	if (!WaylandSetupQueueAndRegistry()) {
 	    return 0;
 	}
-
-	clip.queue = wl_display_create_queue(clip.display);
-	if (clip.queue == NULL) {
-	    clip.display = NULL;
-	    return 0;
-	}
-
-	/*
-	 * Create the registry through a proxy wrapper that already
-	 * points at our queue; this is the race-free way to get the
-	 * registry (and everything bound from it) into a private queue.
-	 */
-	wrapper = (struct wl_display *)wl_proxy_create_wrapper(clip.display);
-	if (wrapper == NULL) {
-	    wl_event_queue_destroy(clip.queue);
-	    clip.queue = NULL;
-	    clip.display = NULL;
-	    return 0;
-	}
-	wl_proxy_set_queue((struct wl_proxy *)wrapper, clip.queue);
-	clip.registry = wl_display_get_registry(wrapper);
-	wl_proxy_wrapper_destroy(wrapper);
-	wl_registry_add_listener(clip.registry, &registryListener, &clip);
-
-	Tcl_CreateEventSource(ClipSourceSetup, ClipSourceCheck, NULL);
-	clip.sourceInstalled = 1;
-	Tcl_CreateThreadExitHandler(ClipExitHandler, NULL);
-
 	/*
 	 * Flush the registry request now so the globals start arriving.
 	 * No read/wait here.
@@ -974,7 +1123,7 @@ TkWaylandClipboardCleanup(void)
 {
     int i;
 
-    if (!clip.Initialized) {
+    if (!clip.Initialized && clip.display == NULL) {
 	return;
     }
     if (clip.sourceInstalled) {
@@ -1034,6 +1183,25 @@ TkWaylandClipboardCleanup(void)
     ckfree(clip.text);
     memset(&clip, 0, sizeof(clip));
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ClipExitHandler --
+ *
+ *      Thread exit handler; a safety net that calls
+ *      TkWaylandClipboardCleanup().  Direct cleanup from the shutdown
+ *      path is preferred; the ordering of thread exit handlers relative
+ *      to glfwTerminate() is not guaranteed.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Same as TkWaylandClipboardCleanup.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 ClipExitHandler(TCL_UNUSED(ClientData))
@@ -1206,6 +1374,22 @@ WaylandClear(void)
  *  Read incoming offer (clipboard get).
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * MonotonicMs --
+ *
+ *      Return the current monotonic time in milliseconds.
+ *
+ * Results:
+ *      The monotonic clock value, in milliseconds.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static long
 MonotonicMs(void)
 {
@@ -1228,13 +1412,22 @@ MonotonicMs(void)
  *      freeze Tk.  Returns NULL if no offer exists or no suitable mime
  *      type is offered.
  *
+ *      Before deciding which offer to read, synchronize with the
+ *      compositor: a set_selection() we just issued, or a foreign
+ *      clear/append the compositor just processed, may still be in
+ *      flight.  Without the roundtrip, [clipboard get] right after
+ *      [clipboard append] (or after [clipboard clear] while a stale
+ *      offer from startup is present) would read the offer that was
+ *      current before the operation.
+ *
  * Results:
  *      Returns a ckalloc'd buffer and stores its length in *lenPtr,
  *      or returns NULL with *lenPtr == 0.
  *
  * Side effects:
  *      Creates a pipe, issues wl_data_offer_receive, pumps Wayland
- *      events and polls the pipe (bounded), closes the pipe.
+ *      events and polls the pipe (bounded), closes the pipe.  May
+ *      roundtrip with the compositor.
  *
  *----------------------------------------------------------------------
  */
@@ -1254,8 +1447,20 @@ WaylandReadOffer(size_t *lenPtr)
 	return NULL;
     }
 
-    /* Make sure a selection/offer already received is the one we read. */
+    /*
+     * Synchronize with the compositor before trusting clip.offer.  A
+     * set_selection() we just issued, or a foreign clear/append the
+     * compositor just processed, may still be in flight.  The default
+     * queue roundtrip guarantees the compositor has processed all our
+     * requests; dispatching our private queue then delivers the
+     * resulting selection (or data_offer/offer) events.
+     */
     WaylandDispatch();
+    if (clip.display != NULL) {
+	wl_display_roundtrip(clip.display);
+	wl_display_dispatch_queue_pending(clip.display, clip.queue);
+    }
+
     if (clip.offer == NULL) {
 	DEBUG_LOG("WaylandReadOffer: no offer");
 	return NULL;
@@ -1286,15 +1491,15 @@ WaylandReadOffer(size_t *lenPtr)
 	return NULL;
     }
     {
-	int i;
-	for (i = 0; i < 2; i++) {
-	    int flags = fcntl(pipefd[i], F_GETFD);
+	int j;
+	for (j = 0; j < 2; j++) {
+	    int flags = fcntl(pipefd[j], F_GETFD);
 	    if (flags >= 0) {
-		fcntl(pipefd[i], F_SETFD, flags | FD_CLOEXEC);
+		fcntl(pipefd[j], F_SETFD, flags | FD_CLOEXEC);
 	    }
-	    flags = fcntl(pipefd[i], F_GETFL);
+	    flags = fcntl(pipefd[j], F_GETFL);
 	    if (flags >= 0) {
-		fcntl(pipefd[i], F_SETFL, flags | O_NONBLOCK);
+		fcntl(pipefd[j], F_SETFL, flags | O_NONBLOCK);
 	    }
 	}
     }
@@ -1577,14 +1782,22 @@ TkSelGetSelection(
  *
  * XSetSelectionOwner --
  *
- *      Stub kept for Tk's generic code.  Real ownership is via
- *      wl_data_device_set_selection() in WaylandPublish.
+ *      Stub kept for Tk's generic code.  Claiming (w != None) is done
+ *      by WaylandPublish via TkSelUpdateClipboard.  Giving up the
+ *      selection (w == None), which generic Tk does for
+ *      `selection clear -s CLIPBOARD` and `clipboard clear`, must
+ *      reach the compositor: WaylandClear() destroys our wl_data_source
+ *      and, if we still own the selection, issues set_selection(NULL)
+ *      so the compositor drops it and other applications see an empty
+ *      clipboard.  Doing nothing here would leave Tk's text visible to
+ *      wl-paste even after `selection clear`.
  *
  * Results:
  *      Always Success.
  *
  * Side effects:
- *      None.
+ *      For w == None, may destroy our wl_data_source, free clip.text,
+ *      and issue set_selection(NULL).
  *
  *----------------------------------------------------------------------
  */
@@ -1592,9 +1805,12 @@ TkSelGetSelection(
 int
 XSetSelectionOwner(TCL_UNUSED(Display *),
 		   TCL_UNUSED(Atom),
-		   TCL_UNUSED(Window),
+		   Window w,
 		   TCL_UNUSED(Time))
 {
+    if (w == None) {
+	WaylandClear();
+    }
     return Success;
 }
 

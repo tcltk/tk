@@ -560,6 +560,7 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 MODULE_SCOPE int  TkWaylandInitialize(Tcl_Interp *interp);
 MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
 MODULE_SCOPE void TkWaylandClipboardCleanup(void);
+MODULE_SCOPE int TkWaylandClipboardEarlyInit(void);
 
 /*
  *----------------------------------------------------------------------
