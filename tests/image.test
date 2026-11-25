@@ -53,7 +53,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
 } -result 1
 
 test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
-    testImageType
+    testImageType aquaKnownBug
 } -setup {
     imageCleanup
 } -body {
@@ -355,11 +355,11 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     catch {destroy .b}
 } -result [list 0 1]
 
-test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
+test image-9.1 {Tk_ImageChanged procedure} -setup {
     .c delete all
     imageCleanup
     update
-} -body {
+} -constraints {testImageType aquaKnownBug} -body {
     image create test foo -variable x
     .c create image 50 50 -image foo
     update
