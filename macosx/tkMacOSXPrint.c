@@ -86,9 +86,6 @@ StartPrint(
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
     int accepted;
-    PMPrintSession printSession;
-    PMPrintSettings printSettings;
-    OSStatus status = noErr;
 
     /* Check for proper number of arguments. */
     if (objc < 2) {
@@ -101,28 +98,6 @@ StartPrint(
 
     /* Initialize the delegate for the callback from the page panel. */
     PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
-
-    status = PMCreateSession( & printSession);
-    if (status != noErr) {
-	NSLog(@ "Error creating print session.");
-	return TCL_ERROR;
-    }
-
-    status = PMCreatePrintSettings( & printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating print settings.");
-	return TCL_ERROR;
-    }
-
-    status = PMSessionDefaultPrintSettings(printSession, printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating default print settings.");
-	return TCL_ERROR;
-    }
-
-    printSession = (PMPrintSession)[printInfo PMPrintSession];
-    (void)(PMPageFormat)[printInfo PMPageFormat];
-    printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
     accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
     [printDelegate printPanelDidEnd: printPanel
@@ -164,24 +139,6 @@ FinishPrint(
      */
     if (buttonValue == NSModalResponseCancel) {
 	return noErr;
-    }
-
-    status = PMCreateSession( & printSession);
-    if (status != noErr) {
-	NSLog(@ "Error creating print session.");
-	return status;
-    }
-
-    status = PMCreatePrintSettings( & printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating print settings.");
-	return status;
-    }
-
-    status = PMSessionDefaultPrintSettings(printSession, printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating default print settings.");
-	return status;
     }
 
     printSession = (PMPrintSession)[printInfo PMPrintSession];
