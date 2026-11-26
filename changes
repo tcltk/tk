@@ -8656,4 +8656,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-11-23 (bug) [356526] On X11, invoke buttons when mouse button 1 is released (storchaka)
 
+2026-11-26 (bug) [ae18a4] Windows: access violation in Tk_GetHWND when implicit focus is released on Leave (anonymous)
+
 - Released 8.6.19, Dec ??, 2026 - https://core.tcl-lang.org/tk/ for details
