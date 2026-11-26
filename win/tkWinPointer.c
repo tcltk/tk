@@ -603,7 +603,13 @@ XSetInputFocus(
     TCL_UNUSED(Time))
 {
     LastKnownRequestProcessed(display)++;
-    if (focus != None) {
+
+     /*
+      * PointerRoot is not a real window and has no Windows counterpart: ignore
+      * it like None instead of passing it to Tk_GetHWND (which would crash).
+      */
+ 
+    if ((focus != None) && (focus != PointerRoot)) {
 	SetFocus(Tk_GetHWND(focus));
     }
     return Success;
