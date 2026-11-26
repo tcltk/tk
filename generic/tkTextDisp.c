@@ -5111,7 +5111,7 @@ LayoutDLine(
 	while (chunkPtr1) {
 	    TkTextDispChunk *nextChunkPtr = chunkPtr1->nextPtr;
 
-	    if (nextChunkPtr && chunkPtr1->width == 0 && chunkPtr1 != data.cursorChunkPtr) {
+	    if (nextChunkPtr && IsHyphenChunk(chunkPtr1) && chunkPtr1->width == 0) {
 		chunkPtr1->prevPtr->numBytes += chunkPtr1->numBytes;
 
 		if ((chunkPtr1->prevPtr->nextPtr = nextChunkPtr)) {
