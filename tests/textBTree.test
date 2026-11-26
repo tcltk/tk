@@ -1492,6 +1492,22 @@ test btree-14.27 {no join of delete undo tokens holding switches} -setup {
     destroy .t
 } -result {ab aXXYYb {1.1 1.5} ab {1.1 1.5}}
 
+test btree-14.136 {free a joined delete undo token} -setup {
+    destroy .t
+} -body {
+    # The two deletes join into one undo token, its segment array reallocated
+    # to the exact size. Without the fix, freeing the token reads one pointer
+    # after the array: ASan (with a Tcl using the system malloc) reports it.
+    text .t -undo 1
+    .t insert end "abc"
+    .t delete 1.0 1.2
+    .t delete 1.0 1.1
+    .t edit reset
+    .t get 1.0 end-1c
+} -cleanup {
+    destroy .t
+} -result {}
+
 test btree-14.28 {delete of the newline before a line starting with an elided region} -setup {
     destroy .t
     text .t
