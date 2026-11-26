@@ -134,6 +134,9 @@
 /* Define if xkbcommon is available */
 #undef HAVE_XKBCOMMON
 
+/* Is XRandR available? */
+#undef HAVE_XRANDR
+
 /* Have we turned on XRender (photo image compositing)? */
 #undef HAVE_XRENDER
 

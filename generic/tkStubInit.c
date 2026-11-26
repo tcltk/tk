@@ -471,7 +471,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpSetCapture, /* 11 */
     0, /* 12 */
     0, /* 13 */
-    TkMacOSXDoHLEvent, /* 14 */
+    0, /* 14 */
     0, /* 15 */
     TkMacOSXGetXWindow, /* 16 */
     0, /* 17 */

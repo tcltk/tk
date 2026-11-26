@@ -1404,6 +1404,7 @@ IsEntirelyElidedLine(
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 static int
 ChunkBidiDir(
     const char *chars,
@@ -1442,6 +1443,7 @@ ChunkBidiDir(
     }
     return 0;
 }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 #ifdef _WIN32
 /*

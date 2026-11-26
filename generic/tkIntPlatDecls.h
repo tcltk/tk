@@ -153,8 +153,7 @@ EXTERN bool		TkpWmSetState(TkWindow *winPtr, int state);
 EXTERN void		TkpSetCapture(TkWindow *winPtr);
 /* Slot 12 is reserved */
 /* Slot 13 is reserved */
-/* 14 */
-EXTERN int		TkMacOSXDoHLEvent(void *theEvent);
+/* Slot 14 is reserved */
 /* Slot 15 is reserved */
 /* 16 */
 EXTERN Window		TkMacOSXGetXWindow(void *macWinPtr);
@@ -341,7 +340,7 @@ typedef struct TkIntPlatStubs {
     void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
     void (*reserved12)(void);
     void (*reserved13)(void);
-    int (*tkMacOSXDoHLEvent) (void *theEvent); /* 14 */
+    void (*reserved14)(void);
     void (*reserved15)(void);
     Window (*tkMacOSXGetXWindow) (void *macWinPtr); /* 16 */
     void (*reserved17)(void);
@@ -546,8 +545,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpSetCapture) /* 11 */
 /* Slot 12 is reserved */
 /* Slot 13 is reserved */
-#define TkMacOSXDoHLEvent \
-	(tkIntPlatStubsPtr->tkMacOSXDoHLEvent) /* 14 */
+/* Slot 14 is reserved */
 /* Slot 15 is reserved */
 #define TkMacOSXGetXWindow \
 	(tkIntPlatStubsPtr->tkMacOSXGetXWindow) /* 16 */

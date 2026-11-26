@@ -1292,6 +1292,43 @@ AS_IF([test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"], [
 ])
 
 #--------------------------------------------------------------------
+# Check whether the header and library for the XRandR extension are
+# available, and set HAVE_XRANDR if so.  XRandR is used to track
+# changes of the screen size.
+#--------------------------------------------------------------------
+
+AS_IF([test $tk_aqua = no], [
+    tk_oldCFlags=$CFLAGS
+    CFLAGS="$CFLAGS $XINCLUDES"
+    tk_oldLibs=$LIBS
+    LIBS="$tk_oldLibs $XLIBSW"
+    xrandr_header_found=no
+    xrandr_lib_found=no
+    AC_MSG_CHECKING([whether to try to use XRandR])
+    AC_ARG_ENABLE(xrandr,
+	AS_HELP_STRING([--enable-xrandr],
+	    [use XRandR to track screen size changes (default: on)]),
+	[enable_xrandr=$enableval], [enable_xrandr=yes])
+    AS_IF([test "$enable_xrandr" = "no" ], [
+	AC_MSG_RESULT([$enable_xrandr])
+    ], [
+	AC_MSG_RESULT([$enable_xrandr])
+	AC_CHECK_HEADER(X11/extensions/Xrandr.h, [
+	    xrandr_header_found=yes
+	],,[#include <X11/Xlib.h>])
+	AC_CHECK_LIB(Xrandr, XRRUpdateConfiguration, [
+	    XLIBSW="$XLIBSW -lXrandr"
+	    xrandr_lib_found=yes
+	])
+    ])
+    AS_IF([test $enable_xrandr = yes -a $xrandr_lib_found = yes -a $xrandr_header_found = yes], [
+	AC_DEFINE(HAVE_XRANDR, 1, [Is XRandR available?])
+    ])
+    CFLAGS=$tk_oldCFlags
+    LIBS=$tk_oldLibs
+])
+
+#--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to
 #	building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------

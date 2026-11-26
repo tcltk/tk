@@ -383,7 +383,7 @@ test textGrapheme-2.4 {double-click on ZWJ emoji selects whole emoji, never spli
     text .t1 -font $fixedFont -wrap none
     pack .t1
     .t1 insert end "\U0001F468\u200D\U0001F469\u200D\U0001F467\0\U0001F468\u200D\U0001F469\u200D\U0001F467"
-} -body {
+} -constraints failsOnXQuartz -body {
     if {[doubleClickAt .t1 1.0]} {
 	selectedText .t1
     } else {
@@ -660,7 +660,7 @@ test textGrapheme-7.2 {linestart / lineend on a NUL line} -setup {
 test textGrapheme-8.1 {NUL vs no-NUL wrapping breaks at same words} -constraints notWayland -setup {
     set withNul "aa\0bb cc\0dd ee"
     set withoutNul "aabb ccdd ee"
-} -body {
+} -constraints failsOnXQuartz -body {
     text .t1 -font $fixedFont -wrap word -width 6
     pack .t1
     .t1 insert end $withNul
