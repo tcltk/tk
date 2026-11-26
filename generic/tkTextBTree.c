@@ -1760,9 +1760,9 @@ UndoDeleteDestroy(
 	unsigned numSegments = tokDel->numSegments;
 
 	if (numSegments > 0) {
-	    TkTextSegment *segPtr;
+	    for ( ; numSegments > 0; --numSegments) {
+		TkTextSegment *segPtr = *segments++;
 
-	    for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
 		while (segPtr) {
 		    TkTextSegment *nextPtr;
 
