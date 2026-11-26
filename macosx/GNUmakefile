@@ -94,7 +94,8 @@ space			:= ${empty} ${empty}
 objdir			= $(subst ${space},\ ,${OBJ_DIR})
 
 develop_make_args	:= BUILD_STYLE=Development CONFIGURE_ARGS=--enable-symbols
-deploy_make_args	:= BUILD_STYLE=Deployment INSTALL_TARGET=install-strip
+deploy_make_args	:= BUILD_STYLE=Deployment INSTALL_TARGET=install-strip \
+			   EXTRA_CFLAGS=-DNDEBUG
 embedded_make_args	:= EMBEDDED_BUILD=1
 install_make_args	:= INSTALL_BUILD=1
 
@@ -159,6 +160,9 @@ clean-${PROJECT} distclean-${PROJECT} test-${PROJECT}: \
 			target = $*
 
 DO_MAKE			= +${MAKE} -C "${OBJ_DIR}" ${target} ${MAKE_ARGS_V} ${MAKE_ARGS} ${EXTRA_MAKE_ARGS}
+# clean targets must not fail when this build style was never configured
+DO_MAKE_CLEAN		= +test ! -f "${OBJ_DIR}/Makefile" || \
+			  ${MAKE} -C "${OBJ_DIR}" ${target} ${MAKE_ARGS_V} ${MAKE_ARGS} ${EXTRA_MAKE_ARGS}
 
 #-------------------------------------------------------------------------------------------------------
 # locations for custom tk install actions
@@ -247,11 +251,13 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # Deployment build can be installed on top
 # of Development build without overwriting
 # the debug library
-	@cd "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}" && \
-	if \
-	    ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
-	then : ; else \
-	    cp "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	@if [ -d "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}" ]; then \
+	    cd "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}"; \
+	    if \
+		ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	    then : ; else \
+		cp "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	    fi; \
 	fi
 
 endif # Development, not embedded
@@ -300,14 +306,14 @@ endif # not subframework
 endif # not X11
 
 clean-${PROJECT}: %-${PROJECT}:
-	${DO_MAKE}
+	${DO_MAKE_CLEAN}
 	rm -rf "${SYMROOT}"/{${PRODUCT_NAME}.framework,${WISH},tktest}
 	rm -f "${OBJ_DIR}"{"${LIBDIR}","${BINDIR}"} && \
 	rmdir -p "${OBJ_DIR}"$(dir $(subst ${space},\ ,${LIBDIR})) 2>&- || true && \
 	rmdir -p "${OBJ_DIR}"$(dir $(subst ${space},\ ,${BINDIR})) 2>&- || true
 
 distclean-${PROJECT}: %-${PROJECT}: clean-${PROJECT}
-	${DO_MAKE}
+	${DO_MAKE_CLEAN}
 	rm -rf "${OBJ_DIR}"
 
 test-${PROJECT}: %-${PROJECT}: build-${PROJECT}

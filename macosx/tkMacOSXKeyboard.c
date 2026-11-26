@@ -250,7 +250,7 @@ InitHashTables(void)
 static void
 UpdateKeymaps()
 {
-    static Bool keymapInitialized = false;
+    static bool keymapInitialized = false;
     Tcl_HashEntry *hPtr;
     int virt, index, dummy;
 
@@ -713,7 +713,7 @@ TkpSetKeycodeAndState(
 	    if (macKC.v.virt != NO_VIRTUAL) {
 		macKC.x.keychar = xvirtual2unichar[macKC.x.xvirtual];
 	    } else {
-		str = [[NSString alloc] initWithCharacters:&keychar length:1];
+		str = [NSString stringWithCharacters:&keychar length:1];
 		lower = [str lowercaseString];
 		upper = [str uppercaseString];
 		if (![str isEqual: lower]) {

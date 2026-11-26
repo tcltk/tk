@@ -1392,6 +1392,7 @@ test listbox-4.6 {ConfigureListbox procedure} -constraints {
 } -result {115x328 15x20}
 test listbox-4.7 {ConfigureListbox procedure} -setup {
     deleteWindows
+    removeTitleBar .
 } -body {
     wm withdraw .
     listbox .l2 -font $fixed -width 30 -height 20 -setgrid 1
@@ -1408,6 +1409,7 @@ test listbox-4.7 {ConfigureListbox procedure} -setup {
     lappend result [getsize .]
 } -cleanup {
     deleteWindows
+    wm overrideredirect . 0
     wm geom . {}
 } -result {30x20 26x15 26x15}
 

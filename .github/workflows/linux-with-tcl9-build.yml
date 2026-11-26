@@ -34,7 +34,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install xvfb tcl9.0-dev libtommath-dev libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev
+          sudo apt-get install xvfb tcl9.0-dev libtommath-dev libx11-dev libxss-dev libxrandr-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev
           mkdir "$HOME/install dir"
           touch doc/man.macros generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -84,6 +84,7 @@ jobs:
           - "gcc"
         config:
           - ""
+          - "--disable-accessibility"
           - "--enable-symbols"
     steps:
       - name: Checkout
@@ -99,7 +100,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install tcl9.0-dev libtommath-dev xvfb libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev
+          sudo apt-get install tcl9.0-dev libtommath-dev xvfb libx11-dev libxss-dev libxrandr-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev at-spi2-core
           mkdir "$HOME/install dir"
           touch doc/man.macros generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -123,13 +124,19 @@ jobs:
           }
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
-          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
+          # Run both, then fail if either failed.
+          rc=0
+          xvfb-run --auto-servernum make test-classic | tee out-classic.txt || rc=1
+          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt || rc=1
           grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
           grep -q "Failed	0" out-ttk.txt || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+          [ $rc -eq 0 ] || {
             echo "::error::Failure during Test"
             exit 1
           }

@@ -15,7 +15,8 @@ wm title $w "Toolbar Demonstration"
 wm iconname $w "toolbar"
 positionWindow $w
 
-ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
+ttk::label $w.msg -wraplength 4i -justify left -anchor n -text \
+	"This is a demonstration of how to do\
 	a toolbar that is styled correctly and which can be torn off. The\
 	buttons are configured to be “toolbar style” buttons by\
 	telling them that they are to use the Toolbutton style. At the left\

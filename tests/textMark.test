@@ -30,7 +30,7 @@ destroy .t
 text .t -width 20 -height 10
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 wm geometry . {}
 entry .t.e
 .t peer create .pt

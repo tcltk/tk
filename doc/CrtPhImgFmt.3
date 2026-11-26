@@ -343,7 +343,7 @@ A sample driver code snippet is:
 .CS
 if (NULL != metadataOut) {
     Tcl_DictObjPut(NULL, metadataOut, Tcl_NewStringObj("XMP",-1),
-            Tcl_NewStringObj(xmpMetadata));
+            Tcl_NewStringObj(xmpMetadata, -1));
 }
 .CE
 .PP

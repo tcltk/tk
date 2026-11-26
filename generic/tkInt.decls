@@ -877,9 +877,10 @@ declare 9 aqua {
 declare 11 aqua {
     void TkpSetCapture(TkWindow *winPtr)
 }
-declare 14 aqua {
-    int TkMacOSXDoHLEvent(void *theEvent)
-}
+# removed in Tk 9.1
+#declare 14 aqua {
+#    int TkMacOSXDoHLEvent(void *theEvent)
+#}
 declare 16 aqua {
     Window TkMacOSXGetXWindow(void *macWinPtr)
 }

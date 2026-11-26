@@ -16,7 +16,7 @@ wm title $w "Ttk Menu Buttons"
 wm iconname $w "ttkmenu"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Ttk is the new Tk themed widget set, and one widget that is available in themed form is the menubutton. Below are some themed menu buttons that allow you to pick the current theme in use. Notice how picking a theme changes the way that the menu buttons themselves look, and that the central menu button is styled differently (in a way that is normally suitable for toolbars). However, there are no themed menus; the standard Tk menus were judged to have a sufficiently good look-and-feel on all platforms, especially as they are implemented as native controls in many places."
+ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -text "Ttk is the new Tk themed widget set, and one widget that is available in themed form is the menubutton. Below are some themed menu buttons that allow you to pick the current theme in use. Notice how picking a theme changes the way that the menu buttons themselves look, and that the central menu button is styled differently (in a way that is normally suitable for toolbars). However, there are no themed menus; the standard Tk menus were judged to have a sufficiently good look-and-feel on all platforms, especially as they are implemented as native controls in many places."
 pack $w.msg [ttk::separator $w.msgSep] -side top -fill x
 
 ## See Code / Dismiss

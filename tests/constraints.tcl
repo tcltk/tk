@@ -25,6 +25,7 @@ testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 testConstraint win32 [expr {[tk windowingsystem] eq "win32"}]
+testConstraint notWin32 [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
 }]
@@ -102,8 +103,7 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
 
-testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-unset fs
+testConstraint withXft [expr {[tk::build-info x11] && ![tk::build-info no-xft]}]
 
 # Expected results of some tests on Linux rely on availability of the "times"
 # font. This font is generally provided when Tk uses the old X font system,
@@ -184,6 +184,12 @@ testConstraint nonUnixUserInteraction [expr {
 
 testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 
+# a test that must be run by the installed wish, not by the tktest executable
+
+testConstraint useInstalledWish [expr {
+    "useInstalledWish" in [tcltest::configure -constraints]
+}]
+
 # constraints for testing facilities defined in the tktest executable
 testConstraint testbitmap      [llength [info commands testbitmap]]
 testConstraint testborder      [llength [info commands testborder]]
@@ -198,6 +204,7 @@ testConstraint testgetwindowinfo [llength [info commands testgetwindowinfo]]
 testConstraint testImageType   [expr {"test" in [image types]}]
 testConstraint testmakeexist   [llength [info commands testmakeexist]]
 testConstraint testmenubar     [llength [info commands testmenubar]]
+testConstraint testmenubaritems [llength [info commands testmenubaritems]]
 testConstraint testmetrics     [llength [info commands testmetrics]]
 testConstraint testmovemouse   [llength [info commands testmovemouse]]
 testConstraint testobjconfig   [llength [info commands testobjconfig]]

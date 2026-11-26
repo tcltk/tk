@@ -3,7 +3,11 @@
  *
  *      Implements line breaks (UAX #14) and word/sentence breaks (UAX #29)
  *      for Unicode extended grapheme clusters utilizing the mojibake Unicode
- *      library.  Also, for scripts without spaces (Thai, Lao, Khmer),
+ *      library (version 0.8.0). Break boundaries come from the
+ *      iterator's state.position field, which mojibake sets to the
+ *      byte offset of the boundary the last returned break type
+ *      refers to; no boundary is reconstructed from the current
+ *      codepoint here.  Also, for scripts without spaces (Thai, Lao, Khmer),
  *      implements a forward maximum-matching word segmenter using
  *      ICU-derived dictionaries.
  *
@@ -20,527 +24,51 @@
 #include "dictionaries.h"
 
 /*
- * ---------------------------------------------------------------
- * Utf8EncodedBytes --
- *
- *   Determine the number of bytes required to encode a Unicode
- *   codepoint in UTF-8.
- *
- * Results:
- *   Returns 1, 2, 3, or 4 bytes depending on the codepoint value.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
+ * Define standard utility functions for the various break types using the
+ * templates in tkTextGrapheme.inc.  See the comments in that file for
+ * information about these functions.
  */
 
-static size_t
-Utf8EncodedBytes(mjb_codepoint cp)
-{
-    if (cp < 0x80) return 1;
-    if (cp < 0x800) return 2;
-    if (cp < 0x10000) return 3;
-    return 4;
-}
-
-/*
- * ---------------------------------------------------------------
- * BoundaryFromState --
- *
- *   Compute the actual byte boundary position from a mojibake
- *   next-state structure. All mojibake next_* states have index =
- *   byte offset of lookahead codepoint, not the boundary itself.
- *   True boundary = index - encoded_len(current).
- *
- * Results:
- *   Returns the boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary to the computed boundary value.
- * ---------------------------------------------------------------
- */
-
-static size_t
-BoundaryFromState(size_t index,
-		  mjb_codepoint curCp,
-		  size_t byteLen,
-		  size_t *lastBoundary)
-{
-    size_t idx = (index > byteLen) ? byteLen : index;
-    size_t enc = Utf8EncodedBytes(curCp);
-    size_t boundary = (enc > idx) ? 0 : (idx - enc);
-    if (index > byteLen) {
-	/* End of text: no lookahead codepoint, curCp is the last one. */
-	boundary = byteLen;
-    }
-    if (boundary < *lastBoundary) boundary = *lastBoundary;
-    *lastBoundary = boundary;
-    return boundary;
-}
-
-
-/*
- * ---------------------------------------------------------------
- * GraphemeBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for grapheme break states.
- *
- * Results:
- *   Returns the grapheme cluster boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-GraphemeBoundaryFromState(const mjb_next_state *state,
-			  size_t byteLen,
-			  size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_grapheme_breaks --
- *
- *   Compute all grapheme cluster break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #29 extended grapheme cluster boundaries.
- *
- * Results:
- *   Returns 1 on success. The breaks array is filled with 1 at each
- *   grapheme boundary byte offset (including 0 and byteLen).
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_grapheme_breaks(const char *buf,
-			 size_t byteLen,
-			 unsigned char *breaks)
-{
-    mjb_next_state state;
-    mjb_break_type bt;
-    size_t lastBoundary = 0;
-    if (buf == NULL || breaks == NULL) return 0;
-    memset(breaks, 0, byteLen + 1);
-    if (byteLen == 0) { breaks[0]=1; return 1; }
-    state.index = 0;
-    breaks[0]=1;
-    while ((bt = mjb_next_grapheme_break(buf, byteLen, MJB_ENC_UTF_8, &state)) != MJB_BT_NOT_SET) {
-	if (bt == MJB_BT_ALLOWED) {
-	    size_t pos = GraphemeBoundaryFromState(&state, byteLen, &lastBoundary);
-	    breaks[pos]=1;
-	}
-    }
-    breaks[byteLen]=1;
-    return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_grapheme_next --
- *
- *   Find the next grapheme cluster boundary after a given byte offset.
- *
- * Results:
- *   Returns 1 on success. nextOffset is set to the byte offset of
- *   the next grapheme boundary, or byteLen if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_grapheme_next(const char *buf,
-		       size_t byteLen,
-		       size_t byteOffset,
-		       size_t *nextOffset)
-{
-    mjb_next_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (nextOffset==NULL) return 0;
-    if (buf==NULL || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
-	}
-    }
-    *nextOffset=byteLen; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_grapheme_prev --
- *
- *   Find the previous grapheme cluster boundary before a given byte offset.
- *
- * Results:
- *   Returns 1 on success. prevOffset is set to the byte offset of
- *   the previous grapheme boundary, or 0 if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_grapheme_prev(const char *buf,
-		       size_t byteLen,
-		       size_t byteOffset,
-		       size_t *prevOffset)
-{
-    mjb_next_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
-    if (prevOffset==NULL) return 0;
-    if (buf==NULL || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>=byteOffset) break;
-	    last=pos;
-	}
-    }
-    *prevOffset=last; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * LineBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for line break states.
- *
- * Results:
- *   Returns the line break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-LineBoundaryFromState(const mjb_next_line_state *state,
-		      size_t byteLen,
-		      size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_line_breaks --
- *
- *   Compute all line break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #14 line breaking rules.
- *
- * Results:
- *   Returns 1 on success. The breaks array is filled with 1 at each
- *   line break boundary byte offset (including 0 and byteLen).
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_line_breaks(const char *buf,
-		     size_t byteLen,
-		     unsigned char *breaks)
-{
-    mjb_next_line_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (!buf || !breaks) return 0;
-    memset(breaks,0,byteLen+1);
-    if (byteLen==0) { breaks[0]=1; return 1; }
-    breaks[0]=1;
-    state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos<=byteLen) breaks[pos]=1;
-	}
-    }
-    breaks[byteLen]=1;
-    return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_line_next --
- *
- *   Find the next line break boundary after a given byte offset.
- *
- * Results:
- *   Returns 1 on success. nextOffset is set to the byte offset of
- *   the next line break boundary, or byteLen if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_line_next(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *nextOffset)
-{
-    mjb_next_line_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (!nextOffset) return 0;
-    if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
-	}
-    }
-    *nextOffset=byteLen; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_line_prev --
- *
- *   Find the previous line break boundary before a given byte offset.
- *
- * Results:
- *   Returns 1 on success. prevOffset is set to the byte offset of
- *   the previous line break boundary, or 0 if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_line_prev(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *prevOffset)
-{
-    mjb_next_line_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
-    if (!prevOffset) return 0;
-    if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>=byteOffset) break;
-	    last=pos;
-	}
-    }
-    *prevOffset=last; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * WordBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for word break states.
- *
- * Results:
- *   Returns the word break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-WordBoundaryFromState(const mjb_next_word_state *state,
-		      size_t byteLen,
-		      size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_word_breaks --
- *
- *   Compute all word break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #29 word breaking rules.
- *
- * Results:
- *   Returns 1 on success. The breaks array is filled with 1 at each
- *   word break boundary byte offset (including 0 and byteLen).
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_word_breaks(const char *buf,
-		     size_t byteLen,
-		     unsigned char *breaks)
-{
-    mjb_next_word_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (!buf || !breaks) return 0;
-    memset(breaks,0,byteLen+1);
-    if (byteLen==0) { breaks[0]=1; return 1; }
-    breaks[0]=1;
-    state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos<=byteLen) breaks[pos]=1;
-	}
-    }
-    breaks[byteLen]=1;
-    return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_word_next --
- *
- *   Find the next word break boundary after a given byte offset.
- *
- * Results:
- *   Returns 1 on success. nextOffset is set to the byte offset of
- *   the next word break boundary, or byteLen if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_word_next(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *nextOffset)
-{
-    mjb_next_word_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (!nextOffset) return 0;
-    if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
-	}
-    }
-    *nextOffset=byteLen; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_word_prev --
- *
- *   Find the previous word break boundary before a given byte offset.
- *
- * Results:
- *   Returns 1 on success. prevOffset is set to the byte offset of
- *   the previous word break boundary, or 0 if none exists.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_word_prev(const char *buf,
-		   size_t byteLen,
-		   size_t byteOffset,
-		   size_t *prevOffset)
-{
-    mjb_next_word_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0, last=0;
-    if (!prevOffset) return 0;
-    if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
-    state.index=0;
-    while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos>=byteOffset) break;
-	    last=pos;
-	}
-    }
-    *prevOffset=last; return 1;
-}
-
-/*
- * ---------------------------------------------------------------
- * SentenceBoundaryFromState --
- *
- *   Wrapper around BoundaryFromState for sentence break states.
- *
- * Results:
- *   Returns the sentence break boundary byte offset.
- *
- * Side effects:
- *   Updates lastBoundary.
- * ---------------------------------------------------------------
- */
-
-static size_t
-SentenceBoundaryFromState(const mjb_next_sentence_state *state,
-			  size_t byteLen,
-			  size_t *lastBoundary)
-{
-    return BoundaryFromState(state->index, state->current_codepoint, byteLen, lastBoundary);
-}
-
-/*
- * ---------------------------------------------------------------
- * mojibake_sentence_breaks --
- *
- *   Compute all sentence break boundaries in a UTF-8 buffer.
- *   Implements Unicode UAX #29 sentence breaking rules.
- *
- * Results:
- *   Returns 1 on success. The breaks array is filled with 1 at each
- *   sentence break boundary byte offset (including 0 and byteLen).
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-mojibake_sentence_breaks(const char *buf,
-			 size_t byteLen,
-			 unsigned char *breaks)
-{
-    mjb_next_sentence_state state;
-    mjb_break_type bt;
-    size_t lastBoundary=0;
-    if (!buf || !breaks) return 0;
-    memset(breaks,0,byteLen+1);
-    if (byteLen==0) { breaks[0]=1; return 1; }
-    breaks[0]=1;
-    state.index=0;
-    while ((bt=mjb_next_sentence_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-	if (bt==MJB_BT_ALLOWED) {
-	    size_t pos=SentenceBoundaryFromState(&state,byteLen,&lastBoundary);
-	    if (pos<=byteLen) breaks[pos]=1;
-	}
-    }
-    breaks[byteLen]=1;
-    return 1;
-}
+#undef BREAK_TYPE
+#undef BREAK_FUNCTION
+#undef BREAK_NEXT_FUNCTION
+#undef BREAK_PREV_FUNCTION
+#define BREAK_TYPE mjb_grapheme_break
+#define BREAK_FUNCTION mojibake_grapheme_breaks
+#define BREAK_NEXT_FUNCTION mojibake_grapheme_next
+#define BREAK_PREV_FUNCTION mojibake_grapheme_prev
+#include "tkTextGrapheme.inc"
+#undef BREAK_TYPE
+#undef BREAK_FUNCTION
+#undef BREAK_NEXT_FUNCTION
+#undef BREAK_PREV_FUNCTION
+#define BREAK_TYPE mjb_line_break
+#define BREAK_FUNCTION mojibake_line_breaks_base
+#define BREAK_NEXT_FUNCTION mojibake_line_next
+#define BREAK_PREV_FUNCTION mojibake_line_prev
+#include "tkTextGrapheme.inc"
+#undef BREAK_TYPE
+#undef BREAK_FUNCTION
+#undef BREAK_NEXT_FUNCTION
+#undef BREAK_PREV_FUNCTION
+#define BREAK_TYPE mjb_word_break
+#define BREAK_FUNCTION mojibake_word_breaks_base
+#define BREAK_NEXT_FUNCTION mojibake_word_next
+#define BREAK_PREV_FUNCTION mojibake_word_prev
+#include "tkTextGrapheme.inc"
+#undef BREAK_TYPE
+#undef BREAK_FUNCTION
+#undef BREAK_NEXT_FUNCTION
+#undef BREAK_PREV_FUNCTION
+#define BREAK_TYPE mjb_sentence_break
+#define BREAK_FUNCTION mojibake_sentence_breaks
+#define BREAK_NEXT_FUNCTION mojibake_sentence_next
+#define BREAK_PREV_FUNCTION mojibake_sentence_prev
+#include "tkTextGrapheme.inc"
+#undef BREAK_TYPE
+#undef BREAK_FUNCTION
+#undef BREAK_NEXT_FUNCTION
+#undef BREAK_PREV_FUNCTION
 
 /*
  * ---------------------------------------------------------------
@@ -650,9 +178,8 @@ InitDictCache(DictCache *c, const char* const* words, size_t count)
     if (c->initialized) return;
     c->orig_words = words;
     c->count = count;
-    c->sorted = (const char**)malloc(count * sizeof(char*));
-    c->lens = (size_t*)malloc(count * sizeof(size_t));
-    if (!c->sorted || !c->lens) return;
+    c->sorted = Tcl_Alloc(count * sizeof(char*));
+    c->lens = Tcl_Alloc(count * sizeof(size_t));
     size_t max=0;
     for (size_t i=0;i<count;i++) {
 	c->sorted[i]=words[i];
@@ -762,6 +289,69 @@ DictContains(DictCache *c, const char *query, size_t qlen)
 
 /*
  * ---------------------------------------------------------------
+ * DecodeUtf8At / CannotStartLine --
+ *
+ *   Decode the codepoint starting at byte offset pos, and test
+ *   whether a line may start with it. Repetition signs (Thai
+ *   U+0E46, Lao U+0EC6, Khmer U+17D4, Thai U+0E2F) repeat the
+ *   preceding word and can never start a line; neither can a
+ *   ZWJ or a combining / spacing mark that belongs to the
+ *   previous cluster. These are their own grapheme clusters,
+ *   so the grapheme-subset filter does NOT clear a break before
+ *   them -- this check is what stops WordBreakIndex from
+ *   choosing a break there (textGrapheme-5.2, 5.3).
+ * ---------------------------------------------------------------
+ */
+
+static mjb_codepoint
+DecodeUtf8At(const char *buf,
+	     size_t byteLen,
+	     size_t pos)
+{
+    unsigned char b;
+    if (pos >= byteLen) return 0;
+    b = (unsigned char) buf[pos];
+    if (b < 0x80) return b;
+    if ((b >> 5) == 0x6 && pos + 1 < byteLen) {
+	return ((b & 0x1F) << 6) | (buf[pos + 1] & 0x3F);
+    }
+    if ((b >> 4) == 0xE && pos + 2 < byteLen) {
+	return ((b & 0x0F) << 12) | ((buf[pos + 1] & 0x3F) << 6)
+	    | (buf[pos + 2] & 0x3F);
+    }
+    if ((b >> 3) == 0x1E && pos + 3 < byteLen) {
+	return ((b & 0x07) << 18) | ((buf[pos + 1] & 0x3F) << 12)
+	    | ((buf[pos + 2] & 0x3F) << 6) | (buf[pos + 3] & 0x3F);
+    }
+    return b;
+}
+
+static int
+CannotStartLine(mjb_codepoint cp)
+{
+    if (cp == 0x200D) return 1; /* ZWJ */
+    if (cp == 0x0E46) return 1; /* THAI MAIYAMOK (repetition) */
+    if (cp == 0x0E2F) return 1; /* THAI PAIYANNOI */
+    if (cp == 0x0EC6) return 1; /* LAO KO LA (repetition) */
+    if (cp == 0x17D4) return 1; /* KHMER SIGN KHAN (repetition) */
+    if (cp == 0x17D5) return 1; /* KHMER SIGN BARI */
+    /* Combining / spacing marks of Thai, Lao, Khmer, Myanmar. */
+    if (cp >= 0x0E31 && cp <= 0x0E3A) return 1;
+    if (cp >= 0x0E47 && cp <= 0x0E4E) return 1;
+    if (cp >= 0x0EB1 && cp <= 0x0EB9) return 1;
+    if (cp >= 0x0EBB && cp <= 0x0EBC) return 1;
+    if (cp >= 0x0EC8 && cp <= 0x0ECD) return 1;
+    if (cp >= 0x17C6 && cp <= 0x17D3) return 1;
+    if (cp == 0x17DD) return 1;
+    if (cp >= 0x102D && cp <= 0x1030) return 1;
+    if (cp >= 0x1032 && cp <= 0x1037) return 1;
+    if (cp >= 0x1039 && cp <= 0x103A) return 1;
+    if (cp >= 0x103D && cp <= 0x103E) return 1;
+    return 0;
+}
+
+/*
+ * ---------------------------------------------------------------
  * ForwardMaxMatchRun --
  *
  *   Forward maximum matching word segmentation inside a single
@@ -833,11 +423,23 @@ ForwardMaxMatchRun(const char *buf, size_t runStart, size_t runEnd,
 	    pos = bestEnd;
 	} else {
 	    /*
-	     * Fallback: break at grapheme boundary.
-	     * This prevents giant unbreakable Thai runs.
+	     * Fallback: NO word break here. An unknown Thai/Lao/Khmer/
+	     * Myanmar run is ONE word for word-selection purposes.
+	     * The old code marked a word break at every grapheme
+	     * cluster, so double-click on an unknown Thai word
+	     * selected a single cluster -- a fragment, not a word
+	     * (textGraphemeNul-4.2). The fallback exists only for
+	     * LINE breaking, to keep an unknown run from becoming
+	     * one unbreakable line: mark a line break at the next
+	     * grapheme boundary, and only if the caller wants line
+	     * breaks (lBreaks != NULL). Callers that only want word
+	     * breaks pass lBreaks == NULL and get no fallback break
+	     * at all.
 	     */
-	    wBreaks[nextG] = 1;
-	    if (lBreaks) lBreaks[nextG] = 1;
+	    if (lBreaks
+		    && !CannotStartLine(DecodeUtf8At(buf, runEnd, nextG))) {
+		lBreaks[nextG] = 1;
+	    }
 	    pos = nextG;
 	}
 
@@ -864,11 +466,22 @@ ForwardMaxMatchRun(const char *buf, size_t runStart, size_t runEnd,
  * ---------------------------------------------------------------
  */
 
-int
-mojibake_word_breaks_with_dict(const char *buf,
+/*
+ * WordBreaksWithDictInternal -- the body of
+ * mojibake_word_breaks_with_dict, plus an lBreaks out-parameter
+ * for the line-breaking caller. When lBreaks is NULL (the word
+ * path), ForwardMaxMatchRun's fallback marks nothing; when it is
+ * non-NULL (the line path), the fallback marks line breaks.
+ * Public callers use mojibake_word_breaks_with_dict (lBreaks
+ * NULL); mojibake_line_breaks_with_dict passes its lBreaks so
+ * unknown runs still get per-cluster line breaks.
+ */
+static int
+WordBreaksWithDictInternal(const char *buf,
 			       size_t byteLen,
 			       unsigned char *wBreaks,
-			       unsigned char *gBreaks_tmp)
+			       unsigned char *gBreaks_tmp,
+			       unsigned char *lBreaks)
 {
     if (!buf || !wBreaks) return 0;
     EnsureDictsInitialized();
@@ -876,12 +489,11 @@ mojibake_word_breaks_with_dict(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-	localG = (unsigned char*)malloc(byteLen+1);
-	if (!localG) return 0;
+	localG = Tcl_Alloc(byteLen+1);
 	gBreaks = localG;
     }
     mojibake_grapheme_breaks(buf, byteLen, gBreaks);
-    mojibake_word_breaks(buf, byteLen, wBreaks);
+    mojibake_word_breaks_base(buf, byteLen, wBreaks);
 
     /* Now walk the buffer codepoint by codepoint to find runs of complex script. */
     size_t i=0;
@@ -911,23 +523,26 @@ mojibake_word_breaks_with_dict(const char *buf,
 	ComplexScript curSc=sc;
 	size_t j=i;
 	while (j < byteLen) {
-	    if (!gBreaks[j]) { j++; continue; }
-	    if (j>=byteLen) break;
-	    /* Decode at j. */
+	    /* Step by grapheme cluster, not by byte/codepoint: a cluster
+	     * such as Thai U+0E01 U+0E33 has no grapheme break before
+	     * the spacing mark, so stepping byte-by-byte decodes a UTF-8
+	     * continuation byte as SCRIPT_OTHER and truncates the run
+	     * mid-word. The script of a cluster is its first codepoint. */
+	    size_t nextG = j + 1;
+	    while (nextG < byteLen && !gBreaks[nextG]) nextG++;
+	    if (nextG > byteLen) nextG = byteLen;
 	    unsigned char bj = (unsigned char)buf[j];
-	    mjb_codepoint cpj=0; int lj=1;
-	    if (bj < 0x80) { cpj=bj; lj=1; }
-	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); lj=2; } }
-	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); lj=3; } }
-	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); lj=4; } }
-	    else { cpj=bj; lj=1; }
-
+	    mjb_codepoint cpj=0;
+	    if (bj < 0x80) { cpj=bj; }
+	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); } }
+	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); } }
+	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); } }
+	    else { cpj=bj; }
 	    ComplexScript scj = ScriptFromCodepoint(cpj);
 	    if (scj!=curSc) break;
-	    /* Break run on ASCII space or line break already? Keep spaces as separators, so stop before space */
 	    if (cpj==0x20 || cpj==0x09 || cpj==0x0A || cpj==0x0D) break;
-	    runEnd = j+lj;
-	    j += lj;
+	    runEnd = nextG;
+	    j = nextG;
 	}
 	if (runEnd>runStart+1) {
 	    /*
@@ -948,14 +563,83 @@ mojibake_word_breaks_with_dict(const char *buf,
 	    memset(wBreaks + runStart + 1, 0, runEnd - runStart - 1);
 	    DictCache *dc = CacheForScript(curSc);
 	    if (dc) {
-		ForwardMaxMatchRun(buf, runStart, runEnd, gBreaks, wBreaks, NULL, dc);
+		ForwardMaxMatchRun(buf, runStart, runEnd, gBreaks, wBreaks, lBreaks, dc);
 	    }
 	}
 	i = runEnd ? runEnd : i+clen;
     }
 
-    if (localG) free(localG);
+    /*
+     * Grapheme-subset filter: a word break must never split a
+     * grapheme cluster. UAX #29 guarantees this (word boundaries
+     * fall on grapheme boundaries), so a base word break that
+     * lands inside a cluster -- e.g. between "e" and its combining
+     * acute, which double-click must select as one cluster
+     * (textGraphemeNul-2.2) -- is a segmentation error, not a
+     * real break. Dictionary hits are already snapped to
+     * grapheme boundaries, so they survive. Breaks at 0 and
+     * byteLen are always kept.
+     */
+    for (i = 1; i < byteLen; i++) {
+	if (wBreaks[i] && !gBreaks[i]) {
+	    wBreaks[i] = 0;
+	}
+    }
+
+    /*
+     * No-line-start / no-word-start filter: a word break must
+     * never sit before a character that may not start a line
+     * or a word. The grapheme-subset filter above does NOT
+     * catch these: Lao U+0EC6 (KO LA, repetition), Khmer
+     * U+17D4 (SIGN KHAN, repetition) and the other marks in
+     * CannotStartLine are each their own grapheme cluster, so
+     * a break before them survives the grapheme filter. The
+     * line-break wrapper filters them again for line breaks,
+     * but word wrap also consumes this word-break array, so a
+     * break before U+0EC6 / U+17D4 here is what put a wrapped
+     * line starting with U+0EC6 at widths 12 and 20. Clearing the
+     * break merges the repetition sign / mark into the preceding word,
+     * which is what it belongs to: it repeats or modifies that word, it
+     * does not start a new one. Breaks at 0 and byteLen are
+     * always kept. The same filter is applied to lBreaks when
+     * the caller supplied it, so the dictionary fallback's
+     * per-grapheme line breaks get the same treatment here as
+     * in the line-break wrapper.
+     */
+    for (i = 1; i < byteLen; i++) {
+	if (wBreaks[i] && CannotStartLine(DecodeUtf8At(buf, byteLen, i))) {
+	    wBreaks[i] = 0;
+	}
+	if (lBreaks != NULL && lBreaks[i]
+		&& CannotStartLine(DecodeUtf8At(buf, byteLen, i))) {
+	    lBreaks[i] = 0;
+	}
+    }
+
+    if (localG) {
+	Tcl_Free(localG);
+    }
     return 1;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_word_breaks_with_dict --
+ *
+ *   Public wrapper: WordBreaksWithDictInternal with lBreaks NULL,
+ *   i.e. word breaks only, no line-break fallback. See the
+ *   internal function for the full contract.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_word_breaks_with_dict(const char *buf,
+			       size_t byteLen,
+			       unsigned char *wBreaks,
+			       unsigned char *gBreaks_tmp)
+{
+    return WordBreaksWithDictInternal(buf, byteLen, wBreaks,
+					      gBreaks_tmp, NULL);
 }
 
 /*
@@ -989,8 +673,7 @@ mojibake_line_breaks_with_dict(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-	localG = (unsigned char*)malloc(byteLen+1);
-	if (!localG) return 0;
+	localG = Tcl_Alloc(byteLen+1);
 	gBreaks = localG;
 	mojibake_grapheme_breaks(buf, byteLen, gBreaks);
     }
@@ -998,15 +681,16 @@ mojibake_line_breaks_with_dict(const char *buf,
     unsigned char *wBreaks = wBreaks_tmp;
     unsigned char *localW = NULL;
     if (!wBreaks) {
-	localW = (unsigned char*)malloc(byteLen+1);
-	if (!localW) { if(localG) free(localG); return 0; }
+	localW = Tcl_Alloc(byteLen+1);
 	wBreaks = localW;
     }
 
     /* Base line breaks. */
-    mojibake_line_breaks(buf, byteLen, lBreaks);
-    /* Enhanced word breaks. */
-    mojibake_word_breaks_with_dict(buf, byteLen, wBreaks, gBreaks);
+    mojibake_line_breaks_base(buf, byteLen, lBreaks);
+    /* Enhanced word breaks. Pass lBreaks so the dictionary
+     * fallback marks line breaks for unknown runs (it must NOT
+     * mark word breaks there -- see ForwardMaxMatchRun). */
+    WordBreaksWithDictInternal(buf, byteLen, wBreaks, gBreaks, lBreaks);
 
     /* For complex scripts, every dictionary word boundary is an allowed line break. */
     for (size_t i=0;i<=byteLen;i++) {
@@ -1033,8 +717,202 @@ mojibake_line_breaks_with_dict(const char *buf,
 	}
     }
 
-    if (localG) free(localG);
-    if (localW) free(localW);
+    /*
+     * Grapheme-subset filter: a line break must never split a
+     * grapheme cluster. The base UAX #14 pass does not know
+     * about grapheme clusters: it allows a break before a Lao
+     * Lo vowel sign (U+0EC6, class SA, treated as AL by the base
+     * rules) and can leave a break before a Khmer combining
+     * mark (U+17D4). Those breaks put a vowel sign / mark at
+     * the start of a wrapped line -- an orphan line start.
+     * UAX #14 LB9 already forbids
+     * breaking a combining sequence; clearing every line break
+     * that is not also a grapheme break enforces it uniformly.
+     * Dictionary boundaries are snapped to grapheme boundaries,
+     * so they survive. Breaks at 0 and byteLen are kept.
+     */
+    for (size_t i = 1; i < byteLen; i++) {
+	if (lBreaks[i] && !gBreaks[i]) {
+	    lBreaks[i] = 0;
+	}
+    }
+
+    /*
+     * No-line-start filter: a line break is not allowed before a
+     * repetition sign, ZWJ, or combining mark, even though it is
+     * a grapheme break. This clears both the base UAX #14 breaks
+     * and the dictionary-fallback breaks (ForwardMaxMatchRun
+     * marks a line break at every grapheme of an unknown run)
+     * at those positions, so the next line never starts with
+     * e.g. Lao U+0EC6 or Khmer U+17D4.
+     * The wrap search then falls through to the next allowed
+     * break instead.
+     */
+    for (size_t i = 1; i < byteLen; i++) {
+	if (lBreaks[i] && CannotStartLine(DecodeUtf8At(buf, byteLen, i))) {
+	    lBreaks[i] = 0;
+	}
+    }
+
+    if (localG) {
+	Tcl_Free(localG);
+    }
+    if (localW) {
+	Tcl_Free(localW);
+    }
+    return 1;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_word_breaks --
+ *
+ *   Plain entry point used by the text widget (double-click word
+ *   selection). It MUST NOT be bare mojibake: bare UAX #29 marks
+ *   a word break after every cluster in Thai/Lao/Khmer runs
+ *   (double-click then selects one cluster, not a word --
+ *   and it can return word breaks inside a grapheme cluster.
+ *   Delegates to the _with_dict implementation, which applies
+ *   the dictionary segmenter for complex scripts and the
+ *   grapheme-subset filter (a word break is kept only if it is
+ *   also a grapheme break) for everything else.
+ *
+ * Results:
+ *   Returns 1 on success.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_word_breaks(const char *buf,
+		     size_t byteLen,
+		     unsigned char *breaks)
+{
+    return WordBreaksWithDictInternal(buf, byteLen, breaks, NULL, NULL);
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_line_breaks --
+ *
+ *   Plain entry point used by the text widget (word wrap). It
+ *   MUST NOT be bare mojibake: bare UAX #14 can return line
+ *   breaks inside a grapheme cluster (Lao/Khmer vowel signs /
+ *   combining marks strand at a line start.
+ *   Delegates to the _with_dict implementation, which
+ *   applies the dictionary segmenter for complex scripts and
+ *   the grapheme-subset filter (a line break is kept only if it
+ *   is also a grapheme break) for everything else.
+ *
+ * Results:
+ *   Returns 1 on success.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_line_breaks(const char *buf,
+		     size_t byteLen,
+		     unsigned char *breaks)
+{
+    return mojibake_line_breaks_with_dict(buf, byteLen, breaks, NULL, NULL);
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_cannot_start_line_at --
+ *
+ *   Test whether the character starting at byte offset pos in
+ *   buf may start a line. Used by tkTextDisp.c's WordBreakIndex,
+ *   which has a break-after-whitespace path that bypasses the
+ *   break arrays: a break after a space is only a valid wrap
+ *   point if the next character may start a line. Without this
+ *   check a space before Lao U+0EC6 or Khmer U+17D4 is taken
+ *   as a wrap point and the next line starts with the
+ *   repetition sign.
+ *
+ * Results:
+ *   Returns 1 if the character at pos may not start a line,
+ *   0 otherwise (including pos >= byteLen, where there is no
+ *   next character to orphan).
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_cannot_start_line_at(const char *buf,
+			      size_t byteLen,
+			      size_t pos)
+{
+    if (buf == NULL || pos >= byteLen) {
+	return 0;
+    }
+    return CannotStartLine(DecodeUtf8At(buf, byteLen, pos));
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_snap_wrap_break --
+ *
+ *   Snap a proposed hard (character-wrap) break so the next line
+ *   never starts inside a grapheme cluster or with a character
+ *   that may not start a line. The break arrays already clear
+ *   those positions, but the text widget's wrap code has a
+ *   second path: when no allowed break fits inside the line
+ *   width, it hard-breaks at the width boundary without
+ *   consulting the array. Call this from that path: pass the
+ *   proposed byte offset and use *adjusted instead. The break
+ *   moves forward to the next grapheme boundary whose first
+ *   codepoint may start a line, pulling the whole cluster onto
+ *   the current line instead of orphaning it. It never moves
+ *   backward, so it never re-opens a line that is already laid
+ *   out.
+ *
+ * Results:
+ *   Returns 1 on success, with *adjusted set to the snapped
+ *   byte offset (byteLen if no such boundary exists).
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_snap_wrap_break(const char *buf,
+			 size_t byteLen,
+			 size_t proposed,
+			 size_t *adjusted)
+{
+    unsigned char *gBreaks;
+    size_t pos;
+
+    if (!adjusted) return 0;
+    if (!buf || proposed >= byteLen) {
+	*adjusted = byteLen;
+	return 1;
+    }
+    if (proposed == 0) {
+	*adjusted = 0;
+	return 1;
+    }
+
+    gBreaks = Tcl_Alloc(byteLen + 1);
+    mojibake_grapheme_breaks(buf, byteLen, gBreaks);
+
+    pos = proposed;
+    while (pos < byteLen
+	   && (!gBreaks[pos]
+	       || CannotStartLine(DecodeUtf8At(buf, byteLen, pos)))) {
+	pos++;
+    }
+    *adjusted = pos;
+    Tcl_Free(gBreaks);
     return 1;
 }
 

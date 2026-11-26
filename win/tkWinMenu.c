@@ -241,11 +241,6 @@ GetNewID(
 	    curID = 1;
 	}
 
-	/* Return error when we've checked all IDs without success. */
-	if (curID == tsdPtr->lastCommandID) {
-	    return TCL_ERROR;
-	}
-
 	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
 		INT2PTR(curID), &isNew);
 	if (isNew) {
@@ -253,6 +248,15 @@ GetNewID(
 	    *menuIDPtr = curID;
 	    tsdPtr->lastCommandID = curID;
 	    return TCL_OK;
+	}
+
+	/*
+	 * Return error when we've checked all IDs, including the last
+	 * allocated one, without success.
+	 */
+
+	if (curID == tsdPtr->lastCommandID) {
+	    return TCL_ERROR;
 	}
     }
 }
@@ -1024,6 +1028,9 @@ TkpMenuNewEntry(
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (GetNewID(mePtr, &commandID) != TCL_OK) {
+	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"No more menu entries can be allocated.", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES", (char *)NULL);
 	return TCL_ERROR;
     }
     ScheduleMenuReconfigure(menuPtr);

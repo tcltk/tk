@@ -15,7 +15,8 @@ wm title $w "Combobox Demonstration"
 wm iconname $w "combo"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Four different\
+ttk::label $w.msg -font $font -wraplength 5i -justify left -anchor n -text \
+	"Four different\
 	combo-boxes are displayed below. You can add characters to the first\
 	one by pointing, clicking and typing, just as with an entry; pressing\
 	Return will cause the current value to be added to the list that is\

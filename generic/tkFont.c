@@ -351,7 +351,8 @@ static void		FreeUnusedFonts(void *clientData);
 static void		DeleteFont(TkFont *fontPtr);
 static Tk_Window	FindWindowOnScreen(TkWindow *winPtr, Screen *screen);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
-			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
+			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr,
+			    int isNew);
 
 /*
  * The following structure defines the implementation of the "font" Tcl
@@ -656,7 +657,7 @@ Tk_FontObjCmd(
 	} else {
 	    result = ConfigAttributesObj(interp, tkwin, objc - 3, objv + 3,
 		    &nfPtr->fa);
-	    UpdateDependentFonts(fiPtr, tkwin, namedHashPtr);
+	    UpdateDependentFonts(fiPtr, tkwin, namedHashPtr, 0);
 	    return result;
 	}
 	return GetAttributeInfoObj(interp, &nfPtr->fa, objPtr);
@@ -863,15 +864,18 @@ static void
 UpdateDependentFonts(
     TkFontInfo *fiPtr,		/* Info about application's fonts. */
     Tk_Window tkwin,		/* A window in the application. */
-    Tcl_HashEntry *namedHashPtr)/* The named font that is changing. */
+    Tcl_HashEntry *namedHashPtr,/* The named font that is changing. */
+    int isNew)			/* The font was newly created. */
 {
     Tcl_HashEntry *cacheHashPtr;
     Tcl_HashSearch search;
     TkFont *fontPtr;
     Tk_Window fontWin;
+    char *name = NULL;
+    int doUpdate = 0;
     NamedFont *nfPtr = (NamedFont *)Tcl_GetHashValue(namedHashPtr);
 
-    if (nfPtr->refCount == 0) {
+    if (!isNew && (nfPtr->refCount == 0)) {
 	/*
 	 * Well nobody's using this named font, so don't have to tell any
 	 * widgets to recompute themselves.
@@ -880,6 +884,9 @@ UpdateDependentFonts(
 	return;
     }
 
+    if (isNew) {
+	name = (char *)Tcl_GetHashKey(&fiPtr->namedTable, namedHashPtr);
+    }
     cacheHashPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
     while (cacheHashPtr != NULL) {
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
@@ -899,13 +906,23 @@ UpdateDependentFonts(
 		    }
 		}
 		TkpGetFontFromAttributes(fontPtr, fontWin, &nfPtr->fa);
-		if (!fiPtr->updatePending) {
-		    fiPtr->updatePending = true;
-		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
+		doUpdate++;
+	    } else if (isNew && (fontPtr->namedHashPtr == NULL)) {
+		char *otherName = (char *)Tcl_GetHashKey(&fiPtr->fontCache,
+			cacheHashPtr);
+		if (strcmp(otherName, name) == 0) {
+		    fontPtr->namedHashPtr = namedHashPtr;
+		    nfPtr->refCount++;
+		    TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
+		    doUpdate++;
 		}
 	    }
 	}
 	cacheHashPtr = Tcl_NextHashEntry(&search);
+    }
+    if (doUpdate && !fiPtr->updatePending) {
+	fiPtr->updatePending = true;
+	Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
     }
 }
 
@@ -1055,16 +1072,16 @@ TkCreateNamedFont(
 
 	nfPtr->fa = *faPtr;
 	nfPtr->deletePending = 0;
-	UpdateDependentFonts(fiPtr, tkwin, namedHashPtr);
-	return TCL_OK;
+    } else {
+	nfPtr = (NamedFont *)Tcl_Alloc(sizeof(NamedFont));
+	nfPtr->deletePending = 0;
+	Tcl_SetHashValue(namedHashPtr, nfPtr);
+	nfPtr->fa = *faPtr;
+	nfPtr->refCount = 0;
+	nfPtr->deletePending = 0;
     }
 
-    nfPtr = (NamedFont *)Tcl_Alloc(sizeof(NamedFont));
-    nfPtr->deletePending = 0;
-    Tcl_SetHashValue(namedHashPtr, nfPtr);
-    nfPtr->fa = *faPtr;
-    nfPtr->refCount = 0;
-    nfPtr->deletePending = 0;
+    UpdateDependentFonts(fiPtr, tkwin, namedHashPtr, isNew);
     return TCL_OK;
 }
 

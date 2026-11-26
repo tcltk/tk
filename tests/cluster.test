@@ -56,6 +56,19 @@ test cluster-1.6 {::tk::startOfCluster} -body {
 test cluster-1.7 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster é end-1
 } -result 0
+test cluster-1.8 {::tk::startOfCluster: end} -body {
+    ::tk::startOfCluster abc end
+} -result 2
+test cluster-1.9 {::tk::startOfCluster: character above U+FFFF} -body {
+    list [::tk::startOfCluster a\U1F600b 1] [::tk::startOfCluster a\U1F600b 2]
+} -result {1 2}
+test cluster-1.10 {::tk::startOfCluster: pointed Hebrew} -constraints needsICU -body {
+    # shin, qamats, shin dot; lamed; vav, holam; final mem
+    set str שָׁלוֹם
+    lmap i {0 1 2 3 4 5 6 7} {::tk::startOfCluster $str $i}
+} -cleanup {
+    unset -nocomplain str
+} -result {0 0 0 3 4 4 6 7}
 
 test cluster-2.0 {::tk::endOfCluster} -body {
     ::tk::endOfCluster é -1
@@ -81,6 +94,18 @@ test cluster-2.6 {::tk::endOfCluster} -body {
 test cluster-2.7 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster é end-1
 } -result 2
+test cluster-2.8 {::tk::endOfCluster: end} -body {
+    ::tk::endOfCluster abc end
+} -result 3
+test cluster-2.9 {::tk::endOfCluster: character above U+FFFF} -body {
+    list [::tk::endOfCluster a\U1F600b 0] [::tk::endOfCluster a\U1F600b 1]
+} -result {1 2}
+test cluster-2.10 {::tk::endOfCluster: pointed Hebrew} -constraints needsICU -body {
+    set str שָׁלוֹם
+    lmap i {-1 0 1 2 3 4 5 6 7} {::tk::endOfCluster $str $i}
+} -cleanup {
+    unset -nocomplain str
+} -result {0 3 3 3 4 6 6 7 {}}
 
 test cluster-3.0 {::tk::endOfWord} -body {
     ::tk::endOfWord "ab cd" -1
@@ -142,6 +167,21 @@ test cluster-4.8 {::tk::startOfPreviousWord} -body {
 } -result {}
 test cluster-4.9 {::tk::startOfPreviousWord} -body {
     ::tk::startOfPreviousWord "ab cd" end-1
+} -result 0
+test cluster-4.10 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord " " 1
+} -result {}
+test cluster-4.11 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord "\n" 1
+} -result {}
+test cluster-4.12 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord " \n" 2
+} -result {}
+test cluster-4.13 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord "  ab" 2
+} -result {}
+test cluster-4.14 {::tk::startOfPreviousWord} -body {
+    ::tk::startOfPreviousWord "a \n" 3
 } -result 0
 
 test cluster-5.0 {::tk::startOfNextWord} -body {

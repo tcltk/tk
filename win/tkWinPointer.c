@@ -22,12 +22,15 @@
  * Declarations of static variables used in this file.
  */
 
-static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
 static bool mouseTimerSet = false;	/* true if the mouse timer is active. */
 static int pointerSuspended = 0;	/* Non-zero while a native popup menu is
 					 * tracked; pointer events are ignored. */
 static bool captured = false;		/* 1 if mouse is currently captured. */
+static unsigned int nonClientButtons = 0;
+					/* Buttons pressed in the non-client area
+					 * of a toplevel and still down. They are
+					 * ignored until released. [Bug 1391053] */
 
 /*
  * Forward declarations of procedures used in this file.
@@ -148,7 +151,7 @@ TkWinPointerEvent(
     }
     tkwin = Tk_HWNDToWindow(hwnd);
 
-    state = (int)TkWinGetModifierState();
+    state = (int)TkWinGetPointerState();
 
     Tk_UpdatePointer(tkwin, pos.x, pos.y, state);
 
@@ -159,6 +162,63 @@ TkWinPointerEvent(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinNonClientButtons --
+ *
+ *	This procedure is called after a mouse button was pressed in the
+ *	non-client area of a toplevel (title bar, border) and processed by
+ *	the default window procedure. The buttons which are still down are
+ *	ignored until they are released, so that a double-click on the title
+ *	bar which maximizes or closes the window does not produce a button
+ *	press in the Tk window which is now under the pointer. As on X11,
+ *	such clicks belong to the window manager. [Bug 1391053]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Changes the state reported by TkWinGetPointerState.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinNonClientButtons(
+    unsigned int buttons)	/* Buttons pressed in the non-client area,
+				 * or 0 if a new press is in the client
+				 * area. */
+{
+    nonClientButtons = buttons & ALL_BUTTONS;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinGetPointerState --
+ *
+ *	Return the modifier state as of the last message, without the
+ *	buttons pressed in the non-client area of a toplevel.
+ *
+ * Results:
+ *	Returns the X modifier mask.
+ *
+ * Side effects:
+ *	Forgets the non-client buttons which have been released.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned int
+TkWinGetPointerState(void)
+{
+    unsigned int state = TkWinGetModifierState();
+
+    nonClientButtons &= state;
+    return state & ~nonClientButtons;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -185,12 +245,12 @@ XGrabKeyboard(
     Time time)
 {
     (void)display;
+    (void)grab_window;
     (void)owner_events;
     (void)pointer_mode;
     (void)keyboard_mode;
     (void)time;
 
-    keyboardWinPtr = TkWinGetWinPtr(grab_window);
     return GrabSuccess;
 }
 
@@ -218,7 +278,6 @@ XUngrabKeyboard(
     (void)display;
     (void)time;
 
-    keyboardWinPtr = NULL;
     return Success;
 }
 
@@ -365,7 +424,7 @@ XQueryPointer(
 {
     LastKnownRequestProcessed(display)++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
-    *mask_return = TkWinGetModifierState();
+    *mask_return = TkWinGetPointerState();
     return True;
 }
 
@@ -542,7 +601,13 @@ XSetInputFocus(
     TCL_UNUSED(Time))
 {
     LastKnownRequestProcessed(display)++;
-    if (focus != None) {
+
+     /*
+      * PointerRoot is not a real window and has no Windows counterpart: ignore
+      * it like None instead of passing it to Tk_GetHWND (which would crash).
+      */
+ 
+    if ((focus != None) && (focus != PointerRoot)) {
 	SetFocus(Tk_GetHWND(focus));
     }
     return Success;

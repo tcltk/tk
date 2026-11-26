@@ -32,7 +32,7 @@ jobs:
       - name: Prepare
         run: |
           sudo apt-get update
-          sudo apt-get install libtommath-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev
+          sudo apt-get install libtommath-dev libxss-dev libxrandr-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev libspeechd-dev
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -105,7 +105,7 @@ jobs:
           mkdir -p install/contents
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c || true
           touch tk/generic/tkStubInit.c || true
-          wget https://github.com/culler/macher/releases/download/v1.8/macher
+          wget https://github.com/culler/macher/releases/download/v1.9/macher
           sudo cp macher /usr/local/bin
           sudo chmod a+x /usr/local/bin/macher
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -183,7 +183,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
-          ref: manifest-in-rc-only
+          ref: main
           path: tcl
       - name: Prepare
         run: |

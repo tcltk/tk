@@ -21,43 +21,11 @@
 #include "tkMacOSXImage.h"
 #include "tkMacOSXPrivate.h"
 
-NSString * fileName = nil;
-CFStringRef urlFile = NULL;
-
 /*Forward declaration of functions.*/
 static Tcl_ObjCmdProc2 StartPrint;
 static OSStatus	FinishPrint(NSString *file, int buttonValue);
 static Tcl_ObjCmdProc2 MakePDF;
 int			MacPrint_Init(Tcl_Interp * interp);
-
-/* Delegate class for print dialogs. */
-@interface PrintDelegate: NSObject
-    - (id) init;
-    - (void) printPanelDidEnd: (NSPrintPanel *) printPanel
-		   returnCode: (int) returnCode
-		  contextInfo: (void *) contextInfo;
-@end
-
-@implementation PrintDelegate
-- (id) init {
-    self = [super init];
-    return self;
-}
-
-- (void) printPanelDidEnd: (NSPrintPanel *) printPanel
-	       returnCode: (int) returnCode
-	      contextInfo: (void *) contextInfo {
-    (void) printPanel;
-    (void) contextInfo;
-
-    /*
-     * Pass returnCode to FinishPrint function to determine how to
-     * handle.
-     */
-
-    FinishPrint(fileName, returnCode);
-}
-@end
 
 /*
  *----------------------------------------------------------------------
@@ -82,9 +50,6 @@ StartPrint(
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
     int accepted;
-    PMPrintSession printSession;
-    PMPrintSettings printSettings;
-    OSStatus status = noErr;
 
     /* Check for proper number of arguments. */
     if (objc < 2) {
@@ -92,39 +57,11 @@ StartPrint(
 	return TCL_ERROR;
     }
 
-    fileName = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
-    urlFile = (CFStringRef) fileName;
-    CFRetain(urlFile);
-
-    /* Initialize the delegate for the callback from the page panel. */
-    PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
-
-    status = PMCreateSession( & printSession);
-    if (status != noErr) {
-	NSLog(@ "Error creating print session.");
-	return TCL_ERROR;
-    }
-
-    status = PMCreatePrintSettings( & printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating print settings.");
-	return TCL_ERROR;
-    }
-
-    status = PMSessionDefaultPrintSettings(printSession, printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating default print settings.");
-	return TCL_ERROR;
-    }
-
-    printSession = (PMPrintSession)[printInfo PMPrintSession];
-    (void)(PMPageFormat)[printInfo PMPageFormat];
-    printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
+    NSString *fileName = [[NSString alloc] initWithUTF8String: Tcl_GetString(objv[1])];
 
     accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
-    [printDelegate printPanelDidEnd: printPanel
-			 returnCode: accepted
-			contextInfo: printInfo];
+    ChkErr(FinishPrint, fileName, accepted);
+    [fileName release];
 
     return TCL_OK;
 }
@@ -153,6 +90,7 @@ FinishPrint(
     PMPrintSettings printSettings;
     OSStatus status = noErr;
     CFStringRef mimeType = NULL;
+    CFStringRef urlFile = (CFStringRef)file;
 
     /*
      * If value passed here is NSCancelButton, return noErr;
@@ -160,24 +98,6 @@ FinishPrint(
      */
     if (buttonValue == NSModalResponseCancel) {
 	return noErr;
-    }
-
-    status = PMCreateSession( & printSession);
-    if (status != noErr) {
-	NSLog(@ "Error creating print session.");
-	return status;
-    }
-
-    status = PMCreatePrintSettings( & printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating print settings.");
-	return status;
-    }
-
-    status = PMSessionDefaultPrintSettings(printSession, printSettings);
-    if (status != noErr) {
-	NSLog(@ "Error creating default print settings.");
-	return status;
     }
 
     printSession = (PMPrintSession)[printInfo PMPrintSession];
@@ -192,9 +112,12 @@ FinishPrint(
 	    return noErr;
 	}
 
-	fileName = file;
-
 	CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
+	if (printURL == NULL) {
+	    NSLog(@ "Could not get file to print.");
+	    return noErr;
+	}
+	CFAutorelease(printURL);
 
 	PMPrinter currentPrinter;
 	PMDestinationType printDestination;
@@ -213,7 +136,6 @@ FinishPrint(
 		    mimeType = CFSTR("application/pdf");
 		    if (CFArrayContainsValue(mimeTypes, CFRangeMake(0, CFArrayGetCount(mimeTypes)), mimeType)) {
 			status = PMPrinterPrintWithFile(currentPrinter, printSettings, pageFormat, mimeType, printURL);
-			CFRelease(urlFile);
 			return status;
 		    }
 		}
@@ -231,11 +153,14 @@ FinishPrint(
 		CFStringRef savePath = CFURLCopyFileSystemPath(outputLocation, kCFURLPOSIXPathStyle);
 		NSString * sourcePath = (NSString * ) sourceFile;
 		NSString * finalPath = (NSString * ) savePath;
+		CFRelease(outputLocation);
+		[sourcePath autorelease];
+		[finalPath autorelease];
 		NSString * pathExtension = [finalPath pathExtension];
 		NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
 
-	/*
+		/*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
@@ -257,7 +182,7 @@ FinishPrint(
 		 * through CUPS filter to convert back to PostScript.
 		 */
 
-	      if ([pathExtension isEqualToString: @ "ps"]) {
+		if ([pathExtension isEqualToString: @ "ps"]) {
 		    char source[5012];
 		    char target[5012];
 		    [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
@@ -273,26 +198,23 @@ FinishPrint(
 		     */
 		    pid_t pid;
 		    if ((pid = fork()) == -1) {
-		      return -1;
+			return -1;
 		    } else if (pid == 0) {
-		      /* Redirect output to file and silence debugging output.*/
-		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
-		      dup2(open("/dev/null", O_WRONLY), 2);
-		      execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, NULL);
-		      exit(0);
+			/* Redirect output to file and silence debugging output.*/
+			dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
+			dup2(open("/dev/null", O_WRONLY), 2);
+			execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, (char *)NULL);
+			exit(0);
 		    }
-	      return status;
-	      }
+		    return status;
+		}
 	    }
 	}
 
 	/* Destination is preview. Open file in default application for PDF. */
 	if ((status == noErr) && (printDestination == kPMDestinationPreview)) {
-	    CFStringRef urlpath = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
-	    NSString * path = (NSString * ) urlpath;
-	    NSURL * url = [NSURL fileURLWithPath: path];
 	    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-	    [ws openURL: url];
+	    [ws openURL: (NSURL *)printURL];
 	    status = noErr;
 	    return status;
 	}
@@ -313,12 +235,6 @@ FinishPrint(
 	    [alert runModal];
 	    return status;
 	}
-    }
-
-    /* Return because cancel button was clicked. */
-    if (buttonValue == NSModalResponseCancel) {
-	PMRelease(printSession);
-	return status;
     }
 
     return status;
@@ -371,6 +287,7 @@ int MakePDF(
 
     NSData *viewData = (NSData*)pdfData;
     [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
+    [viewData release];
     return TCL_OK;
 
 }

@@ -223,8 +223,7 @@ typedef struct TkMacOSXDrawingContext {
  */
 
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
-			    HIShapeRef rgn);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r, HIShapeRef rgn);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
@@ -250,8 +249,8 @@ MODULE_SCOPE bool	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
-			    CGContextRef context, BOOL useDarkAppearance);
+MODULE_SCOPE void	TkMacOSXSetColorInContext(unsigned long pixel,
+			    CGContextRef context, bool useDarkAppearance);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
@@ -265,7 +264,7 @@ MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
-MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
+MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(unsigned long pixel);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
@@ -286,18 +285,27 @@ MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE bool	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
-			    BOOL useDarkAppearance);
+			    bool useDarkAppearance);
 MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
-			    NSColor *color, BOOL useDarkAppearance);
+			    NSColor *color, bool useDarkAppearance);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
 			    NSColor *color, NSColorSpace *colorSpace,
-			    BOOL useDarkAppearance);
+			    bool useDarkAppearance);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+MODULE_SCOPE NSWindow*  TkMacOSXGetKeyWindowSuccessor(
+			     Tcl_Interp *interp, NSWindow *w);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
+MODULE_SCOPE void TkMacOSXUpdatePointerAfterMap(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXUpdatePointerBeforeUnmap(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
+MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
+MODULE_SCOPE void TkMacOSXNotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
+MODULE_SCOPE int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 
@@ -333,6 +341,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
 @property Bool tkWillExit;
+@property Tcl_Interp* eventInterp;
 
 /*
  * Persistent state variables used by processMouseEvent.
@@ -346,6 +355,7 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
+- (void)_clearEventInterp;
 - (void)_resetAutoreleasePool;
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
@@ -418,10 +428,10 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
-@property Bool onScreen;
+@property Bool hasBeenExposed;
+@property int orderFrontCount;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -455,6 +465,7 @@ VISIBILITY_HIDDEN
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 
 @interface TKDrawerWindow : NSWindow
@@ -472,6 +483,7 @@ VISIBILITY_HIDDEN
 
 @interface TKPanel(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 #pragma mark NSMenu & NSMenuItem Utilities
 

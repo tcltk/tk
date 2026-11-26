@@ -31,7 +31,6 @@ static void		GenerateConfigureNotify(TkWindow *winPtr,
 			    int includeWin);
 static void		UpdateOffsets(TkWindow *winPtr, int deltaX,
 			    int deltaY);
-static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 
 /*
@@ -57,10 +56,11 @@ XDestroyWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
-    //fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
-    //	    Tk_PathName(macWin->winPtr),
-    //	    Tk_PathName(macWin->winPtr->parentPtr));
-
+#if 0
+    fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
+	    Tk_PathName(macWin->winPtr),
+	    Tk_PathName(macWin->winPtr->parentPtr));
+#endif
     /*
      * Remove any dangling pointers that may exist if the window we are
      * deleting is being tracked by the grab code.
@@ -143,6 +143,88 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper for XMapWindow.
+ */
+
+static bool mouseIsInTkWindow(TkWindow *winPtr)
+{
+    if (!winPtr || winPtr->window == None) {
+	return false;
+    }
+    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSRect toplevelFrame = [macWin frame];
+    int viewHeight = (int) [[macWin contentView] frame].size.height;
+    int widgetY = viewHeight - Tk_Height(winPtr) - winPtr->privatePtr->yOff;
+    NSRect widgetFrame = NSMakeRect(
+	  toplevelFrame.origin.x + winPtr->privatePtr->xOff,
+	  toplevelFrame.origin.y + widgetY,
+	  Tk_Width(winPtr), Tk_Height(winPtr));
+    return NSMouseInRect([NSEvent mouseLocation], widgetFrame, NO);
+}
+
+/*
+ * If this newly mapped window contains the pointer, tell tk that it is the new
+ * pointer window.
+ */
+static void
+updatePointerForMap(
+    TkWindow *winPtr)
+{
+    NSPoint mouse = [NSEvent mouseLocation];
+    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+
+    if (!mouseIsInTkWindow(winPtr)) {
+	return;
+    }
+    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
+
+    if (toplevelPtr &&
+	toplevelPtr->wmInfoPtr &&
+	(toplevelPtr->wmInfoPtr->flags & WM_IS_HIDDEN)) {
+	return;
+    }
+    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+}
+
+/*
+ * If this newly unmapped window contains the pointer, find the new
+ * pointer window and tell tk about it
+ */
+
+static void
+updatePointerForUnmap(
+    TkWindow *winPtr)
+{
+    if (!mouseIsInTkWindow(winPtr)) {
+	return;
+    }
+    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
+    if (!toplevelPtr) {
+	return;
+    }
+    NSPoint mouse = [NSEvent mouseLocation];
+    NSPoint local = [macWin tkConvertPointFromScreen: mouse];
+    int top_x = floor(local.x),
+	top_y = floor(macWin.frame.size.height - local.y);
+    int root_x = floor(mouse.x),
+	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+    int dummy_x, dummy_y;
+    Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr, top_x, top_y,
+					    &dummy_x, &dummy_y);
+    if (!Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
+	/*
+	 * The parent of the Tk window is in the process of being destroyed.
+	 * Don't call Tk_UpdatePointer in this case.
+	 */
+	return;
+    } else {
+	Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
+    }
+}
+
 int
 XMapWindow(
     Display *display,		/* Display. */
@@ -152,19 +234,18 @@ XMapWindow(
 	return BadWindow;
     }
     MacDrawable *macWin = (MacDrawable *)window;
-    static bool initialized = false;
-    NSPoint mouse = [NSEvent mouseLocation];
-    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
-
+#if 0
+    fprintf(stderr, "XMapWindow: mapping %s\n", Tk_PathName(macWin->winPtr));
+    NSArray *stack = [NSThread callStackSymbols];
+    NSLog(@"Full Stack Trace:\n%@", [stack componentsJoinedByString:@"\n"]);
+#endif
     /*
-     * Under certain situations it's possible for this function to be called
+     * In certain situations it's possible for this function to be called
      * before the toplevel window it's associated with has actually been
      * mapped. In that case we need to create the real Macintosh window now as
      * this function as well as other X functions assume that the portPtr is
      * valid.
      */
-
     if (!TkMacOSXHostToplevelExists(macWin->toplevel->winPtr)) {
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
@@ -175,50 +256,23 @@ XMapWindow(
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
-
-	    /*
-	     * We want to activate Tk when a toplevel is mapped but we can't
-	     * always specify activateIgnoringOtherApps to be YES.  This is
-	     * because during Tk initialization the root window is mapped
-	     * before applicationDidFinishLaunching returns. Forcing the app to
-	     * activate too early can make the menu bar unresponsive.
-	     */
-
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
-	    [NSApp activateIgnoringOtherApps:initialized];
-	    if (initialized) {
-		if ([win canBecomeKeyWindow]) {
-		    [win makeKeyAndOrderFront:NSApp];
-		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
-		} else {
-		    [win orderFrontRegardless];
-		}
-
-		/*
-		 * Delay for up to 20 milliseconds until the toplevel has
-		 * actually become the highest toplevel.  This is to ensure
-		 * that the Visibility event occurs after the toplevel is
-		 * visible.
-		 */
-
-		for (int count = 0; count < 20; count++) {
-		    if ([[NSApp orderedWindows] firstObject] == win) {
-			break;
-		    }
-		    [NSThread sleepForTimeInterval:.001];
-		}
+	    if ([win canBecomeKeyWindow]) {
+		[(TKWindow *) win tkOrderFront];
+		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
+		[NSApp activateIgnoringOtherApps:YES];
+	    } else if (winPtr->wmInfoPtr &&
+		       (winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0){
+		/* OverrideRedirect windows can't become key. */
+		[win orderFrontRegardless];
 	    }
 
 	    /*
-	     * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
-	     * new window.
+	     * Tell Tk if the pointer is in the contentView of the new toplevel window.
 	     */
 
-	    NSPoint viewLocation = [view convertPoint:mouse fromView:nil];
-	    if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-		Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
-	    }
+	    updatePointerForMap(winPtr);
 	} else {
 	    Tk_Window contWinPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
@@ -230,6 +284,11 @@ XMapWindow(
 	    TkMacOSXInvalClipRgns(contWinPtr);
 	}
     } else {
+	/*
+	 * Tell Tk if the pointer is in the window which we are mapping.
+	 */
+
+	updatePointerForMap(winPtr);
 
 	/*
 	 * For non-toplevel windows, rebuild the parent's clipping region
@@ -249,18 +308,28 @@ XMapWindow(
     Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 
     /*
-     * Generate VisibilityNotify events for window and all mapped children.
+     * Generate VisibilityNotify events for window and all mapped children.  Do
+     * not do this here for normal toplevels.  They are handled by the method
+     * [NSApplication windowBecameVisible].
      */
 
-    if (initialized) {
+    if (!Tk_IsTopLevel(winPtr) || Tk_IsEmbedded(winPtr)) {
 	XEvent event;
 	event.xany.send_event = False;
 	event.xany.display = display;
 	event.xvisibility.type = VisibilityNotify;
-	event.xvisibility.state = VisibilityUnobscured;
-	NotifyVisibility(winPtr, &event);
-    } else {
-	initialized = true;
+	if (win.occlusionState & NSWindowOcclusionStateVisible) {
+	    /* OcclusionStateVisible is 1 when any part of the window
+	     * is visible and 0 when the window is offscreen or completely
+	     * covered by other windows.  There is no notification that
+	     * the entire window is visible.  So we use PartlyObscured
+	     * here, treating FullyObscured a subcase of PartlyObscured.
+	     */
+	    event.xvisibility.state = VisibilityPartiallyObscured;
+	} else {
+	    event.xvisibility.state = VisibilityFullyObscured;
+	}
+	TkMacOSXNotifyVisibility(winPtr, &event);
     }
     return Success;
 }
@@ -268,10 +337,12 @@ XMapWindow(
 /*
  *----------------------------------------------------------------------
  *
- * NotifyVisibility --
+ * TkMacOSXNotifyVisibility --
  *
- *	Helper for XMapWindow().  Generates VisibilityNotify events
- *      for the window and all of its descendants.
+ *	Generates VisibilityNotify events for the window and all of its
+ *      descendants.  The XEvent parameter should have filled in the fields
+ *	xany.send_event, event.xany.display, event.xvisibility.type, and
+ *	event.xvisibility.state.
  *
  * Results:
  *	None.
@@ -282,8 +353,8 @@ XMapWindow(
  *----------------------------------------------------------------------
  */
 
-static void
-NotifyVisibility(
+MODULE_SCOPE void
+TkMacOSXNotifyVisibility(
     TkWindow *winPtr,
     XEvent *eventPtr)
 {
@@ -295,7 +366,7 @@ NotifyVisibility(
     for (winPtr = winPtr->childList; winPtr != NULL;
 	    winPtr = winPtr->nextPtr) {
 	if (winPtr->flags & TK_MAPPED) {
-	    NotifyVisibility(winPtr, eventPtr);
+	    TkMacOSXNotifyVisibility(winPtr, eventPtr);
 	}
     }
 }
@@ -324,20 +395,18 @@ XUnmapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *)window;
-    TkWindow *winPtr = macWin->winPtr;
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-
     if (!window) {
 	return BadWindow;
     }
+    MacDrawable *macWin = (MacDrawable *)window;
+    TkWindow *winPtr = macWin->winPtr;
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
-	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
+	    [win orderOut:nil];
 	    if ([win isKeyWindow]) {
 
 		/*
@@ -352,7 +421,7 @@ XUnmapWindow(
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
 
-		    BOOL isOnScreen;
+		    bool isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;
@@ -361,7 +430,7 @@ XUnmapWindow(
 		    isOnScreen = (wmInfoPtr->hints.initial_state != IconicState &&
 				  wmInfoPtr->hints.initial_state != WithdrawnState);
 		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
-			[w makeKeyAndOrderFront:NSApp];
+			[w makeKeyAndOrderFront:nil];
 			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 			break;
 		    }
@@ -385,6 +454,37 @@ XUnmapWindow(
 	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 	}
     }
+
+    /*
+     * If the window being unmapped contains the mouse pointer We have to tell Tk
+     * which window will contain the mouse pointer after this window is unmapped.
+     */
+
+    updatePointerForUnmap(winPtr);
+#if 0
+    if (mouseIsInTkWindow(winPtr)) {
+	NSPoint mouse = [NSEvent mouseLocation];
+	NSPoint local = [win tkConvertPointFromScreen: mouse];
+	int top_x = floor(local.x),
+	    top_y = floor(win.frame.size.height - local.y);
+	int root_x = floor(mouse.x),
+	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+	bool doUpdatePointer = true;
+	int dummy_x, dummy_y;
+	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr, top_x, top_y,
+					       &dummy_x, &dummy_y);
+	if (!Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
+	   /*
+	    * The parent of the Tk window is in the process of being destroyed.
+	    * Don't call Tk_UpdatePointer in this case.
+	    */
+	    doUpdatePointer = False;
+	}
+	if (doUpdatePointer) {
+	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
+	}
+    }
+#endif
     return Success;
 }
 
@@ -1075,7 +1175,6 @@ Tk_MacOSXGetNSWindowForDrawable(
 
     if (!macWin || macWin->flags & TK_IS_PIXMAP) {
 	result = nil;
-
     } else if (macWin->toplevel && macWin->toplevel->winPtr &&
 	    macWin->toplevel->winPtr->wmInfoPtr &&
 	    macWin->toplevel->winPtr->wmInfoPtr->window) {

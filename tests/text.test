@@ -26,6 +26,8 @@ resetWindows
 # COMMON TEST SETUP
 #
 
+testConstraint tcl905 [package vsatisfies [info tclversion] 9.0.5]
+
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 wm geometry . {}
@@ -2681,7 +2683,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result 3
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t -expand 1 -fill both
+    pack .t
 } -body {
     .t configure -width 20 -height 10
     update
@@ -3509,7 +3511,13 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # Tests text-14.19 and text-14.20 were failing on Windows because the title bar
 # on .t was a certain minimum size and it was interfering with the size requested
 # by the -setgrid. The "overrideredirect" gets rid of the titlebar so the
-# toplevel can shrink to the appropriate size.
+# toplevel can shrink to the appropriate size. It also keeps the window
+# manager out of the reported position: under Weston (XWayland), the
+# geometry of a decorated window includes the shadow of its frame, so
+# "+0+0" is reported as "+-32+-32".
+# The toplevel must still be wider than the minimum width which Tk on
+# Wayland gives every toplevel when it draws the decorations itself (180
+# pixels, with libdecor on GNOME), override-redirect or not.
 # On macOS, however, there is no way to make the window overlap the
 # menubar. Starting with macOS 15 (Sequoia) it became impossible for
 # the y coordinate of the top of a window to be less than 10 plus the
@@ -3525,7 +3533,7 @@ test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 -setgrid 1
+    .top.t configure -width 70 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
     wm geometry .top +0+$minY
@@ -3533,18 +3541,18 @@ test text-14.19 {ConfigureText procedure} -setup {
     wm geometry .top
 } -cleanup {
     destroy .top
-} -result "20x10+0+$minY"
+} -result "70x10+0+$minY"
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 -setgrid 1
+    .top.t configure -width 70 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
     wm geometry .top +0+$minY
     update
     set result [wm geometry .top]
-    wm geometry .top 15x8
+    wm geometry .top 65x8
     update
     lappend result [wm geometry .top]
     .top.t configure -wrap word
@@ -3552,7 +3560,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     lappend result [wm geometry .top]
 } -cleanup {
     destroy .top
-} -result "20x10+0+$minY 15x8+0+$minY 15x8+0+$minY"
+} -result "70x10+0+$minY 65x8+0+$minY 65x8+0+$minY"
 
 
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
@@ -6698,7 +6706,8 @@ test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widge
     bind .t <<Selection>> "set ::retval <<Selection>>_fired"
     update
     set ::retval no_<<Selection>>_event_fired
-    event generate .t <<PasteSelection>> -x 15 -y [lindex [.t dlineinfo 1.0] 1]
+    event generate .t <<PasteSelection>> -x [lindex [.t bbox 1.5] 0] \
+	    -y [lindex [.t dlineinfo 1.0] 1]
     update
     set ::retval
 } -cleanup {
@@ -7880,6 +7889,39 @@ test text-39.1 {no scroll command before the text is mapped - bug 991849} -setup
     destroy .top
     unset -nocomplain log res
 } -result {{} {y 0.0 0.5 x 0.0 0.5}}
+
+test text-42.1 {<<PrevWord>> stops at a one-character word before the cursor} -setup {
+    text .t
+    set res {}
+} -body {
+    .t insert end "a b c\nxy z"
+    .t mark set insert end-1c
+    for {set i 0} {$i < 5} {incr i} {
+	event generate .t <<PrevWord>>
+	lappend res [.t index insert]
+    }
+    .t mark set insert 2.4
+    event generate .t <<SelectPrevWord>>
+    lappend res [.t tag ranges sel]
+} -cleanup {
+    destroy .t
+    unset -nocomplain res i
+} -result {2.3 2.0 1.4 1.2 1.0 {2.3 2.4}}
+test text-42.2 {<<PrevWord>> stops at a one-character word before the cursor, -locale tcl8} -setup {
+    text .t -locale tcl8
+    set res {}
+} -constraints tcl905 -body {
+    .t insert end "a b c\nxy z"
+    .t mark set insert end-1c
+    for {set i 0} {$i < 5} {incr i} {
+	event generate .t <<PrevWord>>
+	lappend res [.t index insert]
+    }
+    set res
+} -cleanup {
+    destroy .t
+    unset -nocomplain res i
+} -result {2.3 2.0 1.4 1.2 1.0}
 
 # A word made only of right-to-left characters (Hebrew).
 set rtlWord [format %c%c%c%c 0x5E9 0x5DC 0x5D5 0x5DD]

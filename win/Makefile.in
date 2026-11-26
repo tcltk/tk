@@ -526,18 +526,28 @@ install-binaries: binaries
 		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
 	    done
-	@echo "Creating package index $(PKG_INDEX)";
-	@$(RM) $(PKG_INDEX);
-	@(\
-	echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
-	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
-	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin cygtcl9tk$(VERSION).dll]]]";\
-	echo "} else {";\
-	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
-	echo "}";\
-	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
-	) > $(PKG_INDEX);
+	@if test "x${SHARED_BUILD}" != "x1"; then \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    $(RM) $(PKG_INDEX); \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
+	    echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
+	    ) > $(PKG_INDEX);\
+	    else \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    $(RM) $(PKG_INDEX); \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
+	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
+	    echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin cygtcl9tk$(VERSION).dll]]]";\
+	    echo "} else {";\
+	    echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
+	    echo "}";\
+	    echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
+	    ) > $(PKG_INDEX);\
+	    fi
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
 	    if [ -f $$i ]; then \
@@ -714,15 +724,30 @@ cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
 
+# The files and directories of the library, so that the zip file is rebuilt
+# when any of them changes, or a file is added or removed. ROOT_DIR, not
+# TOP_DIR: the latter can contain a drive letter.
+TK_LIBRARY_FILES = $(wildcard $(ROOT_DIR)/library/* $(ROOT_DIR)/library/*/* \
+	$(ROOT_DIR)/library/*/*/*)
+
 tkzipfile: ${TK_ZIP_FILE}
 
-${TK_ZIP_FILE}:
+${TK_ZIP_FILE}: ${TK_LIBRARY_FILES}
 	@$(RMDIR) ${TK_VFS_ROOT}
 	@mkdir -p ${TK_VFS_PATH}
 	@echo "creating ${TK_VFS_PATH} (prepare compression)"
 	@( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
+	@if test "x${SHARED_BUILD}" != "x1"; then \
+	    echo "Creating package index pkgIndex.tcl"; \
+	    $(RM) $(TK_VFS_PATH)/pkgIndex.tcl; \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
+	    echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
+	    ) > $(TK_VFS_PATH)/pkgIndex.tcl;\
+	    fi
 	@$(RMDIR) $(TK_VFS_PATH)/demos
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
 	@tclsh='${NATIVE_TCLSH}'; wine=; \

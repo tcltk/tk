@@ -201,7 +201,10 @@ proc ::tk::ConsoleInit {} {
     if {[tk windowingsystem] ne "aqua"} {
 	# Subtle work-around to erase the '% ' that tclMain.c prints out
 	after idle [subst -nocommand {
-	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
+	    # The application may have been destroyed in the meantime
+	    catch {
+		if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
+	    }
 	}]
     }
 }

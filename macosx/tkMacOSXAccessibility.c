@@ -12,7 +12,6 @@
  *
  */
 
-
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -23,37 +22,40 @@
 #include "tkMacOSXPrivate.h"
 #include <AppKit/NSAccessibility.h>
 
-
-/* Data declarations and protoypes of functions used in this file. */
+/*
+ * This hash table is defined and allocated in generic/tkAccessibility.c
+ * but initialized by a TkAccessibilityElement object on first access.
+ */
 extern Tcl_HashTable *TkAccessibilityObject;
-static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
-void PostAccessibilityAnnouncement(NSString *message);
-static void InitAccessibilityHashTables(void);
-void TkAccessibility_LinkWindowToElement(Tk_Window tkwin, TkAccessibilityElement *element);
-TkAccessibilityElement *TkAccessibility_GetElementForWindow(Tk_Window tkwin);
-Tk_Window TkAccessibility_GetWindowForElement(TkAccessibilityElement *element);
-void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElement *element);
-void TkAccessibility_CleanupHashTables(void);
-static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
-static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr);
-void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
-int IsVoiceOverRunning(void *clientData, Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int ActionEventProc(Tcl_Event *ev, int flags);
 
-char *callback_command;
+static bool accessibilityTablesInitialized = false;
 static Tcl_HashTable *TkWindowToElementTable = NULL;
 static Tcl_HashTable *ElementToTkWindowTable = NULL;
-static bool accessibilityTablesInitialized = false;
+static char *callback_command = NULL;
+
+/* Static functions used in this file. */
+static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
+static void postAccessibilityAnnouncement(NSString *message);
+static void InitAccessibilityHashTables(void);
+static TkAccessibilityElement *getElementForWindow(Tk_Window tkwin);
+static Tk_Window getWindowForElement(TkAccessibilityElement *element);
+static void linkWindowToElement(Tk_Window tkwin, TkAccessibilityElement *element);
+static void unlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElement *element);
+static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip,
+    Tcl_Size objc, Tcl_Obj *const objv[]);
+static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr);
+static void registerForCleanup(Tk_Window tkwin, void *accessibilityElement);
+static int isVoiceOverRunning(void *clientData, Tcl_Interp *ip,
+    Tcl_Size objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip,
+    Tcl_Size objc, Tcl_Obj *const objv[]);
+static int ActionEventProc(Tcl_Event *ev, int flags);
 
 /*
  * Map script-level roles to CoreFoundation role constants, which are bridged
  * to the NSAccessibilityRole constants. Using these offers better compatibility
  * in C code.
  */
-
 
 #ifndef kAXSwitchRole
 #define kAXSwitchRole CFSTR("AXSwitch")
@@ -64,7 +66,7 @@ struct MacRoleMap {
     CFStringRef macrole;          /* CF role constant (CFStringRef). */
 };
 
-const struct MacRoleMap roleMap[] = {
+static const struct MacRoleMap roleMap[] = {
     {"Button",        kAXButtonRole},
     {"Canvas",        kAXScrollAreaRole},
     {"Checkbutton",   kAXCheckBoxRole},
@@ -85,7 +87,6 @@ const struct MacRoleMap roleMap[] = {
     {NULL,            NULL}
 };
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -102,9 +103,10 @@ const struct MacRoleMap roleMap[] = {
  *----------------------------------------------------------------------
  */
 
-static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
+static NSPoint FlipY(
+    NSPoint screenpoint,
+    NSWindow *window)
 {
-
     /* Convert screen coordinates to window base coordinates. */
     NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
 
@@ -118,7 +120,7 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
 /*
  *----------------------------------------------------------------------
  *
- * PostAccessibilityAnnouncement --
+ * postAccessibilityAnnouncement --
  *
  *  Customized accessibility message.
  *
@@ -131,8 +133,8 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
  *----------------------------------------------------------------------
  */
 
-
-void PostAccessibilityAnnouncement(NSString *message)
+static void postAccessibilityAnnouncement(
+    NSString *message)
 {
     if (!message || [message length] == 0) {
 	return; /* Avoid posting empty announcements. */
@@ -153,7 +155,6 @@ void PostAccessibilityAnnouncement(NSString *message)
 	);
     }
 }
-
 
 /*
  *
@@ -211,7 +212,6 @@ void PostAccessibilityAnnouncement(NSString *message)
     return nil;
 }
 
-
 - (NSString *) accessibilityLabel
 {
     Tk_Window win = self.tk_win;
@@ -230,7 +230,8 @@ void PostAccessibilityAnnouncement(NSString *message)
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
     if (role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) {
 	NSInteger rowCount = [self accessibilityRowCount];
-	NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
+	NSString *count = [NSString stringWithFormat:@"Table with %ld items. ",
+				    (long)rowCount];
 	NSString *interact = self.accessibilityHint ?: @"";
 	NSString *groupLabel = [NSString stringWithFormat:@"%@%@", count, interact];
 	return groupLabel;
@@ -300,8 +301,11 @@ void PostAccessibilityAnnouncement(NSString *message)
 	    if (varName && *varName) {
 		const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 
-		if ((role && CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo) ||
-		    (role && CFStringCompare(role, kAXSwitchRole, 0) == kCFCompareEqualTo)) {
+		if (role &&
+		    (
+		     CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo ||
+		     CFStringCompare(role, kAXSwitchRole, 0) == kCFCompareEqualTo
+		     )) {
 		    if (varVal && strcmp(varVal, "1") == 0) {
 			stateValue = 1;
 		    }
@@ -475,14 +479,18 @@ void PostAccessibilityAnnouncement(NSString *message)
      *  is required.
      */
 
-    if ((role && CFStringCompare(role, kAXSliderRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+    if (role &&
+	(
+	  CFStringCompare(role, kAXSliderRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo ||
+	  CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo
+	 )
+	) {
 	[self forceFocus];
     }
 
@@ -491,7 +499,6 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 - (NSString*) accessibilityIdentifier
 {
-
     int x = arc4random_uniform(1000);
     NSNumber *id = [NSNumber numberWithInt: x];
     NSString *identifier = [id stringValue];
@@ -589,18 +596,22 @@ void PostAccessibilityAnnouncement(NSString *message)
 - (void) accessibilityPerformAction: (NSAccessibilityActionName)action
 {
     if (CFStringCompare((CFStringRef)action, kAXPressAction, 0) == kCFCompareEqualTo) {
-	BOOL success = [self accessibilityPerformPress];
+	bool success = [self accessibilityPerformPress];
 
 	if (success) {
 	    /* Post notification AFTER the action completes. */
 	    CFStringRef role = (__bridge CFStringRef) self.accessibilityRole;
-	    if ((role && CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo) ||
-		(role && CFStringCompare(role, kAXRadioButtonRole, 0) == kCFCompareEqualTo) ||
-		(role && CFStringCompare(role, kAXSwitchRole, 0) == kCFCompareEqualTo)) {
+	    if (role &&
+		(
+		    CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo ||
+		    CFStringCompare(role, kAXRadioButtonRole, 0) == kCFCompareEqualTo ||
+		    CFStringCompare(role, kAXSwitchRole, 0) == kCFCompareEqualTo
+		 )) {
 		/* Delay the notification to ensure the value has actually changed. */
 		dispatch_async(dispatch_get_main_queue(), ^{
-			NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
-		    });
+		    NSAccessibilityPostNotification(self,
+			NSAccessibilityValueChangedNotification);
+		});
 	    }
 	}
     }
@@ -626,10 +637,7 @@ void PostAccessibilityAnnouncement(NSString *message)
     if (!hPtr2) {
 	return FALSE;
     }
-    char *action = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
-
-
-    callback_command = action;
+    callback_command = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
     event = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
     event->proc = ActionEventProc;
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
@@ -673,7 +681,8 @@ void PostAccessibilityAnnouncement(NSString *message)
     } else if (result &&
 	       (strcmp(result, "Table") == 0 || strcmp(result, "Tree") == 0)) {
 	/* For ttk::treeview, use llength [tree children {}]. */
-	commandString = [NSString stringWithFormat:@"llength [%@ children {}]", widgetName];
+	commandString = [NSString stringWithFormat:@"llength [%@ children {}]",
+				  widgetName];
     } else {
 	return 0;
     }
@@ -694,7 +703,8 @@ void PostAccessibilityAnnouncement(NSString *message)
 
     TkMainInfo *info = TkGetMainInfoList();
     NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-    NSString *commandString = [NSString stringWithFormat:@"::tk::accessible::_forceTkFocus %@", widgetName];
+    NSString *commandString = [NSString stringWithFormat:
+		 @"::tk::accessible::_forceTkFocus %@", widgetName];
     Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
 
     if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
@@ -710,7 +720,8 @@ void PostAccessibilityAnnouncement(NSString *message)
     }
 
     /* Notify macOS that this element is being destroyed. */
-    NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
+    NSAccessibilityPostNotification(self,
+	NSAccessibilityUIElementDestroyedNotification);
 
     /* Break any strong references to avoid accessing stale memory. */
     self.tk_win = NULL;
@@ -752,16 +763,16 @@ static void InitAccessibilityHashTables(void)
 {
     if (!accessibilityTablesInitialized) {
 	TkWindowToElementTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
-	ElementToTkWindowTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
-
 	Tcl_InitHashTable(TkWindowToElementTable, TCL_ONE_WORD_KEYS);
+	ElementToTkWindowTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(ElementToTkWindowTable, TCL_ONE_WORD_KEYS);
-
 	accessibilityTablesInitialized = true;
     }
 }
 
-void TkAccessibility_LinkWindowToElement(Tk_Window tkwin, TkAccessibilityElement *element)
+void linkWindowToElement(
+    Tk_Window tkwin,
+    TkAccessibilityElement *element)
 {
     if (!tkwin || !element) {
 	return;
@@ -787,7 +798,9 @@ void TkAccessibility_LinkWindowToElement(Tk_Window tkwin, TkAccessibilityElement
     }
 }
 
-TkAccessibilityElement *TkAccessibility_GetElementForWindow(Tk_Window tkwin)
+static
+TkAccessibilityElement *getElementForWindow(
+    Tk_Window tkwin)
 {
     if (!tkwin || !accessibilityTablesInitialized) {
 	return nil;
@@ -801,7 +814,9 @@ TkAccessibilityElement *TkAccessibility_GetElementForWindow(Tk_Window tkwin)
     return nil;
 }
 
-Tk_Window TkAccessibility_GetWindowForElement(TkAccessibilityElement *element)
+
+static Tk_Window getWindowForElement(
+    TkAccessibilityElement *element)
 {
     if (!element || !accessibilityTablesInitialized) {
 	return NULL;
@@ -815,7 +830,11 @@ Tk_Window TkAccessibility_GetWindowForElement(TkAccessibilityElement *element)
     return NULL;
 }
 
-void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElement *element)
+static
+void
+unlinkWindowAndElement(
+    Tk_Window tkwin,
+    TkAccessibilityElement *element)
 {
     if (!accessibilityTablesInitialized) {
 	return;
@@ -827,7 +846,8 @@ void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElem
     if (tkwin) {
 	hPtr = Tcl_FindHashEntry(TkWindowToElementTable, (char *)tkwin);
 	if (hPtr) {
-	    TkAccessibilityElement *storedElement = (TkAccessibilityElement *)Tcl_GetHashValue(hPtr);
+	    TkAccessibilityElement *storedElement =
+		(TkAccessibilityElement *)Tcl_GetHashValue(hPtr);
 	    [storedElement release]; /* Release the retained element. */
 	    Tcl_DeleteHashEntry(hPtr);
 	}
@@ -842,36 +862,11 @@ void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElem
     }
 }
 
-void TkAccessibility_CleanupHashTables(void)
-{
-    if (!accessibilityTablesInitialized) {
-	return;
-    }
-
-    /* Clean up TkWindowToElementTable and release all elements. */
-    Tcl_HashSearch search;
-    Tcl_HashEntry *hPtr = Tcl_FirstHashEntry(TkWindowToElementTable, &search);
-    while (hPtr) {
-	TkAccessibilityElement *element = (TkAccessibilityElement *)Tcl_GetHashValue(hPtr);
-	[element release];
-	hPtr = Tcl_NextHashEntry(&search);
-    }
-
-    Tcl_DeleteHashTable(TkWindowToElementTable);
-    Tcl_DeleteHashTable(ElementToTkWindowTable);
-
-    Tcl_Free(TkWindowToElementTable);
-    Tcl_Free(ElementToTkWindowTable);
-
-    TkWindowToElementTable = NULL;
-    ElementToTkWindowTable = NULL;
-    accessibilityTablesInitialized = false;
-}
 
 /*
  *----------------------------------------------------------------------
  *
- * IsVoiceOverRunning --
+ * isVoiceOverRunning --
  *
  * Runtime check to see if screen reader is running.
  *
@@ -884,7 +879,8 @@ void TkAccessibility_CleanupHashTables(void)
  *----------------------------------------------------------------------
  */
 
-int IsVoiceOverRunning(
+static
+int isVoiceOverRunning(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
     TCL_UNUSED(Tcl_Size), /* objc */
@@ -941,7 +937,7 @@ static int EmitSelectionChanged(
 	Tk_MakeWindowExist(path);
     }
 
-    TkAccessibilityElement *widget = TkAccessibility_GetElementForWindow(path);
+    TkAccessibilityElement *widget = getElementForWindow(path);
     if (!widget) {
 	Tcl_SetResult(ip, "no accessibility element for window", TCL_STATIC);
 	return TCL_ERROR;
@@ -951,25 +947,30 @@ static int EmitSelectionChanged(
 
     CFStringRef role = (__bridge CFStringRef) widget.accessibilityRole;
 
-    if ((role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
-	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+    if (role &&
+	(
+	    CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo ||
+	    CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo
+	 )) {
 
 	NSString *announcement = widget.accessibilityValue;
 	if (announcement && [announcement length] > 0) {
 	    /* Delay slightly to ensure the value is fully updated. */
 	    dispatch_async(dispatch_get_main_queue(), ^{
-		    PostAccessibilityAnnouncement(announcement);
+		    postAccessibilityAnnouncement(announcement);
 		});
 	}
     } else {
 	/* Existing behavior for other widgets */
-	NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
-	NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
+	NSAccessibilityPostNotification(widget,
+	    NSAccessibilityValueChangedNotification);
+	NSAccessibilityPostNotification(widget,
+	    NSAccessibilitySelectedChildrenChangedNotification);
 
 	NSString *announcement = widget.accessibilityValue;
 	if (announcement && [announcement length] > 0) {
 	    dispatch_async(dispatch_get_main_queue(), ^{
-		    PostAccessibilityAnnouncement(announcement);
+		    postAccessibilityAnnouncement(announcement);
 		});
 	}
     }
@@ -980,7 +981,7 @@ static int EmitSelectionChanged(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXAccessibility_RegisterForCleanup --
+ * registerForCleanup --
  *
  * Register event handler for destroying accessibility element.
  *
@@ -993,9 +994,13 @@ static int EmitSelectionChanged(
  *----------------------------------------------------------------------
  */
 
-void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement)
+static
+void registerForCleanup(
+    Tk_Window tkwin,
+    void *accessibilityElement)
 {
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkMacOSXAccessibility_DestroyHandler, accessibilityElement);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	TkMacOSXAccessibility_DestroyHandler, accessibilityElement);
 }
 
 /*
@@ -1019,10 +1024,10 @@ static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *event
       if (eventPtr->type == DestroyNotify) {
 	TkAccessibilityElement *element = (TkAccessibilityElement *)clientData;
 	if (element) {
-	    Tk_Window tkwin = TkAccessibility_GetWindowForElement(element);
+	    Tk_Window tkwin = getWindowForElement(element);
 
 	    /* Remove from hash tables before invalidating */
-	    TkAccessibility_UnlinkWindowAndElement(tkwin, element);
+	    unlinkWindowAndElement(tkwin, element);
 
 	    [element invalidateAndRelease];
 	}
@@ -1066,7 +1071,7 @@ static int TkMacOSXAccessibleObjCmd(
     }
 
     /* Check if element already exists for this window. */
-    TkAccessibilityElement *existingElement = TkAccessibility_GetElementForWindow(path);
+    TkAccessibilityElement *existingElement = getElementForWindow(path);
     if (existingElement) {
 	/* Element already exists, no need to create a new one. */
 	return TCL_OK;
@@ -1077,11 +1082,12 @@ static int TkMacOSXAccessibleObjCmd(
     widget.tk_win = path;
 
     /* Create the bidirectional link. */
-    TkAccessibility_LinkWindowToElement(path, widget);
+    linkWindowToElement(path, widget);
 
     [widget.accessibilityParent accessibilityAddChildElement:widget];
-    TkMacOSXAccessibility_RegisterForCleanup(widget.tk_win, widget);
-    NSAccessibilityPostNotification(widget.parentView, NSAccessibilityLayoutChangedNotification);
+    registerForCleanup(widget.tk_win, widget);
+    NSAccessibilityPostNotification(widget.parentView,
+	NSAccessibilityLayoutChangedNotification);
 
     [pool drain];
     return TCL_OK;
@@ -1106,13 +1112,16 @@ static int TkMacOSXAccessibleObjCmd(
  *----------------------------------------------------------------------
  */
 
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp)
+MODULE_SCOPE int TkMacOSXAccessibility_Init(
+    Tcl_Interp * interp)
 {
-
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object",
+			  TkMacOSXAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change",
+			  EmitSelectionChanged, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader",
+			  isVoiceOverRunning, NULL, NULL);
     [pool release];
     return TCL_OK;
 }
@@ -1123,6 +1132,8 @@ int TkMacOSXAccessibility_Init(Tcl_Interp * interp)
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4
+ * eval: (c-set-offset 'arglist-intro '+)
+ * eval: (c-set-offset 'arglist-cont-nonempty '+)
  * fill-column: 79
  * coding: utf-8
  * End:

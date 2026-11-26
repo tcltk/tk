@@ -157,14 +157,14 @@ void DebugPrintQueue(void)
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
     if ([theEvent type] == NSAppKitDefined) {
-	static Bool aWindowIsMoving = NO;
+	static bool aWindowIsMoving = false;
 	switch([theEvent subtype]) {
 	case 20:
-	    aWindowIsMoving = YES;
+	    aWindowIsMoving = true;
 	    break;
 	case 21:
 	    if (aWindowIsMoving) {
-		aWindowIsMoving = NO;
+		aWindowIsMoving = false;
 		break;
 	    } else {
 		// printf("Bug!!!!\n");

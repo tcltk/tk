@@ -961,13 +961,23 @@ ConfigureFrame(
      * A few of the options require additional processing.
      */
 
-    if ((((oldMenuNameObj == NULL) && (framePtr->menuNameObj != NULL))
-	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj == NULL))
-	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj != NULL)
-	    && strcmp(Tcl_GetString(oldMenuNameObj), Tcl_GetString(framePtr->menuNameObj)) != 0))
-	    && framePtr->type == TYPE_TOPLEVEL) {
-	Tk_SetWindowMenubar(interp, framePtr->tkwin, (oldMenuNameObj ? Tcl_GetString(oldMenuNameObj) : NULL),
-		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
+    if (framePtr->type == TYPE_TOPLEVEL) {
+	const char *oldMenuName = oldMenuNameObj
+		? Tcl_GetString(oldMenuNameObj) : NULL;
+	const char *menuName = framePtr->menuNameObj
+		? Tcl_GetString(framePtr->menuNameObj) : NULL;
+
+	/*
+	 * Also set the menubar again if it is unchanged but its clone has
+	 * been destroyed, e.g. together with the other children of the
+	 * toplevel.
+	 */
+
+	if (((oldMenuName == NULL) != (menuName == NULL))
+		|| (menuName != NULL && (strcmp(oldMenuName, menuName) != 0
+		|| TkMenubarCloneMissing(interp, framePtr->tkwin, menuName)))) {
+	    Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName, menuName);
+	}
     }
 
     if (oldMenuNameObj != NULL) {
@@ -2033,6 +2043,15 @@ TkMapTopFrame(
 	}
     } else if (!Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_TOPLEVEL) {
 	framePtr->type = TYPE_FRAME;
+	if (framePtr->menuNameObj != NULL) {
+	    /*
+	     * The window is no longer a toplevel (wm forget): release its
+	     * menubar, so that no stale references to it remain.
+	     */
+
+	    Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin,
+		    Tcl_GetString(framePtr->menuNameObj), NULL);
+	}
     } else {
 	/*
 	 * Not a frame or toplevel, skip it.

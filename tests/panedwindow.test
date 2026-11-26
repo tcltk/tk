@@ -4538,7 +4538,7 @@ test panedwindow-21.14 {ArrangePanes, panedwindow resizes} -setup {
 test panedwindow-21.15 {ArrangePanes, last pane grows} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -height 50
+    panedwindow .p -showhandle false -sashwidth 3 -height 50
     .p add [frame .f1 -width 50 -bg red] [frame .f2 -width 50 -bg white] \
 	    [frame .f3 -width 50 -bg blue] [frame .f4 -width 50 -bg green]
     .p sash place 1 250 0
@@ -4927,7 +4927,7 @@ test panedwindow-23.28 {ConfigurePanes, restrict possible panes} -setup {
 test panedwindow-23.29 {ConfigurePanes, -hide works} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false
+    panedwindow .p -showhandle false -sashwidth 3
     frame .f1 -width 40 -height 100 -bg red
     frame .f2 -width 40 -height 100 -bg white
     frame .f3 -width 40 -height 100 -bg blue
@@ -4952,7 +4952,7 @@ test panedwindow-23.29 {ConfigurePanes, -hide works} -setup {
 test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -width 130 -height 100
+    panedwindow .p -showhandle false -sashwidth 3 -width 130 -height 100
     frame .f1 -width 40 -bg red
     frame .f2 -width 40 -bg white
     frame .f3 -width 40 -bg blue
@@ -5009,7 +5009,7 @@ test panedwindow-23.30a {ConfigurePanes, hidden panes are unmapped} -setup {
 test panedwindow-23.31 {ConfigurePanes, -hide works, last pane stretches} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -width 200 -height 200 -borderwidth 0
+    panedwindow .p -showhandle false -sashwidth 3 -width 200 -height 200 -borderwidth 0
     frame .f1 -width 50 -bg red
     frame .f2 -width 50 -bg green
     frame .f3 -width 50 -bg blue
@@ -5027,7 +5027,7 @@ test panedwindow-23.31 {ConfigurePanes, -hide works, last pane stretches} -setup
 test panedwindow-23.32 {ConfigurePanes, -hide works, last pane stretches} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -width 200 -height 200 \
+    panedwindow .p -showhandle false -sashwidth 3 -width 200 -height 200 \
 	    -borderwidth 0 -orient vertical
     frame .f1 -height 50 -bg red
     frame .f2 -height 50 -bg green
@@ -5047,7 +5047,7 @@ test panedwindow-23.32 {ConfigurePanes, -hide works, last pane stretches} -setup
 test panedwindow-23.33 {ConfigurePanes, -stretch first} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -height 100 -width 182
+    panedwindow .p -showhandle false -sashwidth 3 -height 100 -width 182
     frame .f1 -width 40 -bg red
     frame .f2 -width 40 -bg white
     frame .f3 -width 40 -bg blue
@@ -5068,7 +5068,7 @@ test panedwindow-23.33 {ConfigurePanes, -stretch first} -setup {
 test panedwindow-23.34 {ConfigurePanes, -stretch middle} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -height 100 -width 182
+    panedwindow .p -showhandle false -sashwidth 3 -height 100 -width 182
     frame .f1 -width 40 -bg red
     frame .f2 -width 40 -bg white
     frame .f3 -width 40 -bg blue
@@ -5089,7 +5089,7 @@ test panedwindow-23.34 {ConfigurePanes, -stretch middle} -setup {
 test panedwindow-23.35 {ConfigurePanes, -stretch always} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -height 100 -width 182
+    panedwindow .p -showhandle false -sashwidth 3 -height 100 -width 182
     frame .f1 -width 40 -bg red
     frame .f2 -width 40 -bg white
     frame .f3 -width 40 -bg blue
@@ -5110,7 +5110,7 @@ test panedwindow-23.35 {ConfigurePanes, -stretch always} -setup {
 test panedwindow-23.36 {ConfigurePanes, -stretch never} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -showhandle false -height 100 -width 182
+    panedwindow .p -showhandle false -sashwidth 3 -height 100 -width 182
     frame .f1 -width 40 -bg red
     frame .f2 -width 40 -bg white
     frame .f3 -width 40 -bg blue
@@ -5337,6 +5337,7 @@ test panedwindow-27.2 {destroy the window cleanly on rename [Bug #616589]} -setu
 
 test panedwindow-28.1 {resizing width} -setup {
     deleteWindows
+    removeTitleBar .
 } -body {
     panedwindow .p -bd 5
     frame .f1 -width 100 -height 50 -bg blue
@@ -5356,6 +5357,7 @@ test panedwindow-28.1 {resizing width} -setup {
     set b "$a [winfo width .f2]"
 } -cleanup {
     deleteWindows
+    wm overrideredirect . 0
 } -result {100 110}
 
 test panedwindow-28.2 {resizing height} -setup {
@@ -5413,6 +5415,76 @@ test panedwindow-29.2 {display on depths other than the default one} -constraint
 } -cleanup {
     deleteWindows
 } -result {}
+
+test panedwindow-30.1 {sash cursor: set when the pointer enters on the sash} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Enter> -x $x -y 10
+    .p cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {sb_h_double_arrow}
+test panedwindow-30.2 {sash cursor: kept while the sash is dragged} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    event generate .p <B1-Motion> -x [expr {$x + 40}] -y 10
+    # The pointer moves ahead of the sash, out of the panedwindow.
+    event generate .p <Leave>
+    ::tk::panedwindow::Cursor .p
+    .p cget -cursor
+} -cleanup {
+    event generate .p <ButtonRelease-1> -x [expr {$x + 40}] -y 10
+    deleteWindows
+} -result {sb_h_double_arrow}
+test panedwindow-30.3 {sash cursor: restored after the drag if not over the sash} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+    movePointerAwayFromTestArea
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    event generate .p <ButtonRelease-1> -x $x -y 10
+    .p cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {}
+test panedwindow-30.4 {sash cursor: widget destroyed while its sash is dragged} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    destroy .p
+    panedwindow .q -orient horizontal -sashwidth 6
+    .q add [frame .q.l -width 100 -height 50] [frame .q.r -width 100 -height 50]
+    pack .q
+    update
+    set x [expr {[lindex [.q sash coord 0] 0] + 2}]
+    event generate .q <Enter> -x $x -y 10
+    .q cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {sb_h_double_arrow}
 
 test panedwindow-31.1 {sash move in an enlarged panedwindow keeps its requested size} -setup {
     deleteWindows

@@ -39,10 +39,54 @@ resetWindows
 # operation. The raiseDelay procedure idles for a while to give the operation
 # a chance to complete.
 #
-proc raiseDelay {} {
-    after 300;
-    update idletasks
+if {[tk windowingsystem] eq "aqua"} {
+    proc raiseDelay {} {
+	after 100
+    }
+} else {
+    proc raiseDelay {} {
+	after 300
+	update idletasks
+	update
+    }
+ }
+
+# Zooming, iconifying and deiconifying a window are done by the window manager
+# asynchronously, sometimes in several steps.  waitForWm processes events until
+# the condition holds and the geometry of the window has not changed for 100
+# ms, for up to 2 seconds; without a window manager on X11 nothing would change.
+#
+proc waitForWm {w cond} {
+    if {[testConstraint withWindowManager]} {
+	set end [expr {[clock milliseconds] + 2000}]
+	set geometry {}
+	set stable 0
+	while {[clock milliseconds] < $end} {
+	    update
+	    if {[uplevel 1 [list expr $cond]]} {
+		if {[wm geometry $w] eq $geometry} {
+		    if {[incr stable] >= 5} {
+			break
+		    }
+		} else {
+		    set geometry [wm geometry $w]
+		    set stable 0
+		}
+	    }
+	    after 20
+	}
+    }
     update
+}
+proc zoomWindow {w zoomed} {
+    if {[tk windowingsystem] eq "x11"} {
+	wm attributes $w -zoomed $zoomed
+	waitForWm $w {[wm attributes $w -zoomed] == $zoomed}
+    } else {
+	set state [expr {$zoomed ? "zoomed" : "normal"}]
+	wm state $w $state
+	waitForWm $w {[wm state $w] eq $state}
+    }
 }
 
 proc stdWindow {} {
@@ -223,7 +267,8 @@ test wm-attributes-1.2.5.2 {usage} -constraints win32 -returnCodes error -body {
 } -result {bad attribute "_": must be -alpha, -appearance, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 test wm-attributes-1.2.5.3 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
+} -result {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -hidden, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
+
 #
 # COMMON TEST CLEANUP
 #
@@ -275,7 +320,8 @@ test wm-attributes-1.3.4 {change -fullscreen after map} -setup {
 } -result {0 1 1 0}
 test wm-attributes-1.3.5 {change -fullscreen after map} -setup {
     set results [list]
-    set normal_geom "301x302+101+102"
+    # The window cannot be narrower than its title bar.
+    set normal_geom "[expr {max(301, [lindex [wm minsize .] 0] + 1)}]x302+101+102"
     set fullscreen_geom "[winfo screenwidth .]x[winfo screenheight .]+0+0"
 } -constraints win -body {
     toplevel .t
@@ -519,6 +565,70 @@ test wm-attributes-1.5.5 {fullscreen stackorder} -setup {
     deleteWindows
 } -result {{. .a .b .c} {. .a .b .c} {. .a .b .c}}
 
+# Test that a window is hidden and revealed by the -hidden attribute
+# and that a window can be reconfigured and drawn while hidden.
+test wm-attributes-1.6.1 {-hidden} \
+    -constraints {aqua testpixel} \
+    -setup {set result [list]} \
+-body {
+    toplevel .a -bg red
+    wm geometry .a 200x200
+    update idletasks
+    after 300;# Allow humans to see the window.
+    # Check that the window is red.
+    lappend result [testpixel .a 100 100]
+    # Hide the red window.
+    wm attributes .a -hidden 1
+    update idletasks
+    # Turn it blue.
+    .a configure -bg blue
+    # Resize it
+    wm geometry .a 250x300
+    # Reveal it.
+    wm attributes .a -hidden 0
+    update idletasks
+    after 300; # Allow humans to see the window.
+    # Check that it is now blue.
+    lappend result [testpixel .a 100 100]
+    # Check that it got resized.
+    lappend result [winfo width .a]
+    lappend result [winfo height .a]
+} \
+-cleanup {
+    deleteWindows
+} \
+-result [list "#ff0000" "#0000ff" 250 300]
+
+# Test that <Enter> and <Leave> are generated when a window
+# is hidden or revealed.
+test wm-attributes-1.6.2 {-hidden} \
+-constraints {aqua testpixel} \
+-setup {set result [list]} \
+-body {
+    toplevel .a
+    wm geometry .a 200x200+100+100
+    #tkwait visibility .a
+    update idletasks
+    after 300; #Allow humans to see the window.
+    # Move the mouse pointer into the window.
+    event generate {} <Motion> -warp 1 -x 200 -y 200
+    update; # Process any <Leave> or <Enter caused by the warp.
+    bind .a <Leave> {lappend result "<Leave> %d %W"}
+    bind .a <Enter> {lappend result "<Enter> %d %W"}
+    # Hide the window - should generate a <Leave> event.
+    wm attributes .a -hidden 1
+    after 500; # Allow humans to see that the window is gone.
+    # Show the window - should generate an <Enter> event.
+    wm attributes .a -hidden 0
+    update; # Process the events.
+    after 300; # Allow humans to see that the window is back.
+    set result
+} \
+-cleanup {
+    deleteWindows
+} \
+-result {{<Leave> NotifyNonlinear .a} {<Enter> NotifyNonlinear .a}}
+
 ### wm client ###
 test wm-client-1.1 {usage} -returnCodes error -body {
     wm client
@@ -679,6 +789,7 @@ test wm-deiconify-2.3 {geometry for an unmapped window\
     set results {}
 } -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     lappend results [wm geometry .t]
     wm deiconify .t
     lappend results [wm geometry .t]
@@ -748,16 +859,19 @@ test wm-geometry-1.3 {usage} -returnCodes error -body {
     wm geometry . bogus
 } -result {bad geometry specifier "bogus"}
 
-test wm-geometry-2.1 {setting values} -body {
-    wm geometry .t 150x150+50+50
+test wm-geometry-2.1 {setting values} -setup {
+    removeTitleBar .t
+} -body {
+    wm geometry .t 480x150+50+50
     update
     set result [wm geometry .t]
     wm geometry .t {}
     update
     return [list $result [string equal [wm geometry .t] $result]]
 } -cleanup {
+    wm overrideredirect .t 0
     unset result
-} -match glob -result [list 150x150+*+* 0]
+} -match glob -result [list 480x150+*+* 0]
 test wm-geometry-2.2 {setting only the size does not move the window - bug 2995339} -setup {
     destroy .geom
     toplevel .geom -width 200 -height 150
@@ -768,7 +882,7 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -body {
     set x [winfo rootx .geom]
     set y [winfo rooty .geom]
-    wm geometry .geom 300x200
+    wm geometry .geom 500x200
     update
     after 500
     update
@@ -777,7 +891,87 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
 } -cleanup {
     destroy .geom
     unset -nocomplain x y
-} -result {0 0 300 200}
+} -result {0 0 500 200}
+test wm-geometry-2.3 {the position of a zoomed toplevel - bug 557441302b} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+    # The offset of the contents from the position [wm geometry] reports.
+    regexp {[+-](-?\d+)[+-](-?\d+)$} [wm geometry .geom] -> x y
+    set dx [expr {[winfo rootx .geom] - $x}]
+    set dy [expr {[winfo rooty .geom] - $y}]
+} -body {
+    zoomWindow .geom 1
+    regexp {[+-](-?\d+)[+-](-?\d+)$} [wm geometry .geom] -> x y
+    set res [list [expr {abs([winfo rootx .geom] - $x - $dx) < 10}] \
+	    [expr {abs([winfo rooty .geom] - $y - $dy) < 10}]]
+    zoomWindow .geom 0
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain x y dx dy res
+} -result {1 1 480x200+303+210}
+test wm-geometry-2.4 {a toplevel iconified from zoomed - bug 557441302b} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+} -body {
+    zoomWindow .geom 1
+    set zoomed [wm geometry .geom]
+    wm iconify .geom
+    waitForWm .geom {![winfo ismapped .geom]}
+    set res [list [expr {[wm geometry .geom] eq $zoomed}]]
+    wm deiconify .geom
+    waitForWm .geom {[winfo ismapped .geom]}
+    lappend res [expr {[wm geometry .geom] eq $zoomed}]
+    zoomWindow .geom 0
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain zoomed res
+} -result {1 1 480x200+303+210}
+test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+} -body {
+    wm iconify .geom
+    waitForWm .geom {![winfo ismapped .geom]}
+    set res [list [wm geometry .geom]]
+    wm deiconify .geom
+    waitForWm .geom {[winfo ismapped .geom]}
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain res
+} -result {480x200+303+210 480x200+303+210}
+# On macOS the menubar is not in the window.
+test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -constraints {
+    notAqua
+} -setup {
+    destroy .geom .m
+    menu .m
+    .m add command -label Entry
+    toplevel .geom -menu .m
+    pack [label .geom.l -text Label]
+    waitForWm .geom {[winfo ismapped .geom]}
+    regexp {^\d+x\d+} [wm geometry .geom] size
+} -body {
+    # No events are processed before the window leaves the fullscreen state.
+    wm attributes .geom -fullscreen 1
+    .geom configure -menu {}
+    .geom configure -menu .m
+    wm attributes .geom -fullscreen 0
+    waitForWm .geom {![wm attributes .geom -fullscreen]}
+    regexp {^\d+x\d+} [wm geometry .geom] newSize
+    expr {$newSize eq $size}
+} -cleanup {
+    destroy .geom .m
+    unset -nocomplain size newSize
+} -result 1
 
 
 ### wm grid ###
@@ -1020,6 +1214,21 @@ test wm-iconify-3.1 {iconify behavior} -constraints withWindowManager -body {
 } -cleanup {
     destroy .t2
 } -result {1 0}
+test wm-iconify-3.2 {a toplevel moved while iconified - bug f23a58ce24} -constraints x11 -setup {
+    destroy .icon
+    toplevel .icon
+    wm geometry .icon 480x200+303+210
+    waitForWm .icon {[winfo ismapped .icon]}
+} -body {
+    wm iconify .icon
+    waitForWm .icon {![winfo ismapped .icon]}
+    wm geometry .icon +100+105
+    wm deiconify .icon
+    waitForWm .icon {[winfo ismapped .icon]}
+    wm geometry .icon
+} -cleanup {
+    destroy .icon
+} -result {480x200+100+105}
 
 
 ### wm iconmask ###
@@ -1211,6 +1420,7 @@ destroy .t
 test wm-maxsize-2.1 {setting the maxsize to a value smaller\
 	than the current size will resize a toplevel} -body {
     toplevel .t -width 300 -height 300
+    removeTitleBar .t
     update
     wm maxsize .t 200 150
     # UpdateGeometryInfo invoked at idle
@@ -1222,6 +1432,7 @@ test wm-maxsize-2.1 {setting the maxsize to a value smaller\
 test wm-maxsize-2.2 {setting the maxsize to a value smaller\
 	than the current size will resize a gridded toplevel} -body {
     toplevel .t
+    removeTitleBar .t
     wm grid .t 0 0 50 50
     wm geometry .t 6x6
     update
@@ -1235,6 +1446,7 @@ test wm-maxsize-2.2 {setting the maxsize to a value smaller\
 test wm-maxsize-2.3 {attempting to resize to a value\
 	bigger than the current maxsize will set it to the max size} -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     wm maxsize .t 300 250
     update
     wm geom .t 400x300
@@ -1259,6 +1471,7 @@ test wm-maxsize-2.4 {attempting to resize to a value bigger than the\
 test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 	and the reqWidth/reqHeight are bigger than the max size} -body {
     toplevel .t
+    removeTitleBar .t
     pack [frame .t.f -width 400 -height 400]
     update idletasks
     set req [list [winfo reqwidth .t] [winfo reqheight .t]]
@@ -1268,6 +1481,40 @@ test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 } -cleanup {
     destroy .t
 } -result {{400 400} {300 300}}
+test wm-maxsize-2.6 {use the default max size if the window size is not\
+	explicitly set and the reqheight is bigger than the screen - bug 3598564fff} -body {
+    toplevel .t
+    pack [frame .t.f -width 200 -height [expr {2*[winfo screenheight .]}]]
+    update
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list [expr {[winfo height .t] <= $maxHeight}] \
+	    [expr {$maxHeight <= [winfo screenheight .]}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight
+} -result {1 1}
+test wm-maxsize-2.7 {the default max size fits in the work area - bug 3598564fff} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    update
+    zoomWindow .t 1
+    if {[tk windowingsystem] eq "x11"} {
+	set zoomed [wm attributes .t -zoomed]
+	# At a fractional scale KWin can make a zoomed window a pixel smaller
+	# than the work area it reports.
+	set tolerance 1
+    } else {
+	set zoomed [expr {[wm state .t] eq "zoomed"}]
+	set tolerance 0
+    }
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list $zoomed [expr {$maxWidth <= [winfo width .t] + $tolerance}] \
+	    [expr {$maxHeight <= [winfo height .t] + $tolerance}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight tolerance zoomed
+} -result {1 1 1}
 
 
 ### wm minsize ###
@@ -1299,6 +1546,7 @@ test wm-minsize-1.6 {usage} -setup {
 test wm-minsize-2.1 {setting the minsize to a value larger\
 	than the current size will resize a toplevel} -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     update
     wm minsize .t 400 300
     # UpdateGeometryInfo invoked at idle
@@ -1323,6 +1571,7 @@ test wm-minsize-2.2 {setting the minsize to a value larger\
 test wm-minsize-2.3 {attempting to resize to a value\
 	smaller than the current minsize will set it to the minsize} -body {
     toplevel .t -width 400 -height 400
+    removeTitleBar .t
     wm minsize .t 300 300
     update
     wm geom .t 200x200
@@ -1349,6 +1598,7 @@ test wm-minsize-2.5 {Use min size if window size is not explicitly set\
     set result [list]
 } -body {
     toplevel .t
+    removeTitleBar .t
     pack [frame .t.f -width 250 -height 250]
     update idletasks
     lappend result [list [winfo reqwidth .t] [winfo reqheight .t]]
@@ -1570,14 +1820,14 @@ test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} -body 
 deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
-    toplevel .t ; update
+    toplevel .t ; update idletasks
     raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
 } -result {. .t}
 test wm-stackorder-2.2 {stacking order} -body {
-    toplevel .t ; update
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .
@@ -1586,12 +1836,8 @@ test wm-stackorder-2.2 {stacking order} -body {
 } -result {.t .}
 test wm-stackorder-2.3 {stacking order} -body {
     set res {}
-    toplevel .t
-    tkwait visibility .t
-    raiseDelay
-    toplevel .t2
-    tkwait visibility .t2
-    raiseDelay
+    toplevel .t ; update idletasks
+    toplevel .t2 ; update idletasks
     lappend res [wm stackorder .]
     raise .
     raiseDelay
@@ -1604,8 +1850,8 @@ test wm-stackorder-2.3 {stacking order} -body {
     destroy .t .t2
 } -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
-    toplevel .t ; update
-    toplevel .t2 ; update
+    toplevel .t ; update idletasks
+    toplevel .t2 ; update idletasks
     raise .
     lower .t2
     raiseDelay
@@ -1616,13 +1862,13 @@ test wm-stackorder-2.4 {stacking order} -body {
 test wm-stackorder-2.5 {stacking order} -setup {
     destroy .parent
 } -body {
-    toplevel .parent ; update
+    toplevel .parent ; update idletasks
     destroy .parent.child1
-    toplevel .parent.child1 ; update
+    toplevel .parent.child1 ; update idletasks
     destroy .parent.child2
-    toplevel .parent.child2 ; update
+    toplevel .parent.child2 ; update idletasks
     destroy .extra
-    toplevel .extra ; update
+    toplevel .extra ; update idletasks
     raise .parent
     lower .parent.child2
     raiseDelay
@@ -1631,11 +1877,10 @@ test wm-stackorder-2.5 {stacking order} -setup {
     deleteWindows
 } -result {.parent.child2 .parent.child1 .parent}
 test wm-stackorder-2.6 {stacking order: non-toplevel widgets ignored} -body {
-    toplevel .t1
-    raiseDelay
+    toplevel .t1 ; update idletasks
     button .t1.b
     pack .t1.b
-    update
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1
@@ -1652,65 +1897,61 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body {
-    toplevel .t1 ; update
-    raiseDelay
-    toplevel .t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     raiseDelay
     wm iconify .t1
-    raiseDelay
+    raiseDelay ;# Windows does not generate a VisibilityNotification for iconify
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
 } -result {. .t2}
 test wm-stackorder-3.2 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     wm withdraw .t2
-    raiseDelay
+    raiseDelay ;# Windows does not generate a VisibilityNotification for withdraw
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
 } -result {. .t1}
 test wm-stackorder-3.3 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     wm withdraw .t2
     wm stackorder .t2
 } -cleanup {
     destroy .t1 .t2
 } -result {}
 test wm-stackorder-3.4 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1.t2
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1}
 test wm-stackorder-3.5 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1.t2}
 test wm-stackorder-3.6 {unmapped toplevel} -body {
-    toplevel .t1
-    tkwait visibility .t1
-    toplevel .t1.t2
-    tkwait visibility .t1.t2
-    toplevel .t1.t2.t3
-    tkwait visibility .t1.t2.t3
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
+    toplevel .t1.t2.t3 ; update idletasks
     wm withdraw .t1.t2
-    raiseDelay
+    raiseDelay ;# Windows does not generate a VisibilityNotification for withdraw
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1 .t1.t2.t3}
 test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
@@ -1729,22 +1970,21 @@ test wm-stackorder-3.8 {toplevel mapped in idle callback} -body {
 deleteWindows
 
 test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; update idletasks
     raise .t
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
 } -result 0
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; update idletasks
     raise .t
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
 } -result 1
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
-    toplevel .t
-    tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .t isabove .
@@ -1752,7 +1992,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     destroy .t
 } -result 0
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .t isb .
@@ -1768,6 +2008,7 @@ deleteWindows
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     toplevel .t
     menu .t.m -type menubar
+    update idletasks; # Fluxbox needs to add the menubar before .t is mapped.
     .t.m add cascade -label "File"
     .t configure -menu .t.m
     update
@@ -1781,9 +2022,8 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
     overrideredirect toplevel on unix} -constraints {x11 withWindowManager} -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     raise .
-    update
     raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
@@ -1793,9 +2033,8 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     overrideredirect toplevel on macOS or win} -constraints aquaOrWin32 -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     raise .
-    update
     raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
@@ -1805,7 +2044,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 	can be explicitly lowered} -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     lower .t
     update
     raiseDelay
@@ -1816,10 +2055,8 @@ test wm-stackorder-5.3 {An overrideredirect window\
 
 test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
 	 stacking order} -body {
-    toplevel .real -container 1
-    raiseDelay
-    toplevel .embd -bg blue -use [winfo id .real]
-    raiseDelay
+    toplevel .real -container 1 ; update idletasks
+    toplevel .embd -bg blue -use [winfo id .real] ; update idletasks
     wm stackorder .
 } -cleanup {
     deleteWindows
@@ -2188,10 +2425,10 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints withWindowManager -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
-} -body {
+} -constraints {aquaKnownBug withWindowManager} -body {
     # Verifies that transients stay on top of their toplevels, even if they were
     # made transients when those toplevels were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update
@@ -2204,6 +2441,21 @@ test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints 
 } -cleanup {
     deleteWindows
 } -result {0 0 1 1 {.t1 .t2}}
+test wm-transient-8.2 {deiconify transient withdrawn before its container
+	was mapped, Bug 562c3a3da5} -setup {
+    deleteWindows
+} -body {
+    toplevel .t1
+    toplevel .t2
+    wm transient .t2 .t1
+    wm withdraw .t2
+    update
+    wm deiconify .t2
+    update
+    list [wm state .t2] [winfo ismapped .t2]
+} -cleanup {
+    deleteWindows
+} -result {normal 1}
 
 
 ### wm state ###
@@ -2390,6 +2642,18 @@ test wm-state-2.19 {deiconify keeps a withdrawn window zoomed} -constraints win 
 } -cleanup {
     deleteWindows
 } -result {zoomed}
+test wm-state-2.20 {a zoomed window is maximized in both directions - bug f126a096e2} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    wm geometry .t 200x200
+    update
+    zoomWindow .t 1
+    list [expr {[winfo width .t] > [winfo screenwidth .] / 2}] \
+	    [expr {[winfo height .t] > [winfo screenheight .] / 2}]
+} -cleanup {
+    deleteWindows
+} -result {1 1}
 
 
 ### wm withdraw ###
@@ -2570,6 +2834,26 @@ test wm-manage-1.8 {unmanaging a toplevel} -setup {
 } -cleanup {
     deleteWindows
 } -result {wm .t.t pack .t wm .t.t}
+test wm-manage-1.9 {managed frame is not mapped before idle} -constraints {
+    notAqua
+} -setup {
+    set result [list]
+} -body {
+    toplevel .t
+    frame .t.f -width 100 -height 100
+    pack .t.f
+    update
+    bind .t.f <Map> {lappend result map}
+    wm manage .t.f
+    wm withdraw .t.f
+    update
+    lappend result [winfo ismapped .t.f]
+    wm deiconify .t.f
+    update
+    lappend result [winfo ismapped .t.f]
+} -cleanup {
+    deleteWindows
+} -result {0 map 1}
 
 test wm-forget-1.1 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
@@ -2688,6 +2972,57 @@ test wm-forget-2.1 {bug [c77b426dc9] - panic with [menu]+[wm forget]} -constrain
     destroy .m
     unset res
 } -result {1 1}
+test wm-forget-2.2 {bug [3515522fff] - crash with menubar + [wm forget]} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    menu .m.system
+    .m.system add command -label test
+    .m add cascade -label System -menu .m.system
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    wm manage .t
+    update
+    wm forget .t
+    update
+    destroy .t
+    update
+    destroy .m
+    update
+    winfo exists .m
+} -cleanup {
+    destroy .t .m
+} -result 0
+test wm-forget-2.3 {bug [3515522fff] - [wm forget] releases the menubar} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    .m add command -label x
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    destroy .m
+    menu .m
+    .m add command -label y
+    update
+    set res [list [winfo children .t]]
+    wm manage .t
+    update
+    lappend res [llength [winfo children .t]]
+} -cleanup {
+    destroy .t .m
+    unset -nocomplain res
+} -result {{} 1}
+
+test wm-forget-3 {bug [9ab6e37e1ac] - [wm forget] segfault} -setup {
+    destroy .l .f.b .f
+    set res {}
+} -body {
+    wm forget .
+} -returnCodes error -result {window "." can not be forgotten}
 
 #
 # TESTFILE CLEANUP

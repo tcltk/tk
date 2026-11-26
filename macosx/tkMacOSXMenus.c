@@ -191,7 +191,7 @@ static void ShowAboutIdleTask(void *clientData) {
 	return (_eventInterp && Tcl_FindCommand(_eventInterp,
 		"::tk::mac::ShowPreferences", NULL, 0));
     } else if (sel_isEqual(action, @selector(tkDemo:))) {
-	BOOL haveDemo = NO;
+	bool haveDemo = false;
 
 	if (_eventInterp) {
 	    Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);

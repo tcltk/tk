@@ -25,6 +25,8 @@ resetWindows
 # Import utility procs for specific functional areas
 testutils import scroll text
 
+testConstraint memory [llength [info commands memory]]
+
 #
 # LOCAL UTILITY PROCS
 #
@@ -99,10 +101,10 @@ option add *Text.padY 1  ; # same padding in x and y, see proc bo; tests work wi
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
 # because some window managers don't allow the overall width of a window
-# to get very narrow.
+# to get very narrow (e.g. about 400 pixels on Windows with 350% scaling).
 
 catch {destroy .f .t}
-frame .f -width 100 -height 20
+frame .f -width 480 -height 20
 pack .f -side left
 
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
@@ -136,7 +138,7 @@ Some of the upcoming tests will probably fail."
 text .t -font $fixedFont -width 20 -height 10 -yscrollcommand setScrollInfo
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
-.t debug on
+.t debug 1
 
 wm geometry . {}
 
@@ -159,6 +161,9 @@ update
 if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
     wm geom . +50+50
 }
+
+# The natural size of the main window, used by many tests.
+scan [wm geom .] %dx%d width height
 
 #
 # TESTS
@@ -374,9 +379,7 @@ foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
 
-test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
-    scan [wm geom .] %dx%d width height
-} -body {
+test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -body {
     wm geom . [expr {$width+1}]x$height
     update
     .t configure -wrap char
@@ -774,10 +777,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
-    wm geom . 103x$height
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x$height
     update
     .t configure -wrap none
     .t delete 1.0 end
@@ -789,35 +789,16 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
 
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
-
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     frame .f2 -width 20 -height 100
     pack .f2 -before .f
-    wm geom . 103x103
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x103
     update
     .t configure -wrap none -borderwidth 2
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
     set x [list [.t bbox 1.0] [.t bbox 2.0] $tk_textRelayout]
-    wm overrideredirect . 0
     update
     set expected [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
     lequal $x $expected
@@ -833,16 +814,6 @@ wm geom . {}
 update
 
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 1.0
@@ -850,7 +821,6 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview 16.0
     update
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
-    wm overrideredirect . 0
     update
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
@@ -1854,7 +1824,7 @@ test textDisp-11.13 {TkTestSetYView, partially visible last line} {
 catch {destroy .top}
 toplevel .top
 wm geometry .top +0+0
-text .top.t -width 30 -height 3
+text .top.t -font $fixedFont -width 30 -height 3
 pack .top.t
 .top.t insert end "Line 1"
 for {set i 2} {$i <= 20} {incr i} {
@@ -1909,7 +1879,8 @@ test textDisp-11.19 {TkTextSetYView, see in elided lines} {
 	.top.t insert end "Line $i\n"
     }
     # button just for having a line with a larger height
-    button .top.t.b -text "Test" -bd 2 -highlightthickness 2
+    button .top.t.b -text "Test" -font $fixedFont -padx 1 -pady 1 -bd 2 \
+	    -highlightthickness 2
     .top.t window create 21.0 -window .top.t.b
     .top.t tag add hidden 15.36 21.0
     .top.t tag configure hidden -elide true
@@ -2153,7 +2124,7 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     # characters and calling see at the line end shall actually show
     # this character
     toplevel .top2
-    pack [text .top2.t2 -wrap none]
+    pack [text .top2.t2 -font $fixedFont -wrap none]
     for {set i 1} {$i < 5} {incr i} {
 	.top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
     }
@@ -4027,9 +3998,6 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
@@ -4041,14 +4009,6 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
 	[list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
-
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
 
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
@@ -4193,7 +4153,7 @@ test textDisp-25.2 {CharBboxProc procedure, multi-byte characters - bug 7579c335
     .t tag configure prop -font {Helvetica 14}
 } -constraints nonPortable -body {
     .t delete 1.0 end
-    .t insert 1.0 "\u0414\u043e\u0431\u0440\u043e\u0433\u043e \u0440\u0430\u043d\u043a\u0443, \u0441\u0432\u0456\u0442\u0435" prop
+    .t insert 1.0 "Доброго ранку, світе" prop
     update
     set result {}
     for {set i 0} {$i < 19} {incr i} {
@@ -4339,7 +4299,7 @@ test textDisp-26.12 {AdjustForTab procedure, adjusting chunks} {
     .t tag add x 1.0 end
     .t tag add y 1.7
     .t tag add y 1.9
-    button .b -text "="
+    button .b -text "=" -font $fixedFont -padx 1 -pady 1
     .t window create 1.3 -window .b
     update
     lindex [.t bbox 1.5] 0
@@ -4485,8 +4445,12 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {
 	[list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
-    set cm [winfo fpixels .t 1c]
-    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    .t configure -tabs [list $cm [expr {2*$cm}] center [expr {3*$cm}] \
+	    [expr {4*$cm}] [expr {5*$cm}] [expr {6*$cm}] [expr {7*$cm}] \
+	    [expr {8*$cm}]] -wrap none -width 40
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
     set width [expr {$fixedWidth * 19}]
     set tab $cm
@@ -4506,8 +4470,12 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
 test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
     .t configure -tabstyle wordprocessor
-    set cm [winfo fpixels .t 1c]
-    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    .t configure -tabs [list $cm [expr {2*$cm}] center [expr {3*$cm}] \
+	    [expr {4*$cm}] [expr {5*$cm}] [expr {6*$cm}] [expr {7*$cm}] \
+	    [expr {8*$cm}]] -wrap none -width 40
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
     set width [expr {$fixedWidth * 19}]
     set tab $cm
@@ -4526,10 +4494,13 @@ test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potenti
 } [list 0 [yline 2] $fixedWidth $fixedHeight]
 test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem} {
     .t delete 1.0 end
-    set interpolatetab {1c 2c}
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    set interpolatetab [list $cm [expr {2*$cm}]]
     set precisetab {}
     for {set i 1} {$i < 20} {incr i} {
-	lappend precisetab "${i}c"
+	lappend precisetab [expr {$i*$cm}]
     }
     .t configure -tabs $interpolatetab -wrap none -width 150
     .t insert 1.0 [string repeat "a\t" 20]
@@ -4741,7 +4712,7 @@ test textDisp-29.2.5 {miscellaneous: can show last character} -setup {
 } -body {
     toplevel .t2
     wm geometry .t2 121x141+200+200
-    text .t2.t -width 5 -height 5 -font {Arial 10} \
+    text .t2.t -width 5 -height 5 -font {Arial -13} \
       -wrap none -xscrollcommand ".t2.s set" \
       -bd 2 -highlightthickness 0 -padx 1
     .t2.t insert end "WWWWWWWWWWWWi"
@@ -5150,16 +5121,20 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     after cancel $timer
     set tk_textHeightCalc
 } {1.0}
-test textDisp-33.3 {one line longer than fits in the widget} {
-    destroy .tt
-    pack [text .tt -wrap char]
+test textDisp-33.3 {one line longer than fits in the widget} -setup {
+    destroy .top
+    toplevel .top
+} -body {
+    pack [text .top.tt -wrap char]
     set tk_textHeightCalc ""
-    .tt insert 1.0 [string repeat "more wrap + " 300]
+    .top.tt insert 1.0 [string repeat "more wrap + " 300]
     update
-    .tt sync
+    .top.tt sync
     # Each line should have been recalculated just once
-    expr {[llength $tk_textHeightCalc] == [.tt count -displaylines 1.0 end]}
-} 1
+    expr {[llength $tk_textHeightCalc] == [.top.tt count -displaylines 1.0 end]}
+} -cleanup {
+    destroy .top
+} -result 1
 test textDisp-33.4 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
@@ -5237,7 +5212,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     # if valgrind check is fully enabled. In this test case only the scrollbar
     # behavior is relevant, all other involved functions (insert, see, ...) are
     # already tested with debug mode in other test cases.
-    .t debug off
+    .t debug 0
     .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
     set res {}
 } -body {
@@ -5249,7 +5224,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
-    .t debug on ;# re-enable debugging
+    .t debug 1;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
@@ -5270,7 +5245,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 } -result {}
 
 test textDisp-37.1 {RTL text rendering in label widget} -setup {
-    label .l1 -text "\u05d0\u05d1\u05d2 \u05d3\u05d4\u05d5" -font $fixedFont
+    label .l1 -text "אבג דהו" -font $fixedFont
     pack .l1
 } -body {
     update
@@ -5282,7 +5257,7 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     text .t1 -font $fixedFont -width 30 -height 3
     pack .t1
 } -body {
-    .t1 insert end "English \u05d0\u05d1\u05d2 Arabic \u0627\u0644\u0639\u0631\u0628\u064a Mixed"
+    .t1 insert end "English אבג Arabic العربي Mixed"
     update
 } -cleanup {
     destroy .t1
@@ -5295,7 +5270,7 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
     # word. Not the space: when the widget font has no Hebrew, it is shaped with
     # the words by another font. The letters whose bbox is wider or narrower than
     # their glyph:
-    set heb "\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd"
+    set heb "שלום עולם"
     .t1 insert end $heb
     update
     set res {}
@@ -5316,7 +5291,7 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
 
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
-    label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
+    label .l1 -text "ประเทศไทยมีประชากรมาก" \
 	-font $fixedFont -width 20
     pack .l1
 } -body {
@@ -5330,7 +5305,7 @@ test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     pack .t1
 } -body {
     # "ภาษาไทย mixed" — includes combining marks and cluster boundaries
-    .t1 insert end "Mixed \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 text"
+    .t1 insert end "Mixed ภาษาไทย text"
     update
 } -cleanup {
     destroy .t1
@@ -5412,7 +5387,7 @@ test textDisp-40.1 {index @x,y inside a multi-byte character in a font of its ow
     text .t1 -font {Courier -12} -wrap none
     .t1 tag configure big -font $bigFont
     pack .t1
-    foreach ch [list \u00e9 \u2611] {
+    foreach ch [list é ☑] {
 	.t1 delete 1.0 end
 	.t1 insert end $ch big " text"
 	update
@@ -5433,7 +5408,7 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
 } -body {
     text .t1 -font {Courier -12} -width 1 -wrap char
     pack .t1
-    foreach ch [list \u00e4 \u2611] {
+    foreach ch [list ä ☑] {
 	.t1 delete 1.0 end
 	.t1 insert end a${ch}b
 	update
@@ -5445,6 +5420,305 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
     destroy .t1
 } -result {1.1 1 1.1 1}
 
+test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
+    toplevel .tt
+} -body {
+    # About 600 widgets are needed to show the bug.  A small font keeps the
+    # toplevel within a small screen: the widgets of a row clipped by it are
+    # unmapped, and an unmapped text widget never completes the update.
+    for {set i 0} {$i < 30} {incr i} {
+	pack [frame .tt.f$i]
+	for {set j 0} {$j < 30} {incr j} {
+	    text .tt.f$i.t$j -height 1 -width 2 -font {TkFixedFont -8}
+	    .tt.f$i.t$j insert end $i$j
+	    pack .tt.f$i.t$j -side left
+	}
+    }
+    # Without the fix, no widget gets synchronized at all.  Allow up to 10
+    # seconds for slow machines.
+    for {set n 0} {$n < 100} {incr n} {
+	pause 100
+	set pending 0
+	foreach f [winfo children .tt] {
+	    foreach t [winfo children $f] {
+		incr pending [$t pendingsync]
+	    }
+	}
+	if {$pending == 0} {
+	    break
+	}
+    }
+    set pending
+} -cleanup {
+    destroy .tt
+    unset -nocomplain i j f t n pending
+} -result 0
+
+test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -constraints {
+    memory
+} -setup {
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    # With debug 1, the text widgets log each line whose height they compute,
+    # and .t may still be computing those of its lines in the background.
+    .t debug 0
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+    .t1 tag configure x -foreground red
+    .t1 insert end "English text flows from left to right.\n"
+    .t1 tag add x 1.8 1.12
+    update
+} -body {
+    growth {
+	.t1 tag add x 1.20 1.25
+	update
+	.t1 tag remove x 1.20 1.25
+	update
+    }
+} -cleanup {
+    .t debug 1;# re-enable debugging
+    destroy .t1
+    rename getbytes {}
+    rename growth {}
+} -result 0
+
+# The colours of the pixels of display line 1 of $w: all its rows if $all is
+# true, else the rows 2, 4 and 6 pixels above its baseline.
+proc linePixels {w {all 0}} {
+    update
+    lassign [$w dlineinfo 1.0] x y width height baseline
+    if {$all} {
+	set rows {}
+	for {set row $y} {$row < $y + $height} {incr row} {
+	    lappend rows $row
+	}
+    } else {
+	set rows [list [expr {$y + $baseline - 2}] [expr {$y + $baseline - 4}] \
+		[expr {$y + $baseline - 6}]]
+    }
+    set res {}
+    foreach row $rows {
+	for {set px $x} {$px < $x + $width} {incr px} {
+	    lappend res [testpixel $w $px $row]
+	}
+    }
+    return $res
+}
+proc countDiffs {a b} {
+    set n 0
+    foreach pa $a pb $b {
+	if {$pa ne $pb} {
+	    incr n
+	}
+    }
+    return $n
+}
+test textDisp-42.2 {a word moved to the next line and cut by a tag or by marks: the line above is drawn} -constraints {
+    testpixel
+} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 20 -height 4 -wrap word \
+	    -foreground black -background white -insertwidth 0 \
+	    -borderwidth 0 -highlightthickness 0
+    pack .pix.t
+    .pix.t tag configure x -foreground black
+} -body {
+    .pix.t insert end "aaaa [string repeat b 60]\n"
+    .pix.t mark set insert end
+    set ref [linePixels .pix.t 1]
+    set res {}
+    .pix.t tag add x 1.5 1.6
+    .pix.t configure -spacing1 0
+    lappend res [expr {[linePixels .pix.t 1] eq $ref}]
+    .pix.t tag remove x 1.0 end
+    .pix.t mark set insert 1.5
+    .pix.t mark set current 1.6
+    .pix.t configure -spacing1 0
+    lappend res [expr {[linePixels .pix.t 1] eq $ref}]
+} -cleanup {
+    destroy .pix
+    unset -nocomplain ref res
+} -result {1 1}
+
+# The bboxes of the characters of line 1 of $w, after a relayout of the line.
+proc lineBboxes {w} {
+    $w tag add relayout 1.0 "1.0 lineend"
+    update
+    set res {}
+    for {set i 0} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	lappend res [$w bbox 1.$i]
+    }
+    $w tag remove relayout 1.0 end
+    return $res
+}
+# The indices of line 1 of $w at which the mark $mark changes the bbox of a
+# character of the line, compared with the mark on line 2.
+proc markMovesText {w mark} {
+    $w tag configure relayout -foreground [$w cget -foreground]
+    $w mark set $mark 2.0
+    set ref [lineBboxes $w]
+    set res {}
+    for {set i 1} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	$w mark set $mark 1.$i
+	if {[lineBboxes $w] ne $ref} {
+	    lappend res 1.$i
+	}
+    }
+    return $res
+}
+# The darkness of a rectangle of $w, summed over its pixels.
+proc cellInk {w x y width height} {
+    set sum 0
+    for {set py $y} {$py < $y + $height} {incr py} {
+	for {set px $x} {$px < $x + $width} {incr px} {
+	    scan [testpixel $w $px $py] #%2x%2x%2x r g b
+	    incr sum [expr {765 - $r - $g - $b}]
+	}
+    }
+    return $sum
+}
+test textDisp-42.3 {the insertion cursor does not move the text after it} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .pix.t
+} -body {
+    .pix.t insert end "English text flows from left to right.\n"
+    markMovesText .pix.t insert
+} -cleanup {
+    destroy .pix
+} -result {}
+test textDisp-42.4 {the insertion cursor does not move right-to-left text} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .pix.t
+} -body {
+    .pix.t insert end "זהו טקסט לדוגמה בעברית.\n"
+    markMovesText .pix.t insert
+} -cleanup {
+    destroy .pix
+} -result {}
+test textDisp-42.5 {the insertion cursor does not change the shape of Arabic text} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .pix.t
+} -body {
+    .pix.t insert end "مرحبا بالعالم\n"
+    markMovesText .pix.t insert
+} -cleanup {
+    destroy .pix
+} -result {}
+test textDisp-42.6 {a mark does not change the shape of Arabic text} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .pix.t
+} -body {
+    .pix.t insert end "مرحبا بالعالم\n"
+    markMovesText .pix.t m
+} -cleanup {
+    destroy .pix
+} -result {}
+test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints {
+    testpixel nonPortable
+} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -borderwidth 0 -highlightthickness 0
+    pack .pix.t
+} -body {
+    .pix.t insert end "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
+    .pix.t mark set insert 2.0
+    set ref [linePixels .pix.t]
+    set res {}
+    for {set i 1} {$i < [.pix.t count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.pix.t mark set insert 1.$i
+	# A moved glyph changes many pixels; a pixel may be anti-aliased
+	# differently where the line is drawn in two pieces.
+	if {[countDiffs [linePixels .pix.t] $ref] > 2} {
+	    lappend res 1.$i
+	}
+    }
+    set res
+} -cleanup {
+    destroy .pix
+    unset -nocomplain ref res i
+} -result {}
+test textDisp-42.8 {the block cursor draws the character under it over its glyph} -constraints {
+    testpixel aqua
+} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 70 -height 3 -wrap none \
+	    -foreground black -background white -blockcursor 1 \
+	    -insertunfocussed solid -insertbackground white \
+	    -borderwidth 0 -highlightthickness 0
+    pack .pix.t
+} -body {
+    .pix.t insert end "English text flows from left to right, of fine office affairs.\n"
+    # The block and the character drawn in it have the background colour:
+    # the character vanishes, but for its edge, when drawn over its glyph
+    # (with grey anti-aliasing, not with ClearType).
+    set ink 0
+    set left 0
+    for {set i 0} {$i < [.pix.t count -chars 1.0 "1.0 lineend"]} {incr i} {
+	if {[.pix.t get 1.$i] eq " "} {
+	    continue
+	}
+	lassign [.pix.t bbox 1.$i] x y w h
+	.pix.t mark set insert end
+	update
+	incr ink [cellInk .pix.t $x $y $w $h]
+	.pix.t mark set insert 1.$i
+	update
+	incr left [cellInk .pix.t $x $y $w $h]
+    }
+    expr {$left < $ink / 5}
+} -cleanup {
+    destroy .pix
+    unset -nocomplain ink left i x y w h
+} -result 1
+test textDisp-42.9 {the edge of the selection does not change the drawing of joined letters} -constraints {
+    testpixel aqua
+} -setup {
+    toplevel .pix
+    wm geometry .pix +0+0
+    text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -selectforeground black -selectbackground white \
+	    -inactiveselectbackground white -borderwidth 0 -highlightthickness 0
+    pack .pix.t
+} -body {
+    .pix.t insert end "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
+    set ref [linePixels .pix.t 1]
+    set res {}
+    for {set i 1} {$i < [.pix.t count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.pix.t tag add sel 1.0 1.$i
+	if {[linePixels .pix.t 1] ne $ref} {
+	    lappend res 1.$i
+	}
+	.pix.t tag remove sel 1.0 end
+    }
+    set res
+} -cleanup {
+    destroy .pix
+    unset -nocomplain ref res i
+} -result {}
 #
 # TESTFILE CLEANUP
 #

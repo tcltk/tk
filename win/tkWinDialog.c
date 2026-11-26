@@ -780,9 +780,10 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     IShellItem *dirIf = NULL;
     LPWSTR wstr;
     Tcl_Obj *resultObj = NULL;
-    int oldMode;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    WCHAR *fileNamePtr;
+    int oldMode;
 
     /*
      * COM must be initialized before the dialog can be created.
@@ -911,7 +912,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	    goto vamoose;
     }
 
-    WCHAR *fileNamePtr = (WCHAR *)Tcl_DStringValue(&optsPtr->utf16FileName);
+    fileNamePtr = (WCHAR *)Tcl_DStringValue(&optsPtr->utf16FileName);
     if (*fileNamePtr) {
 	hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, fileNamePtr);
 	if (FAILED(hr))

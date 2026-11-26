@@ -42,13 +42,10 @@ static void setAllowedFileTypes(
 	    }
 	}
 	[panel setAllowedContentTypes:allowedTypes];
-    } else {
-# if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-/* setAllowedFileTypes is not deprecated */
-	[panel setAllowedFileTypes:extensions];
-#endif
+	return;
     }
-#else
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     [panel setAllowedFileTypes:extensions];
 #endif
 }
@@ -505,7 +502,7 @@ Tk_ChooseColorObjCmd(
 	    if (colorPtr == NULL) {
 		goto end;
 	    }
-	    initialColor = TkMacOSXGetNSColor(NULL, colorPtr->pixel);
+	    initialColor = TkMacOSXGetNSColor(colorPtr->pixel);
 	    Tk_FreeColor(colorPtr);
 	    break;
 	}
@@ -521,7 +518,7 @@ Tk_ChooseColorObjCmd(
 	}
     }
     colorPanel = [NSColorPanel sharedColorPanel];
-    [colorPanel orderOut:NSApp];
+    [colorPanel orderOut:nil];
     [colorPanel setContinuous:NO];
     [colorPanel setBecomesKeyOnlyIfNeeded:NO];
     [colorPanel setShowsAlpha: NO];
@@ -594,7 +591,7 @@ parseFileFilters(
     filterInfo.fileTypeAllowsAll = [NSMutableArray array];
 
     filterInfo.allowedExtensions = [NSMutableArray array];
-    filterInfo.allowedExtensionsAllowAll = NO;
+    filterInfo.allowedExtensionsAllowAll = false;
 
     if (filterInfo.doFileTypes) {
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
@@ -605,7 +602,7 @@ parseFileFilters(
 	    [name release];
 	    NSMutableArray *clauseextensions = [NSMutableArray array];
 	    NSMutableArray *displayextensions = [NSMutableArray array];
-	    bool allowsAll = NO;
+	    bool allowsAll = false;
 
 	    for (FileFilterClause *clausePtr = filterPtr->clauses; clausePtr;
 		    clausePtr = clausePtr->next) {
@@ -631,8 +628,8 @@ parseFileFilters(
 			 * It is the all pattern (*, .* or *.*)
 			 */
 
-			allowsAll = YES;
-			filterInfo.allowedExtensionsAllowAll = YES;
+			allowsAll = true;
+			filterInfo.allowedExtensionsAllowAll = true;
 			[displayextensions addObject:@"*"];
 		    }
 		}
@@ -678,6 +675,7 @@ parseFileFilters(
 		    filterInfo.fileTypeIndex = index;
 		    filterInfo.preselectFilter = true;
 		}
+		[selectedFileTypeStr release];
 	    }
 	}
 
@@ -742,7 +740,7 @@ Tk_GetOpenFileObjCmd(
     NSWindow *parent;
     openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -882,6 +880,9 @@ Tk_GetOpenFileObjCmd(
 	    [openpanel setAllowsOtherFileTypes:NO];
 	}
 	[openpanel setAccessoryView:accessoryView];
+	[accessoryView release];
+	[popupButton release];
+	[label release];
     } else {
 	/*
 	 * No filters are given. Allow picking all files.
@@ -920,6 +921,7 @@ Tk_GetOpenFileObjCmd(
 					multiple);
     if (testsAreRunning) {
 	[monitor cancel];
+	[monitor release];
     }
     if (cmdObj) {
 	Tcl_DecrRefCount(cmdObj);
@@ -1030,7 +1032,7 @@ Tk_GetSaveFileObjCmd(
     NSWindow *parent;
     savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
@@ -1158,8 +1160,11 @@ Tk_GetSaveFileObjCmd(
 	[popupButton setAction:@selector(saveFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
+	[popupButton release];
+	[label release];
 
 	[savepanel setAccessoryView:accessoryView];
+	[accessoryView release];
 
 	setAllowedFileTypes(savepanel,
 	    [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]);
@@ -1274,7 +1279,7 @@ Tk_ChooseDirectoryObjCmd(
     NSWindow *parent;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
@@ -1354,7 +1359,7 @@ Tk_ChooseDirectoryObjCmd(
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
-	parentIsKey = False;
+	parentIsKey = false;
     }
     modalReturnCode = showOpenSavePanel(panel, parent, interp, cmdObj, 0);
     if (cmdObj) {
@@ -1458,7 +1463,7 @@ Tk_MessageBoxObjCmd(
     NSArray *buttons;
     NSAlert *alert = [NSAlert new];
     NSInteger modalReturnCode = 1;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
@@ -2092,7 +2097,7 @@ FontchooserHideCmd(
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
 
     if ([fp isVisible]) {
-	[fp orderOut:NSApp];
+	[fp orderOut:nil];
     }
     return TCL_OK;
 }

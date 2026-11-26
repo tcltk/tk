@@ -47,8 +47,12 @@ always returns an empty string.
 .\" METHOD: get
 The \fBoption get\fR command returns the value of the option
 specified for \fIwindow\fR
-under \fIname\fR and \fIclass\fR.  If several entries in the option
-database match \fIwindow\fR, \fIname\fR, and \fIclass\fR, then
+under \fIname\fR or \fIclass\fR.  An entry matches if its pattern
+matches \fIwindow\fR and the last word of the pattern is either
+\fIname\fR or \fIclass\fR; the other one does not need to be related
+to it, e.g. an entry for \fB*Button.background\fR is returned for
+\fIname\fR \fBbackground\fR with any \fIclass\fR.  If several entries
+in the option database match, then
 the command returns whichever was created with highest
 \fIpriority\fR level.  If there are several matching
 entries at the same priority level, then it returns whichever entry
