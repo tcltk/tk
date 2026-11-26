@@ -6761,6 +6761,102 @@ test textDisp-51.2 {the second letter of a ligature alone in a chunk draws nothi
     destroy .t1
     unset -nocomplain ref
 } -result 1
+
+# The indices of line 1 of $w whose bbox changes with -hyphens.
+proc hyphensMoveText {w} {
+    $w configure -state disabled -hyphens 0
+    set ref [lineBboxes $w]
+    $w configure -hyphens 1
+    set res {}
+    set i 0
+    foreach a $ref b [lineBboxes $w] {
+	if {$a ne $b} {
+	    lappend res 1.$i
+	}
+	incr i
+    }
+    return $res
+}
+# With -hyphens, the layout of a display line frees its unused hyphens, not the
+# other chunks without width; an unused hyphen without a char chunk before it
+# becomes an elided chunk. Without the fix, textDisp-52.1 fails an assertion in
+# CharUndisplayProc in a debug build, 52.4 and 52.6 crash, and 52.5 too in a
+# debug build.
+test textDisp-52.1 {hyphenation does not move the text after a mark alone in its chunk} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word
+    pack .t1
+} -body {
+    # The tag puts the mark, without width, in a chunk of its own.
+    .t1 tag configure red -foreground red
+    .t1 insert end "abe\u0301cd ef"
+    .t1 tag add red 1.3
+    hyphensMoveText .t1
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-52.2 {hyphenation does not drop the second of two tabs} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word
+    pack .t1
+} -body {
+    # The second tab is a chunk of its own, without width before its adjustment.
+    .t1 insert end "ab\t\tcd ef"
+    hyphensMoveText .t1
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-52.3 {hyphenation does not change the bboxes of elided characters} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word
+    pack .t1
+} -body {
+    .t1 tag configure hide -elide 1
+    .t1 insert end "abcXYZdef ghi"
+    .t1 tag add hide 1.3 1.6
+    hyphensMoveText .t1
+} -cleanup {
+    destroy .t1
+} -result {}
+# Whether the unused hyphen at $index of $w takes no room before $next.
+proc hyphenTakesNoRoom {w index next} {
+    lassign [$w bbox $index] x y width
+    expr {$width == 0 && $x == [lindex [$w bbox $next] 0]}
+}
+test textDisp-52.4 {an unused hyphen at the start of a line takes no room} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1
+    pack .t1
+} -body {
+    .t1 insert end "\u00adabc def"
+    .t1 configure -state disabled
+    update
+    hyphenTakesNoRoom .t1 1.0 1.1
+} -cleanup {
+    destroy .t1
+} -result 1
+test textDisp-52.5 {an unused hyphen after elided characters at the start of a line} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1
+    pack .t1
+} -body {
+    .t1 tag configure hide -elide 1
+    .t1 insert end "XYZ\u00adabc def"
+    .t1 tag add hide 1.0 1.3
+    .t1 configure -state disabled
+    update
+    hyphenTakesNoRoom .t1 1.3 1.4
+} -cleanup {
+    destroy .t1
+} -result 1
+test textDisp-52.6 {an unused hyphen after the insertion cursor takes no room} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1 \
+	    -insertunfocussed solid
+    pack .t1
+} -body {
+    .t1 insert end "ab\u00adcd ef"
+    .t1 mark set insert 1.2
+    .t1 configure -state readonly
+    update
+    hyphenTakesNoRoom .t1 1.2 1.3
+} -cleanup {
+    destroy .t1
+} -result 1
 #
 # TESTFILE CLEANUP
 #
