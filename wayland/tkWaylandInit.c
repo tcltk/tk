@@ -666,22 +666,38 @@ PresentOverridePopup(
  *      is blitted to the GL back buffer and then gflwSwapBuffers is called.
  *
  * Results:
- *	None.
+ *	1 if a visible window was left undisplayed because the last display
+ *	or swap was too recent, so that the caller must call again soon;
+ *	0 otherwise.
  *
  * Side effects:
  *	Updates windows on the screen.
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
+static int
+NeedsDisplaySoon(void)
+{
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+        if ((p->flags & TKWL_NEEDS_DISPLAY) && p->glfwWindow
+                && glfwGetWindowAttrib(p->glfwWindow, GLFW_VISIBLE)
+                && !glfwGetWindowAttrib(p->glfwWindow, GLFW_ICONIFIED)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+MODULE_SCOPE int
 TkWaylandDisplayAllWindows()
 {
     static double lastDisplay=0;
+    int retry=0;
     double nowDisp=glfwGetTime();
-    if (nowDisp-lastDisplay<0.005) return;
-    lastDisplay=nowDisp;
-    if (shutdownInProgress) return;
-    if (glfwTkInfoList==NULL) return;
+    if (shutdownInProgress) return 0;
+    /* Only real displays count: a call with nothing to show must not delay the next one. */
+    if (nowDisp-lastDisplay<0.005) return NeedsDisplaySoon();
+    if (glfwTkInfoList==NULL) return 0;
 
     /*
      * Override-redirect toplevels are shown in subsurfaces, not by
@@ -693,6 +709,7 @@ TkWaylandDisplayAllWindows()
         if (TkWaylandWmGetOverridePopup(p->winPtr) != NULL) {
             p->flags &= ~TKWL_NEEDS_DISPLAY;
             PresentOverridePopup(p);
+            lastDisplay=nowDisp;
         }
     }
 
@@ -714,7 +731,7 @@ TkWaylandDisplayAllWindows()
                 p->flags &= ~TKWL_NEEDS_DISPLAY;
             }
         }
-        return;
+        return 0;
     }
     for (glfwTkInfo *infoPtr=glfwTkInfoList; infoPtr; infoPtr=infoPtr->nextPtr) {
         if (!(infoPtr->flags & TKWL_NEEDS_DISPLAY)) continue;
@@ -734,8 +751,12 @@ TkWaylandDisplayAllWindows()
         /* If the swap was throttled, leave NEEDS_DISPLAY set and retry. */
         if (renderFBO(glfwWindow, 0)) {
             infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            lastDisplay=nowDisp;
+        } else {
+            retry=1;
         }
     }
+    return retry;
 }
 
 /*

@@ -34,11 +34,13 @@
  *   cycles.
  *
  * GLFW Event Polling
- *   SetupProc checks for data waiting on the wayland socket. If there is data
- *   available, it calls Tcl_SetMaxBlockTime({0,0} to prevent Tcl_WaitForEvent
- *   from blocking. Otherwise, it sets the maximum block time to roughly the
- *   time of one display frame cycle (~16.7ms) to manage CPU load when wish is
- *   idle.
+ *   SetupProc checks for data waiting on the wayland socket or in the
+ *   default queue. If there is data available, it calls
+ *   Tcl_SetMaxBlockTime({0,0}) to prevent Tcl_WaitForEvent from blocking.
+ *   Otherwise Tcl blocks until the Wayland or IBus socket becomes readable,
+ *   except that it wakes up after one display frame cycle (~16.7ms) while
+ *   a window display was throttled or a key may be auto-repeating (GLFW's
+ *   key repeat timer is not visible to Tcl).
  *
  * Popup Window events
  *   Since these are not processed by gflwPollEvents, the CheckProc processes
@@ -288,6 +290,13 @@ static void TkWaylandWatchFd(int *slot, int fd);
  */
 static int watchedWaylandFd = -1;
 static int watchedIBusFd = -1;
+
+/*
+ * GLFW generates the repeats of a held key from a timer of its own, which
+ * it only checks in glfwPollEvents() and which Tcl cannot watch.  While a
+ * key may be repeating, wake up once per display frame to let it fire.
+ */
+static int keyRepeatPossible = 0;
 static void TkWaylandSetupProc(void *clientData, int flags);
 static void TkWaylandCheckProc(void *clientData, int flags);
 
@@ -412,7 +421,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
      * for any window on which some drawing has been done.
      */
 
-    TkWaylandDisplayAllWindows();
+    int displayPending = TkWaylandDisplayAllWindows();
 
     struct wl_display *display = glfwGetWaylandDisplay();
     if (!display) {
@@ -446,14 +455,33 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
 	    (ibus_bus && sd_bus_get_fd(ibus_bus) >= 0)
 	    ? sd_bus_get_fd(ibus_bus) : -1);
 
+    /*
+     * Send the requests made since the last glfwPollEvents(), so that the
+     * compositor gets them (and can reply) before Tcl blocks.
+     */
+    int flushed = wl_display_flush(display) >= 0 || errno != EAGAIN;
+
+    /*
+     * Events already read into the default queue (for example while
+     * waiting for a reply) do not make the socket readable.
+     */
+    int queued = wl_display_prepare_read(display) != 0;
+    if (!queued) {
+	wl_display_cancel_read(display);
+    }
+
     int r = poll(pfds, nfds, 0);
-    if (r > 0) {
-        /* Socket activity detected â€” process without blocking */
+    if (r > 0 || queued) {
+        /* Socket activity detected - process without blocking */
         Tcl_SetMaxBlockTime(&noBlock);
-    } else {
-        /* Idle-block for one display frame cycle */
+    } else if (displayPending || keyRepeatPossible || !flushed) {
+        /*
+         * Display the windows whose display was throttled, let GLFW's key
+         * repeat fire, or retry sending requests.
+         */
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
+    /* Otherwise block until a socket, a file or a timer needs Tcl. */
 }
 
 /*
@@ -991,6 +1019,10 @@ TkWaylandWindowFocusCallback(
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
+
+    if (!focused) {
+	keyRepeatPossible = 0;	/* GLFW stops repeating on keyboard leave. */
+    }
     DEBUG_LOG("TkWaylandWindowFocusCallback: %s for %s",
 	      focused ? "focus" : "unfocus",
 	      Tk_PathName(winPtr));
@@ -1656,6 +1688,14 @@ TkWaylandKeyCallback(GLFWwindow *window,
                      int mods)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
+
+    /*
+     * GLFW repeats the last pressed key while it is held, if the keymap
+     * says it repeats; any other key event stops the repeat.
+     */
+    keyRepeatPossible = action != GLFW_RELEASE && (xkbState.state == NULL
+	    || xkb_keymap_key_repeats(xkb_state_get_keymap(xkbState.state),
+		    scancode + 8));
     if (!winPtr) return;
 
     /*
