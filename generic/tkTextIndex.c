@@ -3350,7 +3350,7 @@ TkTextIndexForwChars(
 			    }
 			} else {
 			    skipSpaces = false;
-			    charCount -= (type & COUNT_INDICES) ? n : 1;
+			    charCount -= 1;
 			}
 		    }
 		} else if (type & COUNT_INDICES) {
@@ -3889,8 +3889,6 @@ TkTextIndexBackChars(
 		const char *p = end;
 
 		while (1) {
-		    const char *q;
-
 		    if (charCount <= 0) {
 			if (skipSpaces) {
 			    while (p > start && p[-1] == ' ') {
@@ -3906,7 +3904,7 @@ TkTextIndexBackChars(
 		    if (p == start) {
 			break;
 		    }
-		    p = Tcl_UtfPrev(q = p, start);
+		    p = Tcl_UtfPrev(p, start);
 		    if (*p == ' ') {
 			if (!skipSpaces) {
 			    skipSpaces = trimmed;
@@ -3914,7 +3912,7 @@ TkTextIndexBackChars(
 			}
 		    } else {
 			skipSpaces = trimmed && *p == '\n';
-			charCount -= (type & COUNT_INDICES) ? q - p : 1;
+			charCount -= 1;
 		    }
 		}
 	    } else if (type & COUNT_INDICES) {
