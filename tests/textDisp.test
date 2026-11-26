@@ -6778,8 +6778,10 @@ proc hyphensMoveText {w} {
     return $res
 }
 # With -hyphens, the layout of a display line frees its unused hyphens, not the
-# other chunks without width. Without the fix, textDisp-52.1 fails an assertion
-# in CharUndisplayProc in a debug build.
+# other chunks without width; an unused hyphen without a char chunk before it
+# becomes an elided chunk. Without the fix, textDisp-52.1 fails an assertion in
+# CharUndisplayProc in a debug build, 52.4 and 52.6 crash, and 52.5 too in a
+# debug build.
 test textDisp-52.1 {hyphenation does not move the text after a mark alone in its chunk} -setup {
     text .t1 -font $fixedFont -width 40 -height 3 -wrap word
     pack .t1
@@ -6813,6 +6815,48 @@ test textDisp-52.3 {hyphenation does not change the bboxes of elided characters}
 } -cleanup {
     destroy .t1
 } -result {}
+# Whether the unused hyphen at $index of $w takes no room before $next.
+proc hyphenTakesNoRoom {w index next} {
+    lassign [$w bbox $index] x y width
+    expr {$width == 0 && $x == [lindex [$w bbox $next] 0]}
+}
+test textDisp-52.4 {an unused hyphen at the start of a line takes no room} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1
+    pack .t1
+} -body {
+    .t1 insert end "\u00adabc def"
+    .t1 configure -state disabled
+    update
+    hyphenTakesNoRoom .t1 1.0 1.1
+} -cleanup {
+    destroy .t1
+} -result 1
+test textDisp-52.5 {an unused hyphen after elided characters at the start of a line} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1
+    pack .t1
+} -body {
+    .t1 tag configure hide -elide 1
+    .t1 insert end "XYZ\u00adabc def"
+    .t1 tag add hide 1.0 1.3
+    .t1 configure -state disabled
+    update
+    hyphenTakesNoRoom .t1 1.3 1.4
+} -cleanup {
+    destroy .t1
+} -result 1
+test textDisp-52.6 {an unused hyphen after the insertion cursor takes no room} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap word -hyphens 1 \
+	    -insertunfocussed solid
+    pack .t1
+} -body {
+    .t1 insert end "ab\u00adcd ef"
+    .t1 mark set insert 1.2
+    .t1 configure -state readonly
+    update
+    hyphenTakesNoRoom .t1 1.2 1.3
+} -cleanup {
+    destroy .t1
+} -result 1
 #
 # TESTFILE CLEANUP
 #

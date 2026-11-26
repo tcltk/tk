@@ -5100,24 +5100,30 @@ LayoutDLine(
     }
 
     if (data.textPtr->hyphenate) {
-	TkTextDispChunk *chunkPtr1 = data.firstChunkPtr->nextPtr;
+	TkTextDispChunk *chunkPtr1 = data.firstChunkPtr;
 
 	/*
 	 * Remove all unused hyphen segments, this will speed up the display process,
 	 * because this removal will be done only one time, but the display process
-	 * may iterate over the chunks several times.
+	 * may iterate over the chunks several times. Such a chunk has no chars: a
+	 * char chunk before it takes its bytes, otherwise it becomes an elided chunk.
 	 */
 
 	while (chunkPtr1) {
 	    TkTextDispChunk *nextChunkPtr = chunkPtr1->nextPtr;
 
-	    if (nextChunkPtr && IsHyphenChunk(chunkPtr1) && chunkPtr1->width == 0) {
-		chunkPtr1->prevPtr->numBytes += chunkPtr1->numBytes;
+	    if (IsHyphenChunk(chunkPtr1) && chunkPtr1->width == 0) {
+		TkTextDispChunk *prevChunkPtr = chunkPtr1->prevPtr;
 
-		if ((chunkPtr1->prevPtr->nextPtr = nextChunkPtr)) {
-		    nextChunkPtr->prevPtr = chunkPtr1->prevPtr;
+		if (nextChunkPtr && prevChunkPtr && IsCharChunk(prevChunkPtr)) {
+		    prevChunkPtr->numBytes += chunkPtr1->numBytes;
+		    prevChunkPtr->nextPtr = nextChunkPtr;
+		    nextChunkPtr->prevPtr = prevChunkPtr;
 		    data.chunkPtr = chunkPtr1;
 		    LayoutFreeChunk(&data);
+		} else {
+		    LayoutUndisplay(&data, chunkPtr1);
+		    chunkPtr1->layoutProcs = &layoutElideProcs;
 		}
 	    }
 
