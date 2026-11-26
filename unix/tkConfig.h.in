@@ -106,6 +106,9 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
+/* Is XRandR available? */
+#undef HAVE_XRANDR
+
 /* Have we turned on XRender (photo image compositing)? */
 #undef HAVE_XRENDER
 

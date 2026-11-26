@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
- 
+
 #include "tkInt.h"
 
 /* Wrappers from tkTextGrapheme.c. */
@@ -49,7 +49,7 @@ extern int mojibake_word_breaks_with_dict(const char *buf, size_t byteLen,
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 ByteOffsetForCharIndex(
     const char *tclBytes,	/* Tcl string bytes, NUL-terminated. */
@@ -79,7 +79,7 @@ ByteOffsetForCharIndex(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 CharIndexForByteOffset(
     const char *tclBytes,	/* Tcl string bytes, NUL-terminated. */
@@ -134,7 +134,7 @@ CharIndexForByteOffset(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int
 TkIcuStartEndOfClusterCmd(
     void *clientData,		/* 0 = startOfCluster, 1 = endOfCluster. */
@@ -189,7 +189,11 @@ TkIcuStartEndOfClusterCmd(
      * back to Tcl offsets. Pass the raw Tcl bytes; do NOT convert
      * here, and do NOT call any mjb_* function here.
      */
-    breaks = Tcl_Alloc((size_t) tclLen + 1);
+    breaks = (unsigned char *)Tcl_AttemptAlloc((size_t) tclLen + 1);
+    if (breaks == NULL) {
+	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
+	return TCL_ERROR;
+    }
     if (!mojibake_grapheme_breaks(tclBytes, (size_t) tclLen, breaks)) {
 	Tcl_Free((char *) breaks);
 	Tcl_SetResult(interp, "mojibake grapheme segmentation failed",
@@ -276,7 +280,7 @@ TkIcuStartEndOfClusterCmd(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 BreakFollowing(
     const Tcl_Size *offsets,	/* Sorted break offsets (BYTE). */
@@ -314,7 +318,7 @@ BreakFollowing(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 BreakPreceding(
     const Tcl_Size *offsets,	/* Sorted break offsets (BYTE). */
@@ -351,7 +355,7 @@ BreakPreceding(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 BreakNext(
     const Tcl_Size *offsets,	/* Sorted break offsets (BYTE). */
@@ -380,7 +384,7 @@ BreakNext(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 BreakPrev(
     const Tcl_Size *offsets,	/* Sorted break offsets (BYTE). */
@@ -412,7 +416,7 @@ BreakPrev(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int
 IsSpaceAtByte(
     const char *tclBytes,	/* Tcl string bytes, NUL-terminated. */
@@ -472,7 +476,7 @@ IsSpaceAtByte(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int
 TkIcuWordCmd(
     void *clientData,		/* ICU_WORD_* flags selecting the command. */
@@ -499,7 +503,7 @@ TkIcuWordCmd(
     if (objc == 4) {
 	locale = Tcl_GetString(objv[3]);
     }
-    if (locale != NULL && strcmp(locale, "TCL8") == 0) {
+    if (locale != NULL && strcasecmp(locale, "TCL8") == 0) {
 	Tcl_Obj *cmdObjv[3];
 	const char *cmdName;
 	if (wantSpace) {
@@ -533,9 +537,13 @@ TkIcuWordCmd(
 	index = ByteOffsetForCharIndex(tclBytes, index);
     }
 
-    breakArr = Tcl_Alloc((size_t) tclLen + 1);
+    breakArr = (unsigned char *) Tcl_AttemptAlloc((size_t)tclLen + 1);
+    if (breakArr == NULL) {
+	Tcl_SetResult(interp, "out of memory", TCL_STATIC);
+	return TCL_ERROR;
+    }
     /* Wrapper owns Tcl -> strict conversion; see header comment. */
-    if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
+    if (!mojibake_word_breaks_with_dict(tclBytes, (size_t)tclLen,
 	    breakArr, NULL)) {
 	Tcl_Free((char *) breakArr);
 	Tcl_SetResult(interp, "mojibake word segmentation failed",
@@ -550,8 +558,13 @@ TkIcuWordCmd(
 		count++;
 	    }
 	}
-	offsets = (Tcl_Size *) Tcl_Alloc(
-		(size_t) (count + 1) * sizeof(Tcl_Size));
+	offsets = (Tcl_Size *)Tcl_Alloc(
+		(size_t)(count + 1) * sizeof(Tcl_Size));
+	if (offsets == NULL) {
+	    Tcl_Free((char *) breakArr);
+	    Tcl_SetResult(interp, "out of memory", TCL_STATIC);
+	    return TCL_ERROR;
+	}
 	for (k = 0; k <= tclLen; k++) {
 	    if (breakArr[k]) {
 		offsets[w++] = k;
@@ -674,7 +687,7 @@ TkIcuWordBreakCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "str start ?locale?");
 	return TCL_ERROR;
     }
-    if (objc == 4 && strcmp(Tcl_GetString(objv[3]), "TCL8") == 0) {
+    if (objc == 4 && strcasecmp(Tcl_GetString(objv[3]), "TCL8") == 0) {
 	Tcl_Obj *cmdObjv[3];
 	int code;
 
@@ -706,7 +719,7 @@ TkIcuWordBreakCmd(
     }
     idx = ByteOffsetForCharIndex(tclBytes, index);
 
-    breakArr = Tcl_Alloc((size_t) tclLen + 1);
+    breakArr = (unsigned char *)Tcl_Alloc((size_t)tclLen + 1);
     if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
 	    breakArr, NULL)) {
 	Tcl_Free((char *) breakArr);
@@ -714,8 +727,8 @@ TkIcuWordBreakCmd(
 		TCL_STATIC);
 	return TCL_ERROR;
     }
-    offsets = (Tcl_Size *) Tcl_Alloc(
-	    (size_t) (tclLen + 1) * sizeof(Tcl_Size));
+    offsets = (Tcl_Size *)Tcl_Alloc(
+	    (size_t)(tclLen + 1) * sizeof(Tcl_Size));
     for (k = 0; k <= tclLen; k++) {
 	if (breakArr[k]) {
 	    offsets[numBreaks++] = k;
@@ -767,7 +780,7 @@ TkIcuWordBreakCmd(
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 Icu_Init(
     Tcl_Interp *interp)		/* Interpreter in which to create commands. */

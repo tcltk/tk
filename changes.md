@@ -191,6 +191,9 @@ to the userbase.
  - [Remove unused troughGC and copyGC from MacScrollbar](https://core.tcl-lang.org/tk/tktview/f64df5)
  - [On X11, invoke buttons when mouse button 1 is released](https://core.tcl-lang.org/tk/tktview/356526)
  - [ttk auto-repeat goes on endlessly if the command raises an error or opens a modal dialog](https://core.tcl-lang.org/tk/tktview/1842c9)
+ - [X11 accessibility: an idle Tk application wakes up 100 times per second](https://core.tcl-lang.org/tk/tktview/4c6687)
+ - ["winfo screenwidth/height" fail to track resolution changes on X11](https://core.tcl-lang.org/tk/tktview/314137)
+ - [Windows: access violation in Tk_GetHWND when implicit focus is released on Leave](https://core.tcl-lang.org/tk/tktview/ae18a4)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

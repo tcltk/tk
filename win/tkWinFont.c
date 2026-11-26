@@ -45,7 +45,7 @@ extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
  *
  * ----------------------------------------------------------------------
  */
- 
+
 static Tcl_Size
 SnapToGraphemeBreak(
     const char *source,
@@ -90,7 +90,7 @@ SnapToGraphemeBreak(
     Tcl_Free((char *) breaks);
     return snapped;
 }
-    
+
 /*
  * The following structure represents a font family. It is assumed that all
  * screen fonts constructed from the same "font family" share certain

@@ -152,9 +152,9 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     ::tk::PlaceWindow $w widget [winfo parent $w]
     if {$windowingsystem eq "aqua"} {
-        wm attributes $w -hidden 0
+	wm attributes $w -hidden 0
     } else {
-        tkwait visibility $w
+	tkwait visibility $w
     }
     # 7. Set a grab and claim the focus too.
 
