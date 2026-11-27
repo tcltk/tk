@@ -1,5 +1,5 @@
 /**
- * 2026-07-30
+ * 2026-11-17
  *
  * The Mojibake library
  *
@@ -40,7 +40,15 @@
 
 // clang-format off
 #if defined(__cplusplus)
-    #if __cplusplus < 201703L
+    // MSVC reports __cplusplus as 199711L unless /Zc:__cplusplus is passed, while _MSVC_LANG
+    // always holds the selected standard. Use whichever is newer.
+    #if defined(_MSVC_LANG) && _MSVC_LANG > __cplusplus
+        #define MJB_CPLUSPLUS _MSVC_LANG
+    #else
+        #define MJB_CPLUSPLUS __cplusplus
+    #endif
+
+    #if MJB_CPLUSPLUS < 201703L
         #error "C++17 or a later version is required"
     #endif
 #else
@@ -67,193 +75,194 @@
  * See https://www.loc.gov/standards/iso639-2/ for more information.
  */
 typedef enum mjb_locale {
-    MJB_LOCALE_AA, // Afar
-    MJB_LOCALE_AB, // Abkhazian
-    MJB_LOCALE_AF, // Afrikaans
-    MJB_LOCALE_AK, // Akan
-    MJB_LOCALE_SQ, // Albanian
-    MJB_LOCALE_AM, // Amharic
-    MJB_LOCALE_AR, // Arabic
-    MJB_LOCALE_AN, // Aragonese
-    MJB_LOCALE_HY, // Armenian
-    MJB_LOCALE_AS, // Assamese
-    MJB_LOCALE_AV, // Avaric
-    MJB_LOCALE_AE, // Avestan
-    MJB_LOCALE_AY, // Aymara
-    MJB_LOCALE_AZ, // Azerbaijani
-    MJB_LOCALE_BA, // Bashkir
-    MJB_LOCALE_BM, // Bambara
-    MJB_LOCALE_EU, // Basque
-    MJB_LOCALE_BE, // Belarusian
-    MJB_LOCALE_BN, // Bengali
-    MJB_LOCALE_BI, // Bislama
-    MJB_LOCALE_BS, // Bosnian
-    MJB_LOCALE_BR, // Breton
-    MJB_LOCALE_BG, // Bulgarian
-    MJB_LOCALE_MY, // Burmese
-    MJB_LOCALE_CA, // Catalan; Valencian
-    MJB_LOCALE_CH, // Chamorro
-    MJB_LOCALE_CE, // Chechen
-    MJB_LOCALE_ZH, // Chinese
-    MJB_LOCALE_CU, // Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church
-                   // Slavonic
-    MJB_LOCALE_CV, // Chuvash
-    MJB_LOCALE_KW, // Cornish
-    MJB_LOCALE_CO, // Corsican
-    MJB_LOCALE_CR, // Cree
-    MJB_LOCALE_CS, // Czech
-    MJB_LOCALE_DA, // Danish
-    MJB_LOCALE_DV, // Divehi; Dhivehi; Maldivian
-    MJB_LOCALE_NL, // Dutch; Flemish
-    MJB_LOCALE_DZ, // Dzongkha
-    MJB_LOCALE_EN, // English
-    MJB_LOCALE_EO, // Esperanto
-    MJB_LOCALE_ET, // Estonian
-    MJB_LOCALE_EE, // Ewe
-    MJB_LOCALE_FO, // Faroese
-    MJB_LOCALE_FJ, // Fijian
-    MJB_LOCALE_FI, // Finnish
-    MJB_LOCALE_FR, // French
-    MJB_LOCALE_FY, // Western Frisian
-    MJB_LOCALE_FF, // Fulah
-    MJB_LOCALE_KA, // Georgian
-    MJB_LOCALE_DE, // German
-    MJB_LOCALE_GD, // Gaelic; Scottish Gaelic
-    MJB_LOCALE_GA, // Irish
-    MJB_LOCALE_GL, // Galician
-    MJB_LOCALE_GV, // Manx
-    MJB_LOCALE_EL, // Modern Greek (1453-)
-    MJB_LOCALE_GN, // Guarani
-    MJB_LOCALE_GU, // Gujarati
-    MJB_LOCALE_HT, // Haitian; Haitian Creole
-    MJB_LOCALE_HA, // Hausa
-    MJB_LOCALE_HE, // Hebrew
-    MJB_LOCALE_HZ, // Herero
-    MJB_LOCALE_HI, // Hindi
-    MJB_LOCALE_HO, // Hiri Motu
-    MJB_LOCALE_HR, // Croatian
-    MJB_LOCALE_HU, // Hungarian
-    MJB_LOCALE_IG, // Igbo
-    MJB_LOCALE_IS, // Icelandic
-    MJB_LOCALE_IO, // Ido
-    MJB_LOCALE_II, // Sichuan Yi; Nuosu
-    MJB_LOCALE_IU, // Inuktitut
-    MJB_LOCALE_IE, // Interlingue; Occidental
-    MJB_LOCALE_IA, // Interlingua (International Auxiliary Language Association)
-    MJB_LOCALE_ID, // Indonesian
-    MJB_LOCALE_IK, // Inupiaq
-    MJB_LOCALE_IT, // Italian
-    MJB_LOCALE_JV, // Javanese
-    MJB_LOCALE_JA, // Japanese
-    MJB_LOCALE_KL, // Kalaallisut; Greenlandic
-    MJB_LOCALE_KN, // Kannada
-    MJB_LOCALE_KS, // Kashmiri
-    MJB_LOCALE_KR, // Kanuri
-    MJB_LOCALE_KK, // Kazakh
-    MJB_LOCALE_KM, // Central Khmer
-    MJB_LOCALE_KI, // Kikuyu; Gikuyu
-    MJB_LOCALE_RW, // Kinyarwanda
-    MJB_LOCALE_KY, // Kirghiz; Kyrgyz
-    MJB_LOCALE_KV, // Komi
-    MJB_LOCALE_KG, // Kongo
-    MJB_LOCALE_KO, // Korean
-    MJB_LOCALE_KJ, // Kuanyama; Kwanyama
-    MJB_LOCALE_KU, // Kurdish
-    MJB_LOCALE_LO, // Lao
-    MJB_LOCALE_LA, // Latin
-    MJB_LOCALE_LV, // Latvian
-    MJB_LOCALE_LI, // Limburgan; Limburger; Limburgish
-    MJB_LOCALE_LN, // Lingala
-    MJB_LOCALE_LT, // Lithuanian
-    MJB_LOCALE_LB, // Luxembourgish; Letzeburgesch
-    MJB_LOCALE_LU, // Luba-Katanga
-    MJB_LOCALE_LG, // Ganda
-    MJB_LOCALE_MK, // Macedonian
-    MJB_LOCALE_MH, // Marshallese
-    MJB_LOCALE_ML, // Malayalam
-    MJB_LOCALE_MI, // Maori
-    MJB_LOCALE_MR, // Marathi
-    MJB_LOCALE_MS, // Malay
-    MJB_LOCALE_MG, // Malagasy
-    MJB_LOCALE_MT, // Maltese
-    MJB_LOCALE_MN, // Mongolian
-    MJB_LOCALE_NA, // Nauru
-    MJB_LOCALE_NV, // Navajo; Navaho
-    MJB_LOCALE_NR, // South Ndebele
-    MJB_LOCALE_ND, // North Ndebele
-    MJB_LOCALE_NG, // Ndonga
-    MJB_LOCALE_NE, // Nepali
-    MJB_LOCALE_NN, // Norwegian Nynorsk
-    MJB_LOCALE_NB, // Norwegian Bokmål
-    MJB_LOCALE_NO, // Norwegian
-    MJB_LOCALE_NY, // Chichewa; Chewa; Nyanja
-    MJB_LOCALE_OC, // Occitan (post 1500)
-    MJB_LOCALE_OJ, // Ojibwa
-    MJB_LOCALE_OR, // Oriya
-    MJB_LOCALE_OM, // Oromo
-    MJB_LOCALE_OS, // Ossetian; Ossetic
-    MJB_LOCALE_PA, // Panjabi; Punjabi
-    MJB_LOCALE_FA, // Persian
-    MJB_LOCALE_PI, // Pali
-    MJB_LOCALE_PL, // Polish
-    MJB_LOCALE_PT, // Portuguese
-    MJB_LOCALE_PS, // Pushto; Pashto
-    MJB_LOCALE_QU, // Quechua
-    MJB_LOCALE_RM, // Romansh
-    MJB_LOCALE_RO, // Romanian; Moldavian; Moldovan
-    MJB_LOCALE_RN, // Rundi
-    MJB_LOCALE_RU, // Russian
-    MJB_LOCALE_SG, // Sango
-    MJB_LOCALE_SA, // Sanskrit
-    MJB_LOCALE_SI, // Sinhala; Sinhalese
-    MJB_LOCALE_SK, // Slovak
-    MJB_LOCALE_SL, // Slovenian
-    MJB_LOCALE_SE, // Northern Sami
-    MJB_LOCALE_SM, // Samoan
-    MJB_LOCALE_SN, // Shona
-    MJB_LOCALE_SD, // Sindhi
-    MJB_LOCALE_SO, // Somali
-    MJB_LOCALE_ST, // Sotho, Southern
-    MJB_LOCALE_ES, // Spanish; Castilian
-    MJB_LOCALE_SC, // Sardinian
-    MJB_LOCALE_SR, // Serbian
-    MJB_LOCALE_SS, // Swati
-    MJB_LOCALE_SU, // Sundanese
-    MJB_LOCALE_SW, // Swahili
-    MJB_LOCALE_SV, // Swedish
-    MJB_LOCALE_TY, // Tahitian
-    MJB_LOCALE_TA, // Tamil
-    MJB_LOCALE_TT, // Tatar
-    MJB_LOCALE_TE, // Telugu
-    MJB_LOCALE_TG, // Tajik
-    MJB_LOCALE_TL, // Tagalog
-    MJB_LOCALE_TH, // Thai
-    MJB_LOCALE_BO, // Tibetan
-    MJB_LOCALE_TI, // Tigrinya
-    MJB_LOCALE_TO, // Tonga (Tonga Islands)
-    MJB_LOCALE_TN, // Tswana
-    MJB_LOCALE_TS, // Tsonga
-    MJB_LOCALE_TK, // Turkmen
-    MJB_LOCALE_TR, // Turkish
-    MJB_LOCALE_TW, // Twi
-    MJB_LOCALE_UG, // Uighur; Uyghur
-    MJB_LOCALE_UK, // Ukrainian
-    MJB_LOCALE_UR, // Urdu
-    MJB_LOCALE_UZ, // Uzbek
-    MJB_LOCALE_VE, // Venda
-    MJB_LOCALE_VI, // Vietnamese
-    MJB_LOCALE_VO, // Volapük
-    MJB_LOCALE_CY, // Welsh
-    MJB_LOCALE_WA, // Walloon
-    MJB_LOCALE_WO, // Wolof
-    MJB_LOCALE_XH, // Xhosa
-    MJB_LOCALE_YI, // Yiddish
-    MJB_LOCALE_YO, // Yoruba
-    MJB_LOCALE_ZA, // Zhuang; Chuang
-    MJB_LOCALE_ZU  // Zulu
+    MJB_LOCALE_NOT_SET, // 0 is "no value"
+    MJB_LOCALE_AA,      // Afar
+    MJB_LOCALE_AB,      // Abkhazian
+    MJB_LOCALE_AF,      // Afrikaans
+    MJB_LOCALE_AK,      // Akan
+    MJB_LOCALE_SQ,      // Albanian
+    MJB_LOCALE_AM,      // Amharic
+    MJB_LOCALE_AR,      // Arabic
+    MJB_LOCALE_AN,      // Aragonese
+    MJB_LOCALE_HY,      // Armenian
+    MJB_LOCALE_AS,      // Assamese
+    MJB_LOCALE_AV,      // Avaric
+    MJB_LOCALE_AE,      // Avestan
+    MJB_LOCALE_AY,      // Aymara
+    MJB_LOCALE_AZ,      // Azerbaijani
+    MJB_LOCALE_BA,      // Bashkir
+    MJB_LOCALE_BM,      // Bambara
+    MJB_LOCALE_EU,      // Basque
+    MJB_LOCALE_BE,      // Belarusian
+    MJB_LOCALE_BN,      // Bengali
+    MJB_LOCALE_BI,      // Bislama
+    MJB_LOCALE_BS,      // Bosnian
+    MJB_LOCALE_BR,      // Breton
+    MJB_LOCALE_BG,      // Bulgarian
+    MJB_LOCALE_MY,      // Burmese
+    MJB_LOCALE_CA,      // Catalan; Valencian
+    MJB_LOCALE_CH,      // Chamorro
+    MJB_LOCALE_CE,      // Chechen
+    MJB_LOCALE_ZH,      // Chinese
+    MJB_LOCALE_CU,      // Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church
+                        // Slavonic
+    MJB_LOCALE_CV,      // Chuvash
+    MJB_LOCALE_KW,      // Cornish
+    MJB_LOCALE_CO,      // Corsican
+    MJB_LOCALE_CR,      // Cree
+    MJB_LOCALE_CS,      // Czech
+    MJB_LOCALE_DA,      // Danish
+    MJB_LOCALE_DV,      // Divehi; Dhivehi; Maldivian
+    MJB_LOCALE_NL,      // Dutch; Flemish
+    MJB_LOCALE_DZ,      // Dzongkha
+    MJB_LOCALE_EN,      // English
+    MJB_LOCALE_EO,      // Esperanto
+    MJB_LOCALE_ET,      // Estonian
+    MJB_LOCALE_EE,      // Ewe
+    MJB_LOCALE_FO,      // Faroese
+    MJB_LOCALE_FJ,      // Fijian
+    MJB_LOCALE_FI,      // Finnish
+    MJB_LOCALE_FR,      // French
+    MJB_LOCALE_FY,      // Western Frisian
+    MJB_LOCALE_FF,      // Fulah
+    MJB_LOCALE_KA,      // Georgian
+    MJB_LOCALE_DE,      // German
+    MJB_LOCALE_GD,      // Gaelic; Scottish Gaelic
+    MJB_LOCALE_GA,      // Irish
+    MJB_LOCALE_GL,      // Galician
+    MJB_LOCALE_GV,      // Manx
+    MJB_LOCALE_EL,      // Greek, Modern (1453-)
+    MJB_LOCALE_GN,      // Guarani
+    MJB_LOCALE_GU,      // Gujarati
+    MJB_LOCALE_HT,      // Haitian; Haitian Creole
+    MJB_LOCALE_HA,      // Hausa
+    MJB_LOCALE_HE,      // Hebrew
+    MJB_LOCALE_HZ,      // Herero
+    MJB_LOCALE_HI,      // Hindi
+    MJB_LOCALE_HO,      // Hiri Motu
+    MJB_LOCALE_HR,      // Croatian
+    MJB_LOCALE_HU,      // Hungarian
+    MJB_LOCALE_IG,      // Igbo
+    MJB_LOCALE_IS,      // Icelandic
+    MJB_LOCALE_IO,      // Ido
+    MJB_LOCALE_II,      // Sichuan Yi; Nuosu
+    MJB_LOCALE_IU,      // Inuktitut
+    MJB_LOCALE_IE,      // Interlingue; Occidental
+    MJB_LOCALE_IA,      // Interlingua (International Auxiliary Language Association)
+    MJB_LOCALE_ID,      // Indonesian
+    MJB_LOCALE_IK,      // Inupiaq
+    MJB_LOCALE_IT,      // Italian
+    MJB_LOCALE_JV,      // Javanese
+    MJB_LOCALE_JA,      // Japanese
+    MJB_LOCALE_KL,      // Kalaallisut; Greenlandic
+    MJB_LOCALE_KN,      // Kannada
+    MJB_LOCALE_KS,      // Kashmiri
+    MJB_LOCALE_KR,      // Kanuri
+    MJB_LOCALE_KK,      // Kazakh
+    MJB_LOCALE_KM,      // Central Khmer
+    MJB_LOCALE_KI,      // Kikuyu; Gikuyu
+    MJB_LOCALE_RW,      // Kinyarwanda
+    MJB_LOCALE_KY,      // Kirghiz; Kyrgyz
+    MJB_LOCALE_KV,      // Komi
+    MJB_LOCALE_KG,      // Kongo
+    MJB_LOCALE_KO,      // Korean
+    MJB_LOCALE_KJ,      // Kuanyama; Kwanyama
+    MJB_LOCALE_KU,      // Kurdish
+    MJB_LOCALE_LO,      // Lao
+    MJB_LOCALE_LA,      // Latin
+    MJB_LOCALE_LV,      // Latvian
+    MJB_LOCALE_LI,      // Limburgan; Limburger; Limburgish
+    MJB_LOCALE_LN,      // Lingala
+    MJB_LOCALE_LT,      // Lithuanian
+    MJB_LOCALE_LB,      // Luxembourgish; Letzeburgesch
+    MJB_LOCALE_LU,      // Luba-Katanga
+    MJB_LOCALE_LG,      // Ganda
+    MJB_LOCALE_MK,      // Macedonian
+    MJB_LOCALE_MH,      // Marshallese
+    MJB_LOCALE_ML,      // Malayalam
+    MJB_LOCALE_MI,      // Maori
+    MJB_LOCALE_MR,      // Marathi
+    MJB_LOCALE_MS,      // Malay
+    MJB_LOCALE_MG,      // Malagasy
+    MJB_LOCALE_MT,      // Maltese
+    MJB_LOCALE_MN,      // Mongolian
+    MJB_LOCALE_NA,      // Nauru
+    MJB_LOCALE_NV,      // Navajo; Navaho
+    MJB_LOCALE_NR,      // South Ndebele
+    MJB_LOCALE_ND,      // North Ndebele
+    MJB_LOCALE_NG,      // Ndonga
+    MJB_LOCALE_NE,      // Nepali
+    MJB_LOCALE_NN,      // Norwegian Nynorsk
+    MJB_LOCALE_NB,      // Norwegian Bokmål
+    MJB_LOCALE_NO,      // Norwegian
+    MJB_LOCALE_NY,      // Chichewa; Chewa; Nyanja
+    MJB_LOCALE_OC,      // Occitan (post 1500)
+    MJB_LOCALE_OJ,      // Ojibwa
+    MJB_LOCALE_OR,      // Oriya
+    MJB_LOCALE_OM,      // Oromo
+    MJB_LOCALE_OS,      // Ossetian; Ossetic
+    MJB_LOCALE_PA,      // Panjabi; Punjabi
+    MJB_LOCALE_FA,      // Persian
+    MJB_LOCALE_PI,      // Pali
+    MJB_LOCALE_PL,      // Polish
+    MJB_LOCALE_PT,      // Portuguese
+    MJB_LOCALE_PS,      // Pushto; Pashto
+    MJB_LOCALE_QU,      // Quechua
+    MJB_LOCALE_RM,      // Romansh
+    MJB_LOCALE_RO,      // Romanian; Moldavian; Moldovan
+    MJB_LOCALE_RN,      // Rundi
+    MJB_LOCALE_RU,      // Russian
+    MJB_LOCALE_SG,      // Sango
+    MJB_LOCALE_SA,      // Sanskrit
+    MJB_LOCALE_SI,      // Sinhala; Sinhalese
+    MJB_LOCALE_SK,      // Slovak
+    MJB_LOCALE_SL,      // Slovenian
+    MJB_LOCALE_SE,      // Northern Sami
+    MJB_LOCALE_SM,      // Samoan
+    MJB_LOCALE_SN,      // Shona
+    MJB_LOCALE_SD,      // Sindhi
+    MJB_LOCALE_SO,      // Somali
+    MJB_LOCALE_ST,      // Sotho, Southern
+    MJB_LOCALE_ES,      // Spanish; Castilian
+    MJB_LOCALE_SC,      // Sardinian
+    MJB_LOCALE_SR,      // Serbian
+    MJB_LOCALE_SS,      // Swati
+    MJB_LOCALE_SU,      // Sundanese
+    MJB_LOCALE_SW,      // Swahili
+    MJB_LOCALE_SV,      // Swedish
+    MJB_LOCALE_TY,      // Tahitian
+    MJB_LOCALE_TA,      // Tamil
+    MJB_LOCALE_TT,      // Tatar
+    MJB_LOCALE_TE,      // Telugu
+    MJB_LOCALE_TG,      // Tajik
+    MJB_LOCALE_TL,      // Tagalog
+    MJB_LOCALE_TH,      // Thai
+    MJB_LOCALE_BO,      // Tibetan
+    MJB_LOCALE_TI,      // Tigrinya
+    MJB_LOCALE_TO,      // Tonga (Tonga Islands)
+    MJB_LOCALE_TN,      // Tswana
+    MJB_LOCALE_TS,      // Tsonga
+    MJB_LOCALE_TK,      // Turkmen
+    MJB_LOCALE_TR,      // Turkish
+    MJB_LOCALE_TW,      // Twi
+    MJB_LOCALE_UG,      // Uighur; Uyghur
+    MJB_LOCALE_UK,      // Ukrainian
+    MJB_LOCALE_UR,      // Urdu
+    MJB_LOCALE_UZ,      // Uzbek
+    MJB_LOCALE_VE,      // Venda
+    MJB_LOCALE_VI,      // Vietnamese
+    MJB_LOCALE_VO,      // Volapük
+    MJB_LOCALE_CY,      // Welsh
+    MJB_LOCALE_WA,      // Walloon
+    MJB_LOCALE_WO,      // Wolof
+    MJB_LOCALE_XH,      // Xhosa
+    MJB_LOCALE_YI,      // Yiddish
+    MJB_LOCALE_YO,      // Yoruba
+    MJB_LOCALE_ZA,      // Zhuang; Chuang
+    MJB_LOCALE_ZU       // Zulu
 } mjb_locale;
 
-#define MJB_LOCALE_NUM 183
+#define MJB_LOCALE_NUM 184
 
 #endif // MJB_LOCALES_H
 // unicode.h
@@ -589,7 +598,6 @@ typedef enum mjb_block {
     MJB_BLOCK_BASSA_VAH,
     MJB_BLOCK_PAHAWH_HMONG,
     MJB_BLOCK_KIRAT_RAI,
-    MJB_BLOCK_CHISOI,
     MJB_BLOCK_MEDEFAIDRIN,
     MJB_BLOCK_BERIA_ERFE,
     MJB_BLOCK_MIAO,
@@ -670,7 +678,7 @@ typedef enum mjb_block {
     MJB_BLOCK_SUPPLEMENTARY_PRIVATE_USE_AREA_B
 } mjb_block;
 
-#define MJB_BLOCK_NUM 354
+#define MJB_BLOCK_NUM 353
 
 /**
  * Unicode codepoint general category
@@ -929,8 +937,8 @@ typedef enum mjb_plane {
     MJB_PLANE_SMP = 1,
     MJB_PLANE_SIP = 2,
     MJB_PLANE_TIP = 3,
-    MJB_PLANE_SSP = 4,
-    MJB_PLANE_PUA_A = 5,
+    MJB_PLANE_SSP = 14,
+    MJB_PLANE_PUA_A = 15,
     MJB_PLANE_PUA_B = 16
 } mjb_plane;
 
@@ -940,7 +948,7 @@ typedef enum mjb_plane {
 /**
  * Word_Break Property Values
  * UAX #29, Unicode 18.0.0:
- * https://www.unicode.org/reports/tr29/tr29-48.html#Table_Word_Break_Property_Values
+ * https://www.unicode.org/reports/tr29/tr29-49.html#Table_Word_Break_Property_Values
  */
 typedef enum mjb_wbp {
     MJB_WBP_NOT_SET, // 0 is "no value"
@@ -1079,7 +1087,6 @@ typedef enum mjb_script {
     MJB_SC_CARI,
     MJB_SC_CHAM,
     MJB_SC_CHER,
-    MJB_SC_CHIS,
     MJB_SC_CHRS,
     MJB_SC_COPT,
     MJB_SC_CPMN,
@@ -1240,8 +1247,8 @@ typedef enum mjb_script {
     MJB_SC_KORE
 } mjb_script;
 
-#define MJB_SC_PROPERTY_COUNT 181
-#define MJB_SC_COUNT 184
+#define MJB_SC_PROPERTY_COUNT 180
+#define MJB_SC_COUNT 183
 
 /**
  * Property (pr)
@@ -1419,25 +1426,15 @@ typedef enum mjb_property {
 extern "C" {
 #endif
 
-// Static assertions for important constants
-// clang-format off
-#if defined(__cplusplus)
-    static_assert(sizeof(uint32_t) == 4, "uint32_t must be 4 bytes");
-    static_assert(sizeof(char) == 1, "char must be 1 byte");
-#else
-    _Static_assert(sizeof(uint32_t) == 4, "uint32_t must be 4 bytes");
-    _Static_assert(sizeof(char) == 1, "char must be 1 byte");
-#endif
-
-#define MJB_VERSION_NUMBER 0x35 // MAJOR << 8 | MINOR << 4 | REVISION
+#define MJB_VERSION_NUMBER 0x80 // MAJOR << 8 | MINOR << 4 | REVISION
 #define MJB_VERSION_MAJOR 0
-#define MJB_VERSION_MINOR 3
-#define MJB_VERSION_REVISION 5
+#define MJB_VERSION_MINOR 8
+#define MJB_VERSION_REVISION 0
 
 #ifdef __EMSCRIPTEN__
-    #define MJB_VERSION "0.3.5-WASM"
+    #define MJB_VERSION "0.8.0-WASM"
 #else
-    #define MJB_VERSION "0.3.5"
+    #define MJB_VERSION "0.8.0"
 #endif
 
 #define MJB_UNICODE_VERSION "18.0.0"
@@ -1496,7 +1493,7 @@ extern "C" {
         __attribute__((format(printf, FORMAT_INDEX, FIRST_ARGUMENT)))
     #define MJB_PURE __attribute__((pure))
     #define MJB_CONST __attribute__((const))
-#elif defined(__cplusplus) && __cplusplus >= 201703L
+#elif defined(MJB_CPLUSPLUS) && MJB_CPLUSPLUS >= 201703L
     #define MJB_NODISCARD [[nodiscard]]
     #define MJB_NONNULL(...)
     #define MJB_PRINTF_FORMAT(FORMAT_INDEX, FIRST_ARGUMENT)
@@ -1518,10 +1515,25 @@ extern "C" {
 
 // clang-format on
 
-// See c standard memory allocation functions
-typedef void *(*mjb_alloc_fn)(size_t size);
-typedef void *(*mjb_realloc_fn)(void *ptr, size_t new_size);
-typedef void (*mjb_free_fn)(void *ptr);
+// Memory allocator callbacks. The library passes the size of every block it reallocates or frees,
+// so an allocator does not need to record sizes itself:
+// - `size` and `old_size` are the size most recently requested for `ptr`, by `alloc` or by the
+//   last successful `realloc`. Requested sizes are never 0.
+// - `realloc` receives `ptr == NULL` with `old_size == 0` when a block is first allocated. It
+//   returns NULL on failure and leaves the old block valid, as C `realloc` does.
+// - `free` is never called with NULL.
+typedef void *(*mjb_alloc_fn)(void *context, size_t size);
+typedef void *(*mjb_realloc_fn)(void *context, void *ptr, size_t old_size, size_t new_size);
+typedef void (*mjb_free_fn)(void *context, void *ptr, size_t size);
+
+// A process-global allocator installed once, before any other library call. The context remains
+// caller-owned and must stay valid for the lifetime of all Mojibake allocations.
+typedef struct mjb_allocator {
+    void *context;
+    mjb_alloc_fn alloc;
+    mjb_realloc_fn realloc;
+    mjb_free_fn free;
+} mjb_allocator;
 
 /**
  * A Unicode codepoint, a value in the range 0 to 0x10FFFF
@@ -1584,10 +1596,10 @@ typedef uint32_t mjb_codepoint;
 
 // Tangut Ideographs
 #define MJB_TANGUT_IDEOGRAPH_START 0x17000
-#define MJB_TANGUT_IDEOGRAPH_END 0x187F7
+#define MJB_TANGUT_IDEOGRAPH_END 0x187FF
 
 #define MJB_TANGUT_IDEOGRAPH_SUPPLEMENT_START 0x18D00
-#define MJB_TANGUT_IDEOGRAPH_SUPPLEMENT_END 0x18D1E
+#define MJB_TANGUT_IDEOGRAPH_SUPPLEMENT_END 0x18D20
 
 // Tangut components
 #define MJB_TANGUT_COMPONENT_START 0x18800
@@ -1600,8 +1612,16 @@ typedef uint32_t mjb_codepoint;
 #define MJB_KHITAN_SMALL_SCRIPT_CHARACTER_START 0x18B00
 #define MJB_KHITAN_SMALL_SCRIPT_CHARACTER_END 0x18CFF
 
+// Jurchen Characters
+#define MJB_JURCHEN_CHARACTER_START 0x18E00
+#define MJB_JURCHEN_CHARACTER_END 0x19191
+
+// Small Seal Characters
+#define MJB_SEAL_CHARACTER_START 0x3D000
+#define MJB_SEAL_CHARACTER_END 0x3FC3F
+
 // Numeric values, to be used when the decimal and digit mjb_character fields are not valid
-#define MJB_NUMBER_NOT_VALID -1
+#define MJB_NUMBER_NOT_VALID (-1)
 
 /**
  * Unicode encoding
@@ -1689,8 +1709,39 @@ typedef enum mjb_status {
     MJB_STATUS_OUTPUT_TOO_SMALL,
     MJB_STATUS_CALLBACK_STOPPED,
     MJB_STATUS_NOT_FOUND,
-    MJB_STATUS_FEATURE_NOT_ENABLED
+    MJB_STATUS_FEATURE_NOT_ENABLED,
+    MJB_STATUS_END_OF_INPUT
 } mjb_status;
+
+// Policy used by decoding operations when an ill-formed code-unit sequence is encountered.
+typedef enum mjb_malformed_policy {
+    MJB_MALFORMED_STOP,    // Report MJB_STATUS_MALFORMED_INPUT
+    MJB_MALFORMED_REPLACE, // Emit one U+FFFD per maximal ill-formed subsequence
+    MJB_MALFORMED_SKIP     // Discard maximal ill-formed subsequences
+} mjb_malformed_policy;
+
+// Precise reason that a code-unit sequence is not well-formed.
+typedef enum mjb_text_error {
+    MJB_TEXT_ERROR_NONE = 0,
+    MJB_TEXT_ERROR_NON_ASCII,
+    MJB_TEXT_ERROR_INVALID_LEADING_BYTE,
+    MJB_TEXT_ERROR_UNEXPECTED_CONTINUATION,
+    MJB_TEXT_ERROR_MISSING_CONTINUATION,
+    MJB_TEXT_ERROR_OVERLONG_SEQUENCE,
+    MJB_TEXT_ERROR_SURROGATE,
+    MJB_TEXT_ERROR_OUT_OF_RANGE,
+    MJB_TEXT_ERROR_TRUNCATED_SEQUENCE,
+    MJB_TEXT_ERROR_TRUNCATED_CODE_UNIT,
+    MJB_TEXT_ERROR_UNPAIRED_SURROGATE
+} mjb_text_error;
+
+// Location and extent of the first malformed subsequence encountered by an operation.
+typedef struct mjb_diagnostic {
+    mjb_text_error error;
+    size_t byte_offset;
+    size_t byte_length;
+    size_t code_unit_offset;
+} mjb_diagnostic;
 
 typedef struct mjb_locale_id {
     char language[9];
@@ -1701,12 +1752,25 @@ typedef struct mjb_locale_id {
     char extensions[128];
     char private_use[128];
     char grandfathered[32];
+    char code[3];      // ISO 639-1 code of the matched locale, empty if unsupported
+    mjb_locale locale; // Matched locale, MJB_LOCALE_NOT_SET if unsupported
 } mjb_locale_id;
 
+/**
+ * The result of an allocating transformation.
+ */
 typedef struct mjb_result {
+    // The output bytes. Use `output_size`: an output that points into the input may not be
+    // NUL-terminated.
     char *output;
+    // The output size in bytes, excluding any terminator.
     size_t output_size;
-    bool transformed;
+    // The size of the allocation behind an owned `output`, which can exceed `output_size`.
+    // mjb_result_free passes it to the allocator's free function; do not modify it.
+    size_t capacity;
+    // True if the library allocated `output` and it must be freed with mjb_result_free. False if
+    // `output` points into the caller's input, which must outlive the result.
+    bool owned;
 } mjb_result;
 
 // UTS #46 processing errors. Processing can produce a best-effort result while setting one or
@@ -1774,7 +1838,7 @@ typedef struct mjb_numeric_value {
 /**
  * Emoji data
  * [see: UTS #51, Unicode 18.0.0:
- * https://www.unicode.org/reports/tr51/tr51-30.html]
+ * https://www.unicode.org/reports/tr51/tr51-31.html]
  */
 typedef struct mjb_emoji_properties {
     mjb_codepoint codepoint;
@@ -1819,12 +1883,6 @@ typedef enum mjb_break_type {
     MJB_BT_ALLOWED    // ÷
 } mjb_break_type;
 
-// Buffer character used in composition phase
-typedef struct mjb_buffer_character {
-    uint32_t codepoint;
-    uint16_t combining;
-} mjb_buffer_character;
-
 // Position of a character in a string, used for callbacks
 typedef enum mjb_character_position {
     MJB_POSITION_NONE,
@@ -1838,74 +1896,86 @@ typedef enum mjb_terminal_width_profile {
     MJB_TERMINAL_WIDTH_EAST_ASIAN // Treat ambiguous characters as two terminal cells
 } mjb_terminal_width_profile;
 
-typedef struct mjb_next_state {
-    uint8_t state;
+typedef struct mjb_grapheme_break_state {
     size_t index;
+    // Byte offset of the position the last returned break type refers to: the start of the
+    // current codepoint, or the text length at the end. Set by the iterator.
+    size_t position;
     unsigned int previous;
     unsigned int current;
     mjb_codepoint previous_codepoint;
     mjb_codepoint current_codepoint;
-    bool in_error;
+    bool had_error;
     unsigned short ri_count;
+    // Grapheme break-specific members
     bool ext_pict_seen;
     bool zwj_seen;
-    bool incb_consonant_seen;
     bool incb_linker_seen;
-} mjb_next_state;
+} mjb_grapheme_break_state;
 
-typedef struct mjb_next_line_state {
-    uint8_t state;
+typedef struct mjb_line_break_state {
     size_t index;
+    // Byte offset of the position the last returned break type refers to: the start of the
+    // current codepoint, or the text length at the end. Set by the iterator.
+    size_t position;
     mjb_lbp previous;
     mjb_lbp current;
-    mjb_codepoint prev_prev_codepoint;
     mjb_codepoint previous_codepoint;
     mjb_codepoint current_codepoint;
-    bool in_error;
+    unsigned short ri_count;
+    // Line break-specific members
+    mjb_codepoint prev_prev_codepoint;
+    mjb_lbp prev_prev_lbp;
+    mjb_lbp prev_resolved;
+    mjb_lbp prev_num_lbp;
+    mjb_east_asian_width prev_ea;
+    mjb_east_asian_width qu_prev_ea;
     bool zw_seen;
     bool pi_qu_context;
     bool cm_merged;
     bool zwj_absorbed;
-    unsigned short ri_count;
-    mjb_lbp prev_resolved;
-    mjb_east_asian_width prev_ea;
-    mjb_east_asian_width qu_prev_ea;
-    mjb_lbp prev_prev_lbp;
-    mjb_lbp prev_num_lbp;
-} mjb_next_line_state;
+} mjb_line_break_state;
 
-typedef struct mjb_next_word_state {
-    uint8_t state;
+typedef struct mjb_word_break_state {
     size_t index;
+    // Byte offset of the position the last returned break type refers to: the start of the
+    // current codepoint, or the text length at the end. Set by the iterator.
+    size_t position;
     mjb_wbp previous;
     mjb_wbp current;
-    mjb_codepoint prev_prev_codepoint;
     mjb_codepoint previous_codepoint;
     mjb_codepoint current_codepoint;
-    mjb_wbp prev_prev_wbp;
-    bool in_error;
+    bool had_error;
     unsigned short ri_count;
+    // Word break-specific members
+    mjb_wbp prev_prev_wbp;
     bool wb4_merged;
     bool zwj_pending;
     bool prev_was_zwj;
-} mjb_next_word_state;
+} mjb_word_break_state;
 
-typedef struct mjb_next_sentence_state {
-    uint8_t state;
+typedef struct mjb_sentence_break_state {
     size_t index;
+    // Byte offset of the position the last returned break type refers to: the start of the
+    // current codepoint, or the text length at the end. Set by the iterator.
+    size_t position;
     mjb_sbp previous;
     mjb_sbp current;
-    mjb_sbp prev_prev;
     mjb_codepoint previous_codepoint;
     mjb_codepoint current_codepoint;
-    bool in_error;
+    bool had_error;
+    // Sentence break-specific members
+    mjb_sbp prev_prev;
     bool sb5_merged;
     bool in_sat;
     bool sat_has_sp;
     bool sat_is_aterm;
-} mjb_next_sentence_state;
+} mjb_sentence_break_state;
 
-typedef bool (*mjb_for_each_character_fn)(mjb_character *character, mjb_character_position type);
+// Called by mjb_for_each_codepoint for each codepoint. `context` is the pointer passed to
+// mjb_for_each_codepoint, for the caller's own state. Return false to stop the iteration.
+typedef bool (*mjb_for_each_codepoint_fn)(const mjb_character *character,
+    mjb_character_position position, void *context);
 
 typedef enum mjb_direction {
     MJB_DIRECTION_LTR = 0,
@@ -1962,6 +2032,42 @@ typedef enum mjb_script_set_kind {
     MJB_SCRIPT_SET_ALL       // Every script resolves the string
 } mjb_script_set_kind;
 
+/**
+ * The mjb_text structure represents a piece of text with its associated encoding.
+ */
+typedef struct mjb_text {
+    // The text buffer containing the string data.
+    const char *buffer;
+    // The length of the string in bytes, or `MJB_NUL_TERMINATED` to determine it from an
+    // encoding-aware NUL code unit. The mjb_text_make() family resolves it on creation.
+    size_t byte_length;
+    // The encoding of the string. ASCII, UTF-8, UTF-16LE/BE, UTF-32LE/BE.
+    mjb_encoding encoding;
+} mjb_text;
+
+/**
+ * The mjb_buffer structure describes caller-provided output storage and its encoding.
+ */
+typedef struct mjb_buffer {
+    // The output storage, or NULL to query the required size.
+    void *data;
+    // On input, the capacity of `data` in bytes. On return, the required or written byte count.
+    size_t size;
+    // The output encoding. ASCII, UTF-8, UTF-16LE/BE, UTF-32LE/BE.
+    mjb_encoding encoding;
+} mjb_buffer;
+
+// Make an output buffer object.
+static inline mjb_buffer mjb_buffer_make(void *data, size_t size, mjb_encoding encoding) {
+    mjb_buffer buffer;
+
+    buffer.data = data;
+    buffer.size = size;
+    buffer.encoding = encoding;
+
+    return buffer;
+}
+
 // This functions list is automatically generated. Do not edit.
 // clang-format off
 
@@ -1969,37 +2075,37 @@ typedef enum mjb_script_set_kind {
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_info(mjb_codepoint codepoint, mjb_character *character);
 
 // Normalize a string to NFC/NFKC/NFD/NFKD form.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalize(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_normalization form, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalize(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_normalization form, mjb_encoding output_encoding, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Normalize a string into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalize_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_normalization form, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalize_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_normalization form, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Filter a string with the selected mjb_filter_flags.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_filter(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_filter_flags filters, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_filter(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_filter_flags filters, mjb_encoding output_encoding, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Filter a string into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_filter_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_filter_flags filters, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_filter_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_filter_flags filters, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Apply the Unicode NFKC_Casefold transform to a string.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_nfkc_casefold(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_nfkc_casefold(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_encoding output_encoding, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Apply the Unicode NFKC_Casefold transform into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_nfkc_casefold_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_nfkc_casefold_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Convert a domain name to its UTS #46 nontransitional ASCII form.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_ascii(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_idna_info *info, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_ascii(const mjb_text *text, mjb_encoding output_encoding, mjb_idna_info *info, mjb_result *result);
 
 // Convert a domain name to its UTS #46 nontransitional ASCII form into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_ascii_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_idna_info *info, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_ascii_into(const mjb_text *text, mjb_idna_info *info, mjb_buffer *output);
 
 // Convert a domain name to its UTS #46 nontransitional Unicode form.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_unicode(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_idna_info *info, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_unicode(const mjb_text *text, mjb_encoding output_encoding, mjb_idna_info *info, mjb_result *result);
 
 // Convert a domain name to its UTS #46 nontransitional Unicode form into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_unicode_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_idna_info *info, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_idna_to_unicode_into(const mjb_text *text, mjb_idna_info *info, mjb_buffer *output);
 
 // Check if a string is normalized to NFC/NFKC/NFD/NFKD form.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalization_quick_check(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_normalization form, mjb_quick_check_result *quick_check);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_normalization_quick_check(const mjb_text *text, mjb_normalization form, mjb_quick_check_result *quick_check);
 
 // Return the string encoding (the most probable).
 MJB_EXPORT MJB_PURE mjb_encoding mjb_detect_encoding(const char *buffer, size_t byte_length);
@@ -2013,11 +2119,23 @@ MJB_EXPORT MJB_PURE bool mjb_is_utf8(const char *buffer, size_t byte_length);
 // Return true if the string is encoded in UTF-16BE or UTF-16LE.
 MJB_EXPORT MJB_PURE bool mjb_is_utf16(const char *buffer, size_t byte_length);
 
-// Return the length of a string.
-MJB_EXPORT MJB_PURE size_t mjb_count_codepoints(const char *buffer, size_t max_length, mjb_encoding encoding);
+// Validate a complete Unicode code-unit sequence.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_validate_encoding(const mjb_text *text, mjb_diagnostic *diagnostic);
 
-// Run a callback for each character of a string.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_for_each_character(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_for_each_character_fn callback);
+// Return the byte length of a string that ends at its first NUL code unit.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_nul_terminated_length(const char *buffer, mjb_encoding encoding, size_t *byte_length);
+
+// Decode the next codepoint from a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_decode_next(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *offset, mjb_codepoint *codepoint, mjb_diagnostic *diagnostic);
+
+// Decode the previous codepoint from a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_decode_previous(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *offset, mjb_codepoint *codepoint, mjb_diagnostic *diagnostic);
+
+// Count the codepoints in a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_count(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *count, mjb_diagnostic *diagnostic);
+
+// Run a callback for each codepoint of a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_for_each_codepoint(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_for_each_codepoint_fn callback, void *context, mjb_diagnostic *diagnostic);
 
 // Return the value of a binary Unicode property.
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_property_binary(mjb_codepoint codepoint, mjb_property property, bool *value);
@@ -2041,28 +2159,28 @@ MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_script_extensions(mjb_codepoin
 MJB_EXPORT unsigned int mjb_codepoint_encode(mjb_codepoint codepoint, char *buffer, size_t byte_length, mjb_encoding encoding);
 
 // Convert from one encoding to another.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_convert_encoding(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_convert_encoding(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_encoding output_encoding, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Convert from one encoding to another into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_convert_encoding_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_convert_encoding_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Compare two strings using a Unicode caseless matching relation.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_caseless_match(const char *s1, size_t s1_byte_length, mjb_encoding s1_encoding, const char *s2, size_t s2_byte_length, mjb_encoding s2_encoding, mjb_caseless_mode mode, bool *matches);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_caseless_match(const mjb_text *first, const mjb_text *second, mjb_malformed_policy malformed_policy, mjb_caseless_mode mode, bool *matches, mjb_diagnostic *first_diagnostic, mjb_diagnostic *second_diagnostic);
 
 // Compare two strings using UCA.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_compare(const char *s1, size_t s1_byte_length, mjb_encoding s1_encoding, const char *s2, size_t s2_byte_length, mjb_encoding s2_encoding, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, int *order);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_compare(const mjb_text *first, const mjb_text *second, mjb_malformed_policy malformed_policy, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, int *order, mjb_diagnostic *first_diagnostic, mjb_diagnostic *second_diagnostic);
 
 // Generate a UCA sort key for a string.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_key(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_key(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Generate a binary collation key into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_key_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_collation_key_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_collation_variable_weighting variable_weighting, mjb_collation_strength strength, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Change string case.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_map_case(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_map_case_type type, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_map_case(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_map_case_type type, mjb_locale locale, mjb_encoding output_encoding, mjb_result *result, mjb_diagnostic *diagnostic);
 
 // Change string case into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_map_case_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_map_case_type type, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_map_case_into(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_map_case_type type, mjb_locale locale, mjb_buffer *output, mjb_diagnostic *diagnostic);
 
 // Return true if the codepoint is valid.
 MJB_EXPORT MJB_CONST bool mjb_codepoint_is_valid(mjb_codepoint codepoint);
@@ -2101,31 +2219,40 @@ MJB_EXPORT MJB_CONST bool mjb_category_is_graphic(mjb_category category);
 MJB_EXPORT MJB_CONST bool mjb_category_is_combining(mjb_category category);
 
 // Unicode line break algorithm.
-MJB_EXPORT mjb_break_type mjb_next_line_break(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_next_line_state *state);
+MJB_EXPORT mjb_break_type mjb_line_break_next(const mjb_text *text, mjb_line_break_state *state);
 
 // Word cluster breaking.
-MJB_EXPORT mjb_break_type mjb_next_word_break(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_next_word_state *state);
+MJB_EXPORT mjb_break_type mjb_word_break_next(const mjb_text *text, mjb_word_break_state *state);
 
 // Sentence boundaries breaking.
-MJB_EXPORT mjb_break_type mjb_next_sentence_break(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_next_sentence_state *state);
+MJB_EXPORT mjb_break_type mjb_sentence_break_next(const mjb_text *text, mjb_sentence_break_state *state);
+
+// Count the sentence segments in a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_sentence_count(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *count, mjb_diagnostic *diagnostic);
 
 // Grapheme cluster breaking.
-MJB_EXPORT mjb_break_type mjb_next_grapheme_break(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_next_state *state);
+MJB_EXPORT mjb_break_type mjb_grapheme_break_next(const mjb_text *text, mjb_grapheme_break_state *state);
 
 // Return the number of bytes that form the first `max_graphemes` grapheme cluster segments.
-MJB_EXPORT size_t mjb_truncate_grapheme(const char *buffer, size_t byte_length, mjb_encoding encoding, size_t max_graphemes);
+MJB_EXPORT size_t mjb_grapheme_prefix_length(const mjb_text *text, size_t max_graphemes);
+
+// Count the extended grapheme clusters in a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_grapheme_count(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *count, mjb_diagnostic *diagnostic);
 
 // Return the number of bytes whose grapheme clusters fit within max_columns terminal cells.
-MJB_EXPORT size_t mjb_truncate_grapheme_width(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_terminal_width_profile profile, size_t max_columns);
+MJB_EXPORT size_t mjb_grapheme_prefix_length_for_width(const mjb_text *text, mjb_terminal_width_profile profile, size_t max_columns);
 
 // Return the number of bytes that form the first max_segments word-break segments.
-MJB_EXPORT size_t mjb_truncate_word(const char *buffer, size_t byte_length, mjb_encoding encoding, size_t max_segments);
+MJB_EXPORT size_t mjb_word_prefix_length(const mjb_text *text, size_t max_segments);
+
+// Count the word-like segments in a string.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_word_count(const mjb_text *text, mjb_malformed_policy malformed_policy, size_t *count, mjb_diagnostic *diagnostic);
 
 // Return the number of bytes whose word-break segments fit within max_columns terminal cells.
-MJB_EXPORT size_t mjb_truncate_word_width(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_terminal_width_profile profile, size_t max_columns);
+MJB_EXPORT size_t mjb_word_prefix_length_for_width(const mjb_text *text, mjb_terminal_width_profile profile, size_t max_columns);
 
 // Resolve bidirectional text (TR9) for a paragraph.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_bidi_resolve(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_direction direction, mjb_bidi_paragraph *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_bidi_resolve(const mjb_text *text, mjb_direction direction, mjb_bidi_paragraph *result);
 
 // Reorder a line visually (L1-L4); visual_order is caller-allocated.
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_bidi_reorder_line(const mjb_bidi_paragraph *paragraph, size_t line_start, size_t line_end, size_t *visual_order);
@@ -2155,22 +2282,22 @@ MJB_EXPORT bool mjb_codepoint_is_pattern_syntax(mjb_codepoint codepoint);
 MJB_EXPORT bool mjb_codepoint_is_pattern_white_space(mjb_codepoint codepoint);
 
 // Return true if the string is a valid Unicode identifier (Unicode 18.0.0 UAX #31).
-MJB_EXPORT bool mjb_is_identifier(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_identifier_profile profile);
+MJB_EXPORT bool mjb_is_identifier(const mjb_text *text, mjb_identifier_profile profile);
 
 // Return the UTS #39 resolved script set of a string.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_resolved_script_set(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_script *scripts, size_t *count, mjb_script_set_kind *kind);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_resolved_script_set(const mjb_text *text, mjb_script *scripts, size_t *count, mjb_script_set_kind *kind);
 
 // Return the name of a property, NULL if the property specified is not valid.
 MJB_EXPORT MJB_CONST const char *mjb_property_name(mjb_property property);
 
 // Compute a Unicode confusable skeleton (Unicode 18.0.0 UTS #39 Section 4).
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_confusable_skeleton(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, mjb_result *result);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_confusable_skeleton(const mjb_text *text, mjb_encoding output_encoding, mjb_result *result);
 
 // Compute a Unicode confusable skeleton into a caller-provided buffer.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_confusable_skeleton_into(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_encoding output_encoding, void *output, size_t *output_size);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_confusable_skeleton_into(const mjb_text *text, mjb_buffer *output);
 
 // Determine whether two strings are visually confusable (Unicode 18.0.0 UTS #39 Section 4): skeleton(s1) == skeleton(s2).
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_are_confusable(const char *s1, size_t s1_byte_length, mjb_encoding s1_encoding, const char *s2, size_t s2_byte_length, mjb_encoding s2_encoding, bool *confusable);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_confusable_match(const mjb_text *first, const mjb_text *second, mjb_malformed_policy malformed_policy, bool *confusable, mjb_diagnostic *first_diagnostic, mjb_diagnostic *second_diagnostic);
 
 // Return the emoji properties.
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_emoji_properties(mjb_codepoint codepoint, mjb_emoji_properties *emoji);
@@ -2203,37 +2330,37 @@ MJB_EXPORT MJB_CONST bool mjb_plane_is_valid(mjb_plane plane);
 MJB_EXPORT MJB_CONST const char *mjb_plane_name(mjb_plane plane, bool abbreviation);
 
 // Return emoji sequence metadata for a complete string.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_classify_emoji_sequence(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_emoji_sequence *emoji);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_emoji_sequence_info(const mjb_text *text, mjb_emoji_sequence *emoji);
 
 // Return true if the complete string is an emoji sequence listed by Unicode, including standardized emoji variation sequences.
-MJB_EXPORT bool mjb_is_emoji_sequence(const char *buffer, size_t byte_length, mjb_encoding encoding);
+MJB_EXPORT bool mjb_is_emoji_sequence(const mjb_text *text);
 
 // Return true if the complete string is an RGI emoji sequence, excluding plain standardized variation sequences.
-MJB_EXPORT bool mjb_is_rgi_emoji(const char *buffer, size_t byte_length, mjb_encoding encoding);
+MJB_EXPORT bool mjb_is_rgi_emoji(const mjb_text *text);
 
 // Return hangul syllable name.
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_hangul_syllable_name(mjb_codepoint codepoint, char *buffer, size_t byte_length);
 
-// Hangul syllable decomposition.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_hangul_syllable_decomposition(mjb_codepoint codepoint, mjb_codepoint *codepoints);
+// Decompose a Hangul syllable into its jamo.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_hangul_syllable_decompose(mjb_codepoint codepoint, mjb_codepoint *codepoints);
 
-// Hangul syllable composition.
-MJB_EXPORT size_t mjb_hangul_syllable_composition(mjb_buffer_character *characters, size_t characters_len);
+// Compose Hangul jamo into a syllable.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_hangul_syllable_compose(mjb_codepoint leading, mjb_codepoint vowel, mjb_codepoint trailing, mjb_codepoint *syllable);
 
 // Return the east asian width of a codepoint.
 MJB_EXPORT MJB_NODISCARD mjb_status mjb_codepoint_east_asian_width(mjb_codepoint codepoint, mjb_east_asian_width *width);
 
 // Return the estimated terminal-cell width of printable, single-line text.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_terminal_width(const char *buffer, size_t byte_length, mjb_encoding encoding, mjb_terminal_width_profile profile, size_t *width);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_terminal_width(const mjb_text *text, mjb_malformed_policy malformed_policy, mjb_terminal_width_profile profile, size_t *width, mjb_diagnostic *diagnostic);
 
 // Parse a BCP 47 language tag.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_locale_parse(const char *id, size_t byte_length, mjb_encoding encoding, mjb_locale_id *locale);
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_locale_parse(const mjb_text *id, mjb_locale_id *locale);
 
-// Set the current process-global locale.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_set_locale(mjb_locale locale);
+// Return the ISO 639-1 code of a locale, NULL if the locale is not valid.
+MJB_EXPORT MJB_CONST const char *mjb_locale_code(mjb_locale locale);
 
-// Return the current process-global locale.
-MJB_EXPORT MJB_PURE mjb_locale mjb_get_locale(void);
+// Return the ISO 15924 code of a script, NULL if the script is not valid.
+MJB_EXPORT MJB_CONST const char *mjb_script_code(mjb_script script);
 
 // Free a mjb_result.
 MJB_EXPORT mjb_status mjb_result_free(mjb_result *result);
@@ -2262,22 +2389,60 @@ MJB_EXPORT MJB_CONST unsigned int mjb_version_number(void);
 // Output the current supported Unicode version (MJB_UNICODE_VERSION).
 MJB_EXPORT MJB_CONST const char *mjb_unicode_version(void);
 
-// Set the library memory functions.
-MJB_EXPORT MJB_NODISCARD mjb_status mjb_set_memory_functions(mjb_alloc_fn alloc_fn, mjb_realloc_fn realloc_fn, mjb_free_fn free_fn);
-
-// Reset the library. Not needed to be called.
-MJB_EXPORT void mjb_reset(void);
-
-// Allocate memory.
-MJB_EXPORT MJB_NODISCARD void *mjb_alloc(size_t byte_length);
-
-// Reallocate memory.
-MJB_EXPORT MJB_NODISCARD void *mjb_realloc(void *ptr, size_t new_size);
-
-// Free memory.
-MJB_EXPORT void mjb_free(void *ptr);
+// Set the process-global memory allocator.
+MJB_EXPORT MJB_NODISCARD mjb_status mjb_set_allocator(const mjb_allocator *allocator);
 
 // clang-format on
+
+// Make a text object.
+static inline mjb_text mjb_text_make(const char *buffer, size_t byte_length,
+    mjb_encoding encoding) {
+    mjb_text text;
+
+    text.buffer = buffer;
+    text.byte_length = byte_length;
+    text.encoding = encoding;
+
+    // Resolve the length once. When it cannot be resolved, MJB_NUL_TERMINATED is kept.
+    if(byte_length == MJB_NUL_TERMINATED &&
+        mjb_nul_terminated_length(buffer, encoding, &byte_length) == MJB_STATUS_OK) {
+        text.byte_length = byte_length;
+    }
+
+    return text;
+}
+
+// Make a UTF-8 text object.
+static inline mjb_text mjb_text_utf8(const char *buffer, size_t byte_length) {
+    return mjb_text_make(buffer, byte_length, MJB_ENC_UTF_8);
+}
+
+// Make a UTF-16 little-endian text object.
+static inline mjb_text mjb_text_utf16le(const char *buffer, size_t byte_length) {
+    return mjb_text_make(buffer, byte_length, MJB_ENC_UTF_16LE);
+}
+
+// Make a UTF-16 big-endian text object.
+static inline mjb_text mjb_text_utf16be(const char *buffer, size_t byte_length) {
+    return mjb_text_make(buffer, byte_length, MJB_ENC_UTF_16BE);
+}
+
+// Make a UTF-32 little-endian text object.
+static inline mjb_text mjb_text_utf32le(const char *buffer, size_t byte_length) {
+    return mjb_text_make(buffer, byte_length, MJB_ENC_UTF_32LE);
+}
+
+// Make a UTF-32 big-endian text object.
+static inline mjb_text mjb_text_utf32be(const char *buffer, size_t byte_length) {
+    return mjb_text_make(buffer, byte_length, MJB_ENC_UTF_32BE);
+}
+
+// View the bytes written to an output buffer as input text. Use it after a successful call, when
+// `size` is the written byte count.
+static inline mjb_text mjb_buffer_text(const mjb_buffer *buffer) {
+    return mjb_text_make((const char *)buffer->data, buffer->size, buffer->encoding);
+}
+
 #ifdef __cplusplus
 }
 #endif

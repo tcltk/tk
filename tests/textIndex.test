@@ -55,7 +55,7 @@ proc text_test_word {startend chars start} {
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
-pack .t -expand 1 -fill both
+pack .t -anchor nw
 update
 .t debug 1
 wm geometry . {}
@@ -775,7 +775,7 @@ set varFont {Times -14}
 set bigFont {Helvetica -24}
 destroy .t
 text .t -font $fixedFont -width 20 -height 10 -wrap char
-pack .t -expand 1 -fill both
+pack .t -anchor nw
 .t tag configure big -font $bigFont
 .t debug 1
 wm geometry . {}
@@ -912,12 +912,14 @@ test textIndex-21.6 {text index wordend} {
 test textIndex-21.7 {text index wordend} {
     text_test_word wordend "one .&# three" 5
 } 6
+# Word segmentation follows Unicode UAX #29 (WB6/WB7): a "." between two
+# letters does not end a word, so "x.y" is a single word.
 test textIndex-21.8 {text index wordend} {
     text_test_word worde "x.y" 0
-} 1
+} 3
 test textIndex-21.9 {text index wordend} {
     text_test_word worde "x.y" end-1
-} 2
+} 3
 test textIndex-21.10 {text index wordend, unicode} {
     text_test_word wordend "xyzÇde fg" 0
 } 6
