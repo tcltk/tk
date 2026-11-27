@@ -47,9 +47,11 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make TK_NO_STDERR=1 test | tee out.txt
+          # -k: run the ttk tests even if the classic tests fail.
+          rc=0
+          make -k TK_NO_STDERR=1 test | tee out.txt || rc=1
           nmatches=$( grep -c "Failed	0" out.txt )
-          if [ $nmatches -lt 4 ]
+          if [ $nmatches -lt 4 ] || [ $rc -ne 0 ]
           then
             echo "::error::Failure during Test"
             exit 1
@@ -145,13 +147,15 @@ jobs:
               export TK_NO_STDERR=1
             }
           fi
+          # Run both, then fail if either failed.
+          rc=0
           ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
             echo "::error::Failure during Test (classic)"
-            exit 1
+            rc=1
           }
           ( runXvfb :0; make test-ttk; exit $? ) | tee out-ttk.txt || {
             echo "::error::Failure during Test (ttk)"
-            exit 1
+            rc=1
           }
           cat out-classic.txt | grep -q "Failed	0" || {
             echo "::error::Failure in classic test results"
@@ -161,6 +165,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
+          [ $rc -eq 0 ] || exit 1
         timeout-minutes: 20
       - name: Carry out trial installation
         run: |

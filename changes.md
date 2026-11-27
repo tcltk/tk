@@ -191,6 +191,12 @@ to the userbase.
  - [select-10.4 hangs](https://core.tcl-lang.org/tk/tktview/610188)
  - [select test cases fail](https://core.tcl-lang.org/tk/tktview/171927)
  - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
+ - [Every Tk_Init registers another thread exit handler](https://core.tcl-lang.org/tk/tktview/703a7f)
+ - [Remove unused troughGC and copyGC from MacScrollbar](https://core.tcl-lang.org/tk/tktview/f64df5)
+ - [ttk auto-repeat goes on endlessly if the command raises an error or opens a modal dialog](https://core.tcl-lang.org/tk/tktview/1842c9)
+ - [On X11, invoke buttons when mouse button 1 is released](https://core.tcl-lang.org/tk/tktview/356526)
+ - ["winfo screenwidth/height" fail to track resolution changes on X11](https://core.tcl-lang.org/tk/tktview/314137)
+ - [Windows: access violation in Tk_GetHWND when implicit focus is released on Leave](https://core.tcl-lang.org/tk/tktview/ae18a4)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

@@ -3553,8 +3553,10 @@ tkInit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	 * Create exit handlers to delete all windows when the application or
 	 * thread exits. The handler need to be invoked before other platform
 	 * specific cleanups take place to avoid panics in finalization.
+	 * Register it only once per thread, not once per interpreter.
 	 */
 
+	TkDeleteThreadExitHandler(DeleteWindowsExitProc, tsdPtr);
 	TkCreateThreadExitHandler(DeleteWindowsExitProc, tsdPtr);
     }
   done:
