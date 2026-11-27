@@ -232,14 +232,14 @@ Tk_GetGC(
 
     /*
      * Find or make a drawable to use to specify the screen and depth of the
-     * GC. We may have to make a small pixmap, to avoid doing
-     * Tk_MakeWindowExist on the window.
+     * GC. We may have to make a small pixmap. Do not use the window itself:
+     * it may not exist yet, or a window of an embedded application can be
+     * destroyed by its container before Tk knows it, and the GC, which is
+     * shared with other windows, would not be created. [f1fe739a4f]
      */
 
     freeDrawable = None;
-    if (Tk_WindowId(tkwin) != None) {
-	d = Tk_WindowId(tkwin);
-    } else if (valueKey.depth ==
+    if (valueKey.depth ==
 	    DefaultDepth(valueKey.display, valueKey.screenNum)) {
 	d = RootWindow(valueKey.display, valueKey.screenNum);
     } else {

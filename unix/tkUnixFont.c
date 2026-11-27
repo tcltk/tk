@@ -3020,6 +3020,7 @@ TkDrawAngledChars(
 	XImage *dstImage;
 	enum {Q0=1,R1,Q1,R2,Q2,R3,Q3} quadrant;
 	GC bwgc, cpgc;
+	Tk_ErrorHandler handler;
 	XGCValues values;
 	int ascent = ((TkFont *) tkfont)->fm.ascent;
 
@@ -3179,6 +3180,15 @@ TkDrawAngledChars(
 	values.clip_mask = buf;
 	values.clip_x_origin = dx;
 	values.clip_y_origin = dy;
+
+	/*
+	 * The GC is created for the drawable. A window of an embedded
+	 * application can be destroyed by its container before Tk knows
+	 * it; then the GC is not created. It is only used here, so ignore
+	 * the errors for it. [f1fe739a4f]
+	 */
+
+	handler = Tk_CreateErrorHandler(display, BadGC, -1, -1, NULL, NULL);
 	cpgc = XCreateGC(display, drawable,
 		GCFunction|GCFillStyle|GCClipMask|GCClipXOrigin|GCClipYOrigin,
 		&values);
@@ -3186,6 +3196,7 @@ TkDrawAngledChars(
 	XFillRectangle(display, drawable, cpgc, dx, dy, bufWidth,
 		bufHeight);
 	XFreeGC(display, cpgc);
+	Tk_DeleteErrorHandler(handler);
 
 	Tk_FreePixmap(display, buf);
 	return;

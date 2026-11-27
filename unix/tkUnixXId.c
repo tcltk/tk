@@ -36,6 +36,8 @@ Tk_GetPixmap(
     int width, int height,	/* Dimensions of pixmap. */
     int depth)			/* Bits per pixel for pixmap. */
 {
+    Tk_Window tkwin;
+
     /*
      * X servers refuse pixmaps with dimensions larger than 32767 (BadAlloc),
      * and larger values are truncated to 16 bits by the protocol. Drawing
@@ -47,6 +49,18 @@ Tk_GetPixmap(
     }
     if (height > 32767) {
 	height = 32767;
+    }
+
+    /*
+     * The drawable only specifies the screen of the pixmap. A window of an
+     * embedded application can be destroyed by its container before Tk
+     * knows it, and creating a pixmap for it would fail, so create the
+     * pixmap for the root window of the same screen. [f1fe739a4f]
+     */
+
+    tkwin = Tk_IdToWindow(display, d);
+    if (tkwin != NULL) {
+	d = RootWindow(display, Tk_ScreenNumber(tkwin));
     }
     return XCreatePixmap(display, d, (unsigned) width, (unsigned) height,
 	    (unsigned) depth);

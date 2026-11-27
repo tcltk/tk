@@ -442,9 +442,42 @@ Tk_GCForColor(
     }
 
     if (tkColPtr->gc == NULL) {
+	Display *display = DisplayOfScreen(tkColPtr->screen);
+	Pixmap pixmap = None;
+
+	/*
+	 * The drawable only specifies the screen and depth of the GC, which
+	 * is kept with the color and shared by all its users. Do not use it
+	 * if the depth is known from the visual of the color: it can be a
+	 * window of an embedded application destroyed by its container before
+	 * Tk knows it, and the GC would not be created. [f1fe739a4f]
+	 */
+
+	if (tkColPtr->visual == DefaultVisualOfScreen(tkColPtr->screen)) {
+	    drawable = RootWindowOfScreen(tkColPtr->screen);
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+	} else {
+	    Screen *screen = tkColPtr->screen;
+	    int i, j;
+
+	    for (i = 0; i < screen->ndepths && pixmap == None; i++) {
+		for (j = 0; j < screen->depths[i].nvisuals; j++) {
+		    if (&screen->depths[i].visuals[j] == tkColPtr->visual) {
+			pixmap = Tk_GetPixmap(display,
+				RootWindowOfScreen(screen), 1, 1,
+				screen->depths[i].depth);
+			drawable = pixmap;
+			break;
+		    }
+		}
+	    }
+#endif
+	}
 	gcValues.foreground = tkColPtr->color.pixel;
-	tkColPtr->gc = XCreateGC(DisplayOfScreen(tkColPtr->screen), drawable,
-		GCForeground, &gcValues);
+	tkColPtr->gc = XCreateGC(display, drawable, GCForeground, &gcValues);
+	if (pixmap != None) {
+	    Tk_FreePixmap(display, pixmap);
+	}
     }
     return tkColPtr->gc;
 }
