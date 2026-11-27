@@ -657,10 +657,10 @@ test textGrapheme-7.2 {linestart / lineend on a NUL line} -setup {
 # and wraps earlier ("aa bb" instead of "aabb")
 
 
-test textGrapheme-8.1 {NUL vs no-NUL wrapping breaks at same words} -constraints notWayland -setup {
+test textGrapheme-8.1 {NUL vs no-NUL wrapping breaks at same words} -constraints {notWayland failsOnXQuartz} -setup {
     set withNul "aa\0bb cc\0dd ee"
     set withoutNul "aabb ccdd ee"
-} -constraints failsOnXQuartz -body {
+} -body {
     text .t1 -font $fixedFont -wrap word -width 6
     pack .t1
     .t1 insert end $withNul
