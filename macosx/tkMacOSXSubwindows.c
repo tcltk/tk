@@ -686,14 +686,14 @@ MoveResizeWindow(
 		macWin->winPtr->changes.y - macWin->yOff;
     }
     if (macWindow) {
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	TkMacOSXInvalidateWindow(macWin, true);
 	if (macParent) {
 	    TkMacOSXInvalClipRgns((Tk_Window)macParent->winPtr);
 	}
     }
     UpdateOffsets(macWin->winPtr, deltaX, deltaY);
     if (macWindow) {
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	TkMacOSXInvalidateWindow(macWin, true);
     }
     GenerateConfigureNotify(macWin->winPtr, 0);
 }
@@ -853,7 +853,7 @@ XConfigureWindow(
 	NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
 	if (view) {
-	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    TkMacOSXInvalidateWindow(macWin, true);
 	}
     }
 
@@ -1132,8 +1132,7 @@ TkMacOSXRedrawViewIdleTask(
 void
 TkMacOSXInvalidateWindow(
     MacDrawable *macWin,	/* Window to be invalidated. */
-    int flag)			/* Should be TK_WINDOW_ONLY or
-				 * TK_PARENT_WINDOW */
+    bool parentWindow)		/* True means invalidate the parent window, too. */
 {
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
     TkMacOSXDbgMsg("%s", macWin->winPtr->pathName);
@@ -1143,7 +1142,7 @@ TkMacOSXInvalidateWindow(
     Tk_Window tkwin = (Tk_Window) winPtr;
     Tk_Window parent = (Tk_Window) winPtr->parentPtr;
     TkMacOSXInvalClipRgns(tkwin);
-    if ((flag == TK_PARENT_WINDOW) && parent){
+    if (parentWindow && parent){
 	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];

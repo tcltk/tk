@@ -1085,7 +1085,8 @@ ArcToPoint(
     ArcItem *arcPtr = (ArcItem *) itemPtr;
     double vertex[2], pointAngle, diff, dist, newDist;
     double poly[8], polyDist, width, t1, t2;
-    int filled, angleInRange;
+    bool filled;
+    int angleInRange;
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
@@ -1139,7 +1140,7 @@ ArcToPoint(
 
     if (arcPtr->style == ARC_STYLE) {
 	if (angleInRange) {
-	    return TkOvalToPoint(arcPtr->bbox, width, 0, pointPtr);
+	    return TkOvalToPoint(arcPtr->bbox, width, false, pointPtr);
 	}
 	dist = hypot(pointPtr[0] - arcPtr->center1[0],
 		pointPtr[1] - arcPtr->center1[1]);
@@ -1152,9 +1153,9 @@ ArcToPoint(
     }
 
     if ((arcPtr->fillGC != NULL) || (arcPtr->outline.gc == NULL)) {
-	filled = 1;
+	filled = true;
     } else {
-	filled = 0;
+	filled = false;
     }
     if (arcPtr->outline.gc == NULL) {
 	width = 0.0;

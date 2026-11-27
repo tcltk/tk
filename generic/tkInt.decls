@@ -209,16 +209,16 @@ declare 53 {
 }
 declare 54 {
     double TkOvalToPoint(double *ovalPtr,
-	    double width, int filled, double *pointPtr)
+	    double width, bool filled, double *pointPtr)
 }
 declare 55 {
-    size_t TkpChangeFocus(TkWindow *winPtr, int force)
+    size_t TkpChangeFocus(TkWindow *winPtr, bool force)
 }
 declare 56 {
     void TkpCloseDisplay(TkDisplay *dispPtr)
 }
 declare 57 {
-    void TkpClaimFocus(TkWindow *topLevelPtr, int force)
+    void TkpClaimFocus(TkWindow *topLevelPtr, bool force)
 }
 declare 58 {
     void TkpDisplayWarning(const char *msg, const char *title)
@@ -406,7 +406,7 @@ declare 124 {
 	    const char *name, int *width, int *height)
 }
 declare 136 {
-    void TkSetFocusWin(TkWindow *winPtr, int force)
+    void TkSetFocusWin(TkWindow *winPtr, bool force)
 }
 declare 137 {
     void TkpSetKeycodeAndState(Tk_Window tkwin, KeySym keySym,

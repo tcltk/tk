@@ -474,7 +474,7 @@ void
 TkpClaimFocus(
     TkWindow *topLevelPtr,	/* Top-level window containing desired focus
 				 * window; should be embedded. */
-    int force)			/* One means that the container should claim
+    bool force)			/* True means that the container should claim
 				 * the focus if it doesn't currently have
 				 * it. */
 {

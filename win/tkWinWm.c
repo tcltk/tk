@@ -2513,7 +2513,7 @@ TkpWmSetFullScreen(
 
 	    focusWinPtr = TkGetFocusWin(winPtr);
 	    if (focusWinPtr) {
-		TkSetFocusWin(focusWinPtr, 1);
+		TkSetFocusWin(focusWinPtr, true);
 	    }
 	}
     }
@@ -8998,7 +8998,7 @@ TkpWinToplevelDeiconify(
 
     TkWmRestackToplevel(winPtr, Above, NULL);
     if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
-	TkSetFocusWin(winPtr, 1);
+	TkSetFocusWin(winPtr, true);
     }
 }
 

@@ -447,7 +447,7 @@ extern NSString *NSWindowWillCloseNotification;
 
 static void RefocusGrabWindow(void *clientData) {
     TkWindow *winPtr = (TkWindow *) clientData;
-    TkpChangeFocus(winPtr, 1);
+    TkpChangeFocus(winPtr, true);
     Tcl_Release(winPtr);
 }
 

@@ -756,7 +756,7 @@ ScrollbarEventProc(
 
     switch (eventPtr->type) {
     case UnmapNotify:
-	TkMacOSXSetScrollbarGrow((TkWindow *) scrollPtr->tkwin, false);
+	TkMacOSXSetScrollbarGrowOff((TkWindow *) scrollPtr->tkwin);
 	break;
     case ActivateNotify:
     case DeactivateNotify:
