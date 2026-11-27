@@ -538,10 +538,6 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
-    Tcl_HashTable deletedWinTable;
-				/* Maps from X window ids of recently deleted
-				 * windows to the serial number of the last
-				 * request made before the deletion. */
     struct TkWindow *focusInGrabPtr;
 				/* Toplevel window which received the focus
 				 * while it was excluded by a grab, or NULL.
@@ -1170,7 +1166,6 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
 MODULE_SCOPE void	TkPointerClearButtons(void);
 MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 TkStartEndOfClusterCmd;
