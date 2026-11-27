@@ -1116,7 +1116,7 @@ OvalToPoint(
 {
     RectOvalItem *ovalPtr = (RectOvalItem *) itemPtr;
     double width;
-    int filled;
+    bool filled;
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
@@ -1138,7 +1138,7 @@ OvalToPoint(
     filled = ovalPtr->fillGC != NULL;
     if (ovalPtr->outline.gc == NULL) {
 	width = 0.0;
-	filled = 1;
+	filled = true;
     }
     return TkOvalToPoint(ovalPtr->bbox, width, filled, pointPtr);
 }

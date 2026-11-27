@@ -189,13 +189,13 @@ EXTERN void		TkOptionDeadWindow(TkWindow *winPtr);
 EXTERN int		TkOvalToArea(double *ovalPtr, double *rectPtr);
 /* 54 */
 EXTERN double		TkOvalToPoint(double *ovalPtr, double width,
-				int filled, double *pointPtr);
+				bool filled, double *pointPtr);
 /* 55 */
-EXTERN size_t		TkpChangeFocus(TkWindow *winPtr, int force);
+EXTERN size_t		TkpChangeFocus(TkWindow *winPtr, bool force);
 /* 56 */
 EXTERN void		TkpCloseDisplay(TkDisplay *dispPtr);
 /* 57 */
-EXTERN void		TkpClaimFocus(TkWindow *topLevelPtr, int force);
+EXTERN void		TkpClaimFocus(TkWindow *topLevelPtr, bool force);
 /* 58 */
 EXTERN void		TkpDisplayWarning(const char *msg, const char *title);
 /* 59 */
@@ -360,7 +360,7 @@ EXTERN Pixmap		TkpGetNativeAppBitmap(Display *display,
 /* Slot 134 is reserved */
 /* Slot 135 is reserved */
 /* 136 */
-EXTERN void		TkSetFocusWin(TkWindow *winPtr, int force);
+EXTERN void		TkSetFocusWin(TkWindow *winPtr, bool force);
 /* 137 */
 EXTERN void		TkpSetKeycodeAndState(Tk_Window tkwin, KeySym keySym,
 				XEvent *eventPtr);
@@ -605,10 +605,10 @@ typedef struct TkIntStubs {
     void (*tkOptionClassChanged) (TkWindow *winPtr); /* 51 */
     void (*tkOptionDeadWindow) (TkWindow *winPtr); /* 52 */
     int (*tkOvalToArea) (double *ovalPtr, double *rectPtr); /* 53 */
-    double (*tkOvalToPoint) (double *ovalPtr, double width, int filled, double *pointPtr); /* 54 */
-    size_t (*tkpChangeFocus) (TkWindow *winPtr, int force); /* 55 */
+    double (*tkOvalToPoint) (double *ovalPtr, double width, bool filled, double *pointPtr); /* 54 */
+    size_t (*tkpChangeFocus) (TkWindow *winPtr, bool force); /* 55 */
     void (*tkpCloseDisplay) (TkDisplay *dispPtr); /* 56 */
-    void (*tkpClaimFocus) (TkWindow *topLevelPtr, int force); /* 57 */
+    void (*tkpClaimFocus) (TkWindow *topLevelPtr, bool force); /* 57 */
     void (*tkpDisplayWarning) (const char *msg, const char *title); /* 58 */
     void (*tkpGetAppName) (Tcl_Interp *interp, Tcl_DString *name); /* 59 */
     void (*reserved60)(void);
@@ -687,7 +687,7 @@ typedef struct TkIntStubs {
     void (*reserved133)(void);
     void (*reserved134)(void);
     void (*reserved135)(void);
-    void (*tkSetFocusWin) (TkWindow *winPtr, int force); /* 136 */
+    void (*tkSetFocusWin) (TkWindow *winPtr, bool force); /* 136 */
     void (*tkpSetKeycodeAndState) (Tk_Window tkwin, KeySym keySym, XEvent *eventPtr); /* 137 */
     KeySym (*tkpGetKeySym) (TkDisplay *dispPtr, XEvent *eventPtr); /* 138 */
     void (*tkpInitKeymapInfo) (TkDisplay *dispPtr); /* 139 */

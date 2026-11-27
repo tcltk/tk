@@ -85,16 +85,22 @@ if {"x11" eq [tk windowingsystem]} {
 	}
     }
     bind Checkbutton <Button-1> {
-	tk::CheckInvoke %W
+	tk::CheckRadioDown %W
+    }
+    bind Checkbutton <ButtonRelease-1> {
+	tk::CheckRadioUp %W tk::CheckInvoke
     }
     bind Radiobutton <Button-1> {
-	tk::CheckRadioInvoke %W
+	tk::CheckRadioDown %W
+    }
+    bind Radiobutton <ButtonRelease-1> {
+	tk::CheckRadioUp %W
     }
     bind Checkbutton <Enter> {
 	tk::CheckEnter %W
     }
     bind Radiobutton <Enter> {
-	tk::ButtonEnter %W
+	tk::CheckRadioEnter %W
     }
     bind Checkbutton <Leave> {
 	tk::CheckLeave %W
@@ -482,6 +488,64 @@ proc ::tk::ButtonUp w {
     }
 }
 
+# ::tk::CheckRadioEnter --
+# The procedure below is invoked when the mouse pointer enters a
+# radiobutton.  It records the button we're in and changes the state of
+# the button to active unless the button is disabled.  Unlike ButtonEnter,
+# it does not set the relief to sunken if the mouse button is down.
+#
+# Arguments:
+# w -		The name of the widget.
+
+proc ::tk::CheckRadioEnter w {
+    variable ::tk::Priv
+    if {[$w cget -state] ne "disabled"} {
+	# On unix the state is active just with mouse-over
+	$w configure -state active
+
+	if {[set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief) [$w cget -relief]
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
+	}
+    }
+    set Priv(window) $w
+}
+
+# ::tk::CheckRadioDown --
+# The procedure below is invoked when the mouse button is pressed in
+# a checkbutton or radiobutton.  It records the fact that the mouse is
+# in the button.  The button is invoked when the mouse button is released.
+#
+# Arguments:
+# w -		The name of the widget.
+
+proc ::tk::CheckRadioDown w {
+    variable ::tk::Priv
+    if {[$w cget -state] ne "disabled"} {
+	set Priv(buttonWindow) $w
+    }
+}
+
+# ::tk::CheckRadioUp --
+# The procedure below is invoked when the mouse button is released
+# in a checkbutton or radiobutton.  It invokes the button as long as the
+# mouse hasn't left the button, like other toolkits do.  [Bug 3565268]
+#
+# Arguments:
+# w -		The name of the widget.
+# invoke -	The command to invoke the button.
+
+proc ::tk::CheckRadioUp {w {invoke tk::CheckRadioInvoke}} {
+    variable ::tk::Priv
+    if {$Priv(buttonWindow) eq $w} {
+	set Priv(buttonWindow) ""
+	if {$Priv(window) eq $w} {
+	    $invoke $w
+	}
+    }
+}
+
 }
 
 if {[tk windowingsystem] eq "aqua"} {
@@ -741,14 +805,10 @@ proc ::tk::CheckEnter {w} {
 	# On unix the state is active just with mouse-over
 	$w configure -state active
 
-	# If the mouse button is down, set the relief to sunken on entry.
-	# Overwise, if there's an -overrelief value, set the relief to that.
+	# If there's an -overrelief value, set the relief to that.
 
 	set Priv($w,relief) [$w cget -relief]
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -relief sunken
-	    set Priv($w,prelief) sunken
-	} elseif {[set over [$w cget -overrelief]] ne ""} {
+	if {[set over [$w cget -overrelief]] ne ""} {
 	    $w configure -relief $over
 	    set Priv($w,prelief) $over
 	}

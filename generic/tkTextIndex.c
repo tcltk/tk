@@ -19,6 +19,118 @@
 #include "tkWinInt.h"
 #endif
 
+/* Wrappers from tkTextGrapheme.c. */
+extern int mojibake_word_breaks_with_dict(const char *buf, size_t byteLen,
+	unsigned char *wBreaks, unsigned char *gBreaks_tmp);
+
+/*
+ * ----------------------------------------------------------------------
+ * TextWordBreak --
+ *
+ *	Move a text index to the next or previous word boundary in the
+ *	logical line, using mojibake word breaks (UAX #29 plus
+ *	Thai/Lao/Khmer/Myanmar dictionary support) computed over the
+ *	whole line. Unlike the old character-by-character walk with
+ *	Tcl_UniCharIsWordChar(), this keeps combining marks, ZWJ emoji
+ *	sequences, and dictionary-based scripts (e.g. Thai tone marks)
+ *	together, because those cases are handled as single word
+ *	segments by the word breaker.
+ *
+ *	mojibake_word_breaks_with_dict already guarantees that no word
+ *	break falls inside a grapheme cluster, so no further
+ *	reconciliation with grapheme breaks is done here.
+ *
+ *	The trailing newline of the line is never crossed; the last
+ *	break considered is the one before it.
+ *
+ *	This helper is used only for the plain (non-display) modifier.
+ *	The display modifier retains the old character walk, since
+ *	display indices are not logical-line byte offsets.
+ *
+ * Results:
+ *	Returns 1 if the index was successfully updated to a word
+ *	boundary, or 0 if the line contains no character segments (in
+ *	which case the index is left unchanged).
+ *
+ * Side effects:
+ *	Updates indexPtr->byteIndex to the new word boundary. Allocates
+ *	and frees temporary buffers for the line text and break arrays;
+ *	no lasting state is changed.
+ * ----------------------------------------------------------------------
+ */
+
+static int
+TextWordBreak(
+    TkTextIndex *indexPtr,
+    int forward)
+{
+    TkTextSegment *segPtr;
+    Tcl_DString text;
+    const char *chars;
+    unsigned char *breaks;
+    Tcl_Size n, i, target, lineLen = 0;
+    int byteIndex = indexPtr->byteIndex;
+
+    for (segPtr = indexPtr->linePtr->segPtr; segPtr != NULL;
+	    segPtr = segPtr->nextPtr) {
+	if (segPtr->typePtr == &tkTextCharType) {
+	    lineLen += segPtr->size;
+	}
+    }
+    if (lineLen == 0) {
+	return 0;
+    }
+    Tcl_DStringInit(&text);
+    for (segPtr = indexPtr->linePtr->segPtr; segPtr != NULL;
+	    segPtr = segPtr->nextPtr) {
+	if (segPtr->typePtr == &tkTextCharType) {
+	    Tcl_DStringAppend(&text, segPtr->body.chars, segPtr->size);
+	}
+    }
+    chars = Tcl_DStringValue(&text);
+    n = Tcl_DStringLength(&text);
+    breaks = (unsigned char *) Tcl_Alloc(n + 1);
+    if (!mojibake_word_breaks_with_dict(chars, (size_t) n, breaks, NULL)) {
+	Tcl_Free((char *) breaks);
+	Tcl_DStringFree(&text);
+	return 0;
+    }
+    /*
+     * Word breaks from mojibake_word_breaks_with_dict never split a
+     * grapheme cluster, so no further reconciliation is needed here.
+     */
+    /*
+     * The line's last byte is '\n'. Do not let a break at/past it
+     * pull the index onto the next line; the break before it is
+     * the end of the last word on this line.
+     */
+    if (n > 0 && chars[n - 1] == '\n') {
+	breaks[n] = 0;
+    }
+    if (forward) {
+	/* No break found: stop before the trailing '\n', never at/past it. */
+	target = (n > 0 && chars[n - 1] == '\n') ? n - 1 : n;
+	for (i = byteIndex + 1; i <= n; i++) {
+	    if (breaks[i]) {
+		target = i;
+		break;
+	    }
+	}
+    } else {
+	target = 0;
+	for (i = byteIndex; i >= 0; i--) {
+	    if (breaks[i]) {
+		target = i;
+		break;
+	    }
+	}
+    }
+    Tcl_Free((char *) breaks);
+    Tcl_DStringFree(&text);
+    indexPtr->byteIndex = target;
+    return 1;
+}
+
 /*
  * Index to use to select last character in line (very large integer):
  */
@@ -2374,6 +2486,11 @@ StartEnd(
 	}
     } else if ((*string == 'w') && (strncmp(string, "wordend", length) == 0)
 	    && (length >= 5)) {
+	if (modifier != TKINDEX_DISPLAY) {
+	    if (TextWordBreak(indexPtr, 1)) {
+		goto done;
+	    }
+	}
 	int firstChar = 1;
 	Tcl_Size offset;
 
@@ -2417,6 +2534,11 @@ StartEnd(
 	}
     } else if ((*string == 'w') && (strncmp(string, "wordstart", length) == 0)
 	    && (length >= 5)) {
+	if (modifier != TKINDEX_DISPLAY) {
+	    if (TextWordBreak(indexPtr, 0)) {
+		goto done;
+	    }
+	}
 	int firstChar = 1;
 	Tcl_Size offset;
 

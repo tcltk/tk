@@ -55,7 +55,7 @@ typedef struct TkDisplayFocusInfo {
 				 * fact that X won't allow the focus on an
 				 * unmapped window). NULL means no delayed
 				 * focus op in progress for this display. */
-    int forceFocus;		/* Associated with focusOnMapPtr: non-zero
+    bool forceFocus;		/* Associated with focusOnMapPtr: true
 				 * means claim the focus even if some other
 				 * application currently has it. */
     size_t focusSerial;	/* Serial number of last request this
@@ -153,7 +153,7 @@ Tk_FocusObjCmd(
 	    if (newPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    TkSetFocusWin(newPtr, 0);
+	    TkSetFocusWin(newPtr, false);
 	    return TCL_OK;
 	}
     }
@@ -196,7 +196,7 @@ Tk_FocusObjCmd(
 	if (newPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	TkSetFocusWin(newPtr, 1);
+	TkSetFocusWin(newPtr, true);
 	break;
     case 2:			/* -lastfor */
 	windowName = Tcl_GetString(objv[2]);
@@ -294,7 +294,7 @@ TkFocusFilterEvent(
 
     if ((eventPtr->xfocus.mode == EMBEDDED_APP_WANTS_FOCUS)
 	    && (eventPtr->type == FocusIn)) {
-	TkSetFocusWin(winPtr, eventPtr->xfocus.detail);
+	TkSetFocusWin(winPtr, eventPtr->xfocus.detail != 0);
 	return false;
     }
 
@@ -547,7 +547,7 @@ void
 TkSetFocusWin(
     TkWindow *winPtr,		/* Window that is to be the new focus for its
 				 * display and application. */
-    int force)			/* If non-zero, set the X focus to this window
+    bool force)			/* If true, set the X focus to this window
 				 * even if the application doesn't currently
 				 * have the X focus. */
 {

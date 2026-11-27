@@ -218,21 +218,112 @@ static void tk_atk_window_interface_init(TCL_UNUSED(AtkWindowIface *)) /* iface 
 {
 }
 
+/*
+ * The GLib main context is integrated into the Tcl notifier: the file
+ * descriptors GLib waits on (the AT-SPI bus connection and the wakeup
+ * descriptor of the context) are watched with Tcl file handlers, and the
+ * block time is limited only by the next GLib timeout. So an idle
+ * application is not woken up unless GLib has something to do. If GLib
+ * cannot be prepared here, or waits on more descriptors than are watched,
+ * the context is polled every ATK_POLL_MS milliseconds instead.
+ */
+#define ATK_POLL_MS 10
+#define ATK_MAX_WATCH_FDS 16
+static int atkWatchedFds[ATK_MAX_WATCH_FDS];
+static int atkNumWatched = 0;
+
+/*
+ * A readable descriptor only needs to wake up Tcl: Atk_Event_Check then
+ * queues an event which dispatches GLib.
+ */
+static void AtkFdProc(
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(int))    /* mask */
+{
+}
+
+static int AtkFdInList(
+    const int *list,
+    int n,
+    int fd)
+{
+    for (int i = 0; i < n; i++) {
+	if (list[i] == fd) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+/*
+ * Prepare the GLib context and watch its file descriptors. Returns the
+ * maximum time in milliseconds to wait before GLib has to be dispatched,
+ * or -1 if GLib only waits for its file descriptors.
+ */
+static gint AtkPrepareGLib(void)
+{
+    GPollFD fds[ATK_MAX_WATCH_FDS];
+    int newFds[ATK_MAX_WATCH_FDS];
+    int nNew = 0;
+    gint priority, timeout = -1, n;
+    gboolean ready;
+
+    if (!g_main_context_acquire(acc_context)) {
+	/* The context is run by another thread. */
+	return ATK_POLL_MS;
+    }
+    ready = g_main_context_prepare(acc_context, &priority);
+    n = g_main_context_query(acc_context, G_MAXINT, &timeout,
+	    fds, ATK_MAX_WATCH_FDS);
+    g_main_context_release(acc_context);
+
+    if (ready) {
+	timeout = 0;
+    }
+    if (n > ATK_MAX_WATCH_FDS) {
+	n = ATK_MAX_WATCH_FDS;
+	if (timeout < 0 || timeout > ATK_POLL_MS) {
+	    timeout = ATK_POLL_MS;
+	}
+    }
+    for (gint i = 0; i < n; i++) {
+	if ((fds[i].events & (G_IO_IN | G_IO_HUP | G_IO_ERR)) && fds[i].fd >= 0
+		&& !AtkFdInList(newFds, nNew, fds[i].fd)) {
+	    newFds[nNew++] = fds[i].fd;
+	}
+    }
+    for (int i = 0; i < atkNumWatched; i++) {
+	if (!AtkFdInList(newFds, nNew, atkWatchedFds[i])) {
+	    Tcl_DeleteFileHandler(atkWatchedFds[i]);
+	}
+    }
+    for (int i = 0; i < nNew; i++) {
+	if (!AtkFdInList(atkWatchedFds, atkNumWatched, newFds[i])) {
+	    Tcl_CreateFileHandler(newFds[i], TCL_READABLE, AtkFdProc, NULL);
+	}
+	atkWatchedFds[i] = newFds[i];
+    }
+    atkNumWatched = nNew;
+    return timeout;
+}
+
 /* Configure event loop. */
 static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    Tcl_Time block_time = {0, 10000};
+    gint timeout;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
     }
 
-    if (g_main_context_pending(acc_context)) {
-	block_time.usec = 0;
+    timeout = AtkPrepareGLib();
+    if (timeout >= 0) {
+	Tcl_Time block_time = {timeout / 1000, (timeout % 1000) * 1000};
+
+	Tcl_SetMaxBlockTime(&block_time);
     }
-    Tcl_SetMaxBlockTime(&block_time);
 }
 
 /* Check event queue. */

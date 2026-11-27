@@ -2060,7 +2060,7 @@ WmSetAttribute(
 	    [macWindow setBackgroundColor:boolValue ? [NSColor clearColor] : nil];
 	    [macWindow setOpaque:!boolValue];
 	    TkMacOSXInvalidateWindow((MacDrawable *)winPtr->window,
-		    TK_PARENT_WINDOW);
+		    true);
 	    }
 	break;
     case WMATT_CLASS:
@@ -6982,10 +6982,10 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetScrollbarGrow --
+ * TkMacOSXSetScrollbarGrowOff --
  *
- *	Sets a flag for a toplevel window indicating that the passed Tk
- *	scrollbar window will display the grow region for the toplevel window.
+ *	Resets a flag for a toplevel window indicating that the passed Tk
+ *	scrollbar window will not display the grow region for the toplevel window.
  *
  * Results:
  *	None.
@@ -6997,14 +6997,10 @@ TkMacOSXMakeRealWindowExist(
  */
 
 void
-TkMacOSXSetScrollbarGrow(
-    TkWindow *winPtr,		/* Tk scrollbar window. */
-    int flag)			/* Boolean value true or false. */
+TkMacOSXSetScrollbarGrowOff(
+    TkWindow *winPtr)		/* Tk scrollbar window. */
 {
-    if (flag) {
-	winPtr->privatePtr->toplevel->flags |= TK_SCROLLBAR_GROW;
-	winPtr->privatePtr->toplevel->winPtr->wmInfoPtr->scrollWinPtr = winPtr;
-    } else if (winPtr->privatePtr->toplevel->winPtr->wmInfoPtr->scrollWinPtr
+    if (winPtr->privatePtr->toplevel->winPtr->wmInfoPtr->scrollWinPtr
 	    == winPtr) {
 	winPtr->privatePtr->toplevel->flags &= ~TK_SCROLLBAR_GROW;
 	winPtr->privatePtr->toplevel->winPtr->wmInfoPtr->scrollWinPtr = NULL;
@@ -7290,7 +7286,7 @@ XSetInputFocus(
 size_t
 TkpChangeFocus(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
+    bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {

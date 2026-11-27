@@ -739,9 +739,15 @@ cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
 
+# The files and directories of the library, so that the zip file is rebuilt
+# when any of them changes, or a file is added or removed. ROOT_DIR, not
+# TOP_DIR: the latter can contain a drive letter.
+TK_LIBRARY_FILES = $(wildcard $(ROOT_DIR)/library/* $(ROOT_DIR)/library/*/* \
+	$(ROOT_DIR)/library/*/*/*)
+
 tkzipfile: ${TK_ZIP_FILE}
 
-${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
+${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS} ${TK_LIBRARY_FILES}
 	@$(RMDIR) ${TK_VFS_ROOT}
 	@mkdir -p ${TK_VFS_PATH}
 	@echo "creating ${TK_VFS_PATH} (prepare compression)"

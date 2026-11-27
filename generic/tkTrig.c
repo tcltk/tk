@@ -657,8 +657,8 @@ TkOvalToPoint(
 				 * y1, x2, y2) defining oval's bounding
 				 * box. */
     double width,		/* Width of outline for oval. */
-    int filled,			/* Non-zero means oval should be treated as
-				 * filled; zero means only consider
+    bool filled,		/* True means oval should be treated as
+				 * filled; false means only consider
 				 * outline. */
     double pointPtr[])		/* Coordinates of point. */
 {

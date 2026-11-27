@@ -601,7 +601,13 @@ XSetInputFocus(
     TCL_UNUSED(Time))
 {
     LastKnownRequestProcessed(display)++;
-    if (focus != None) {
+
+     /*
+      * PointerRoot is not a real window and has no Windows counterpart: ignore
+      * it like None instead of passing it to Tk_GetHWND (which would crash).
+      */
+ 
+    if ((focus != None) && (focus != PointerRoot)) {
 	SetFocus(Tk_GetHWND(focus));
     }
     return Success;
@@ -631,7 +637,7 @@ XSetInputFocus(
 size_t
 TkpChangeFocus(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
+    bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
